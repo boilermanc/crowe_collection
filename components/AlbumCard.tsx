@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Album } from '../types';
+import { proxyImageUrl } from '../services/imageProxy';
 
 interface AlbumCardProps {
   album: Album;
@@ -25,7 +26,7 @@ const AlbumCard: React.FC<AlbumCardProps> = ({ album, onDelete, onSelect }) => {
     >
       <div className="aspect-square overflow-hidden bg-black/40 relative">
         <img
-          src={album.cover_url || `https://picsum.photos/seed/${album.id}/400/400`}
+          src={proxyImageUrl(album.cover_url) || `https://picsum.photos/seed/${album.id}/400/400`}
           alt={album.title}
           loading="lazy"
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"

@@ -1,6 +1,7 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Album } from '../types';
+import { proxyImageUrl } from '../services/imageProxy';
 
 interface AlbumDetailModalProps {
   album: Album;
@@ -89,7 +90,7 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
         </button>
 
         <div className="w-full md:w-5/12 overflow-hidden bg-black flex items-center justify-center p-6 md:p-12 relative flex-shrink-0">
-             <img src={album.cover_url} alt={album.title} className="w-full h-auto max-h-[40vh] md:max-h-full object-contain rounded-md shadow-[0_0_100px_rgba(0,0,0,0.8)] z-10" />
+             <img src={proxyImageUrl(album.cover_url)} alt={album.title} className="w-full h-auto max-h-[40vh] md:max-h-full object-contain rounded-md shadow-[0_0_100px_rgba(0,0,0,0.8)] z-10" />
              <div className="absolute -bottom-10 -left-10 text-[80px] md:text-[120px] font-syncopate font-black text-white/5 select-none pointer-events-none uppercase whitespace-nowrap">
                {album.genre?.split(' ')[0]}
              </div>

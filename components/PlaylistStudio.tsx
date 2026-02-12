@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Album, Playlist, PlaylistItem } from '../types';
 import { geminiService } from '../services/geminiService';
 import SpinningRecord from './SpinningRecord';
+import { proxyImageUrl } from '../services/imageProxy';
 
 interface PlaylistStudioProps {
   albums: Album[];
@@ -61,7 +62,7 @@ const PlaylistStudio: React.FC<PlaylistStudioProps> = ({ albums, onClose }) => {
         <div className="space-y-12">
           {playlist?.items.map((item, idx) => (
             <div key={idx} className="flex gap-8 md:gap-12 items-center break-inside-avoid">
-              <img src={item.cover_url} className="w-24 h-24 md:w-40 md:h-40 object-cover border-4 border-black shadow-[8px_8px_0_rgba(0,0,0,0.1)]" />
+              <img src={proxyImageUrl(item.cover_url)} className="w-24 h-24 md:w-40 md:h-40 object-cover border-4 border-black shadow-[8px_8px_0_rgba(0,0,0,0.1)]" />
               <div>
                 <span className="text-sm md:text-lg font-black opacity-20 block mb-1">TRACK {idx + 1}</span>
                 <h3 className="text-2xl md:text-4xl font-bold leading-tight">{item.itemTitle}</h3>
@@ -129,7 +130,7 @@ const PlaylistStudio: React.FC<PlaylistStudioProps> = ({ albums, onClose }) => {
                  <div className="absolute inset-0 bg-pink-500/10 blur-[100px] rounded-full animate-pulse"></div>
                  <img 
                   key={currentItem?.cover_url}
-                  src={currentItem?.cover_url} 
+                  src={proxyImageUrl(currentItem?.cover_url)} 
                   className="w-full h-full object-cover rounded-md shadow-[0_0_80px_rgba(0,0,0,0.8)] relative z-10 transition-all duration-1000 transform hover:scale-105" 
                 />
                 <div className="absolute -bottom-4 -right-4 z-20 bg-indigo-600 text-white px-4 py-1.5 md:px-6 md:py-2 rounded-full font-syncopate text-[9px] md:text-[10px] tracking-widest font-bold shadow-xl">
@@ -199,7 +200,7 @@ const PlaylistStudio: React.FC<PlaylistStudioProps> = ({ albums, onClose }) => {
               {playlist.items.map((item, idx) => (
                 <div key={idx} className="group flex items-center gap-4 md:gap-6 p-3 md:p-4 rounded-2xl hover:bg-white/5 transition-all">
                   <span className="font-syncopate text-white/10 text-lg md:text-xl font-black w-8 md:w-12">{idx + 1}</span>
-                  <img src={item.cover_url} className="w-16 h-16 md:w-20 md:h-20 rounded-md object-cover shadow-lg flex-shrink-0" />
+                  <img src={proxyImageUrl(item.cover_url)} className="w-16 h-16 md:w-20 md:h-20 rounded-md object-cover shadow-lg flex-shrink-0" />
                   <div className="min-w-0">
                     <h4 className="text-sm md:text-xl font-bold text-white group-hover:text-pink-500 transition-colors truncate">{item.itemTitle}</h4>
                     <p className="text-xs md:text-sm text-white/40 font-medium truncate">{item.artist}</p>
