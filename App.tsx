@@ -415,51 +415,57 @@ const App: React.FC = () => {
             <h2 className="font-syncopate text-3xl md:text-5xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white to-white/60 mb-3">
               THE CROWE COLLECTION
             </h2>
-            <p className="text-white/30 text-sm md:text-base tracking-wide">Your vinyl archive awaits</p>
+            <p className="text-white/30 text-sm md:text-base tracking-wide">
+              {albums.length > 0 ? 'Your vinyl archive awaits' : 'Scan your first record to start your archive'}
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 w-full max-w-4xl animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {/* Browse Collection */}
-            <button
-              onClick={() => setCurrentView('grid')}
-              className="glass-morphism rounded-3xl p-6 md:p-8 text-left group hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all duration-300 cursor-pointer"
-            >
-              <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center mb-5 group-hover:bg-emerald-500/20 transition-colors">
-                <svg className="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                </svg>
-              </div>
-              <h3 className="font-syncopate text-[10px] md:text-xs tracking-widest uppercase font-bold text-white mb-2">Browse Crate</h3>
-              <p className="text-white/30 text-xs leading-relaxed">Visual grid of your vinyl — search, filter, and explore covers.</p>
-            </button>
+          <div className={`grid grid-cols-1 ${albums.length > 0 ? 'sm:grid-cols-2 lg:grid-cols-4 max-w-4xl' : 'sm:grid-cols-2 max-w-lg'} gap-4 md:gap-6 w-full animate-in fade-in slide-in-from-bottom-4 duration-700`}>
+            {albums.length > 0 && (
+              <>
+                {/* Browse Collection */}
+                <button
+                  onClick={() => setCurrentView('grid')}
+                  className="glass-morphism rounded-3xl p-6 md:p-8 text-left group hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all duration-300 cursor-pointer"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center mb-5 group-hover:bg-emerald-500/20 transition-colors">
+                    <svg className="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                    </svg>
+                  </div>
+                  <h3 className="font-syncopate text-[10px] md:text-xs tracking-widest uppercase font-bold text-white mb-2">Browse Crate</h3>
+                  <p className="text-white/30 text-xs leading-relaxed">Visual grid of your vinyl — search, filter, and explore covers.</p>
+                </button>
 
-            {/* Collection List */}
-            <button
-              onClick={() => setCurrentView('list')}
-              className="glass-morphism rounded-3xl p-6 md:p-8 text-left group hover:border-amber-500/30 hover:bg-amber-500/5 transition-all duration-300 cursor-pointer"
-            >
-              <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center mb-5 group-hover:bg-amber-500/20 transition-colors">
-                <svg className="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                </svg>
-              </div>
-              <h3 className="font-syncopate text-[10px] md:text-xs tracking-widest uppercase font-bold text-white mb-2">Collection List</h3>
-              <p className="text-white/30 text-xs leading-relaxed">Sortable table view — sort by title, artist, year, value, and more.</p>
-            </button>
+                {/* Collection List */}
+                <button
+                  onClick={() => setCurrentView('list')}
+                  className="glass-morphism rounded-3xl p-6 md:p-8 text-left group hover:border-amber-500/30 hover:bg-amber-500/5 transition-all duration-300 cursor-pointer"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center mb-5 group-hover:bg-amber-500/20 transition-colors">
+                    <svg className="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                    </svg>
+                  </div>
+                  <h3 className="font-syncopate text-[10px] md:text-xs tracking-widest uppercase font-bold text-white mb-2">Collection List</h3>
+                  <p className="text-white/30 text-xs leading-relaxed">Sortable table view — sort by title, artist, year, value, and more.</p>
+                </button>
 
-            {/* Spin a Playlist */}
-            <button
-              onClick={() => setIsStudioOpen(true)}
-              className="glass-morphism rounded-3xl p-6 md:p-8 text-left group hover:border-pink-500/30 hover:bg-pink-500/5 transition-all duration-300 cursor-pointer"
-            >
-              <div className="w-12 h-12 rounded-2xl bg-pink-500/10 flex items-center justify-center mb-5 group-hover:bg-pink-500/20 transition-colors">
-                <svg className="w-6 h-6 text-pink-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" />
-                </svg>
-              </div>
-              <h3 className="font-syncopate text-[10px] md:text-xs tracking-widest uppercase font-bold text-white mb-2">Spin a Playlist</h3>
-              <p className="text-white/30 text-xs leading-relaxed">Let AI curate a session from your collection based on mood.</p>
-            </button>
+                {/* Spin a Playlist */}
+                <button
+                  onClick={() => setIsStudioOpen(true)}
+                  className="glass-morphism rounded-3xl p-6 md:p-8 text-left group hover:border-pink-500/30 hover:bg-pink-500/5 transition-all duration-300 cursor-pointer"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-pink-500/10 flex items-center justify-center mb-5 group-hover:bg-pink-500/20 transition-colors">
+                    <svg className="w-6 h-6 text-pink-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" />
+                    </svg>
+                  </div>
+                  <h3 className="font-syncopate text-[10px] md:text-xs tracking-widest uppercase font-bold text-white mb-2">Spin a Playlist</h3>
+                  <p className="text-white/30 text-xs leading-relaxed">Let AI curate a session from your collection based on mood.</p>
+                </button>
+              </>
+            )}
 
             {/* Scan a Record */}
             <button
@@ -475,6 +481,22 @@ const App: React.FC = () => {
               <h3 className="font-syncopate text-[10px] md:text-xs tracking-widest uppercase font-bold text-white mb-2">Scan a Record</h3>
               <p className="text-white/30 text-xs leading-relaxed">Snap a cover photo to identify and catalog a new album.</p>
             </button>
+
+            {/* Upload a Cover — shown when crate is empty */}
+            {albums.length === 0 && (
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="glass-morphism rounded-3xl p-6 md:p-8 text-left group hover:border-indigo-400/30 hover:bg-indigo-400/5 transition-all duration-300 cursor-pointer"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-indigo-400/10 flex items-center justify-center mb-5 group-hover:bg-indigo-400/20 transition-colors">
+                  <svg className="w-6 h-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                  </svg>
+                </div>
+                <h3 className="font-syncopate text-[10px] md:text-xs tracking-widest uppercase font-bold text-white mb-2">Upload Cover</h3>
+                <p className="text-white/30 text-xs leading-relaxed">Pick an album cover photo from your device.</p>
+              </button>
+            )}
           </div>
 
           {albums.length > 0 && (
