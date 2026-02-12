@@ -412,8 +412,44 @@ const App: React.FC = () => {
           <p className="font-syncopate text-[10px] tracking-widest mt-8 text-white/40 uppercase">SYNCING COLLECTION</p>
         </div>
       ) : currentView === 'landing' ? (
-        <main className="max-w-5xl mx-auto px-4 md:px-6 pb-32 md:pb-0 min-h-[calc(100vh-80px)] flex flex-col items-center justify-center animate-in fade-in duration-500">
-          <div className="text-center mb-12 md:mb-16">
+        <main className="relative max-w-5xl mx-auto px-4 md:px-6 pb-32 md:pb-0 min-h-[calc(100vh-80px)] flex flex-col items-center justify-center animate-in fade-in duration-500 overflow-hidden">
+          {/* Spinning vinyl record background */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none" aria-hidden="true">
+            <svg
+              className="animate-spin-vinyl w-[600px] h-[600px] md:w-[750px] md:h-[750px] opacity-[0.04]"
+              viewBox="0 0 400 400"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              {/* Outer disc */}
+              <circle cx="200" cy="200" r="195" fill="#fff" />
+              <circle cx="200" cy="200" r="195" stroke="#fff" strokeWidth="2" />
+
+              {/* Grooves */}
+              {[175, 165, 155, 145, 135, 125, 115, 105, 95, 85, 78, 71].map((r) => (
+                <circle key={r} cx="200" cy="200" r={r} stroke="#000" strokeWidth="0.8" opacity="0.3" />
+              ))}
+
+              {/* Groove highlight arcs — gives depth */}
+              {[170, 150, 130, 110, 90].map((r) => (
+                <circle key={`h-${r}`} cx="200" cy="200" r={r} stroke="#fff" strokeWidth="0.3" opacity="0.15" />
+              ))}
+
+              {/* Center label */}
+              <circle cx="200" cy="200" r="58" fill="#10b981" opacity="0.6" />
+              <circle cx="200" cy="200" r="56" stroke="#000" strokeWidth="0.5" opacity="0.2" />
+
+              {/* Label details */}
+              <circle cx="200" cy="200" r="45" stroke="#000" strokeWidth="0.3" opacity="0.15" />
+              <circle cx="200" cy="200" r="35" stroke="#000" strokeWidth="0.3" opacity="0.1" />
+
+              {/* Spindle hole */}
+              <circle cx="200" cy="200" r="6" fill="#050505" />
+              <circle cx="200" cy="200" r="8" stroke="#000" strokeWidth="0.5" opacity="0.3" />
+            </svg>
+          </div>
+
+          <div className="text-center mb-12 md:mb-16 relative z-10">
             <h2 className="font-syncopate text-3xl md:text-5xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white to-white/60 mb-3">
               THE CROWE COLLECTION
             </h2>
@@ -422,7 +458,7 @@ const App: React.FC = () => {
             </p>
           </div>
 
-          <div className={`grid grid-cols-1 ${albums.length > 0 ? 'sm:grid-cols-2 lg:grid-cols-4 max-w-4xl' : 'sm:grid-cols-2 max-w-lg'} gap-4 md:gap-6 w-full animate-in fade-in slide-in-from-bottom-4 duration-700`}>
+          <div className={`relative z-10 grid grid-cols-1 ${albums.length > 0 ? 'sm:grid-cols-2 lg:grid-cols-4 max-w-4xl' : 'sm:grid-cols-2 max-w-lg'} gap-4 md:gap-6 w-full animate-in fade-in slide-in-from-bottom-4 duration-700`}>
             {albums.length > 0 && (
               <>
                 {/* Browse Collection */}
@@ -502,7 +538,7 @@ const App: React.FC = () => {
           </div>
 
           {albums.length > 0 && (
-            <div className="mt-10 flex items-center gap-4">
+            <div className="relative z-10 mt-10 flex items-center gap-4">
               <p className="text-white/20 text-xs font-syncopate tracking-widest uppercase">{albums.length} records in your crate</p>
               {albums.some(a => a.isFavorite) && (
                 <button
