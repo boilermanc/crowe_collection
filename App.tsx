@@ -8,6 +8,7 @@ import CameraModal from './components/CameraModal';
 import SpinningRecord from './components/SpinningRecord';
 import AlbumDetailModal from './components/AlbumDetailModal';
 import PlaylistStudio from './components/PlaylistStudio';
+import { proxyImageUrl } from './services/imageProxy';
 
 type SortOption = 'recent' | 'year' | 'artist' | 'title' | 'value';
 
@@ -260,7 +261,7 @@ const App: React.FC = () => {
       <div className="fixed inset-0 z-[-1] overflow-hidden">
         <div 
           className="absolute inset-0 bg-cover bg-center transition-all duration-[3000ms] ease-in-out opacity-20 scale-110 blur-[80px] animate-[ken-burns_60s_linear_infinite]"
-          style={{ backgroundImage: `url(${heroBg})` }}
+          style={{ backgroundImage: `url(${proxyImageUrl(heroBg) || heroBg})` }}
         ></div>
         <div className="absolute inset-0 bg-gradient-to-b from-[#050505] via-transparent to-[#050505]"></div>
       </div>
