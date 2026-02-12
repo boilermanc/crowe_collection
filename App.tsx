@@ -500,11 +500,32 @@ const App: React.FC = () => {
           </div>
 
           {albums.length > 0 && (
-            <p className="mt-10 text-white/20 text-xs font-syncopate tracking-widest uppercase">{albums.length} records in your crate</p>
+            <div className="mt-10 flex items-center gap-4">
+              <p className="text-white/20 text-xs font-syncopate tracking-widest uppercase">{albums.length} records in your crate</p>
+              {albums.some(a => a.isFavorite) && (
+                <button
+                  onClick={() => { setFavoritesOnly(true); setCurrentView('list'); }}
+                  className="flex items-center gap-1.5 text-rose-400/60 hover:text-rose-400 transition-colors group"
+                  title="View favorites"
+                >
+                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                  </svg>
+                  <span className="text-xs font-syncopate tracking-widest uppercase">{albums.filter(a => a.isFavorite).length}</span>
+                </button>
+              )}
+            </div>
           )}
         </main>
       ) : currentView === 'list' ? (
-        <CollectionList albums={albums} onSelect={setSelectedAlbum} onDelete={handleDelete} />
+        <CollectionList
+          albums={albums}
+          onSelect={setSelectedAlbum}
+          onDelete={handleDelete}
+          onToggleFavorite={handleToggleFavorite}
+          favoritesOnly={favoritesOnly}
+          onToggleFavoritesFilter={() => setFavoritesOnly(prev => !prev)}
+        />
       ) : (
         <main className="max-w-7xl mx-auto px-4 md:px-6 mt-8">
           {albums.length === 0 ? (

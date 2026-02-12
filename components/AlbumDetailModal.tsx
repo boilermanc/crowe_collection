@@ -151,8 +151,11 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
 
             {/* Quick Actions */}
             <section className="flex flex-col sm:flex-row gap-4">
-              <button onClick={() => album.id && onToggleFavorite?.(album.id)} className={`flex-1 font-bold py-4 rounded-xl transition-all uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-3 ${album.isFavorite ? 'bg-emerald-600 text-white' : 'bg-white text-black hover:bg-emerald-500 hover:text-white'}`}>
-                {album.isFavorite ? 'Saved to Crate' : 'Add to Crate'}
+              <button onClick={() => album.id && onToggleFavorite?.(album.id)} className={`flex-1 font-bold py-4 rounded-xl transition-all uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-3 ${album.isFavorite ? 'bg-rose-600 text-white' : 'bg-white text-black hover:bg-rose-500 hover:text-white'}`}>
+                <svg className={`w-4 h-4 ${album.isFavorite ? 'fill-current' : ''}`} viewBox="0 0 24 24" fill={album.isFavorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2}>
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                </svg>
+                {album.isFavorite ? 'Favorited' : 'Add to Favorites'}
               </button>
               <button onClick={handlePlaySample} className="flex-1 border border-white/10 text-white font-bold py-4 rounded-xl hover:bg-white/10 transition-all uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-2">
                 Listen Sample

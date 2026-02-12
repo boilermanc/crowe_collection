@@ -7,9 +7,12 @@ interface CollectionListProps {
   albums: Album[];
   onSelect: (album: Album) => void;
   onDelete: (id: string) => void;
+  onToggleFavorite?: (albumId: string) => void;
+  favoritesOnly?: boolean;
+  onToggleFavoritesFilter?: () => void;
 }
 
-type SortField = 'title' | 'artist' | 'year' | 'genre' | 'value' | 'added' | 'condition' | 'plays';
+type SortField = 'favorite' | 'title' | 'artist' | 'year' | 'genre' | 'value' | 'added' | 'condition' | 'plays';
 type SortDir = 'asc' | 'desc';
 
 const CONDITION_ORDER: Record<string, number> = {
@@ -23,7 +26,7 @@ const CONDITION_ORDER: Record<string, number> = {
   'Poor': 7,
 };
 
-const CollectionList: React.FC<CollectionListProps> = ({ albums, onSelect, onDelete }) => {
+const CollectionList: React.FC<CollectionListProps> = ({ albums, onSelect, onDelete, onToggleFavorite, favoritesOnly, onToggleFavoritesFilter }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortField, setSortField] = useState<SortField>('title');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
@@ -33,12 +36,14 @@ const CollectionList: React.FC<CollectionListProps> = ({ albums, onSelect, onDel
       setSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
     } else {
       setSortField(field);
-      setSortDir(field === 'value' || field === 'added' || field === 'plays' ? 'desc' : 'asc');
+      setSortDir(field === 'value' || field === 'added' || field === 'plays' || field === 'favorite' ? 'desc' : 'asc');
     }
   };
 
   const sortedAlbums = useMemo(() => {
     let result = albums.filter(a => {
+      const matchesFavorite = !favoritesOnly || a.isFavorite;
+      if (!matchesFavorite) return false;
       if (!searchQuery) return true;
       const q = searchQuery.toLowerCase();
       return (
@@ -51,6 +56,9 @@ const CollectionList: React.FC<CollectionListProps> = ({ albums, onSelect, onDel
     result.sort((a, b) => {
       let cmp = 0;
       switch (sortField) {
+        case 'favorite':
+          cmp = (a.isFavorite ? 1 : 0) - (b.isFavorite ? 1 : 0);
+          break;
         case 'title':
           cmp = a.title.localeCompare(b.title);
           break;
@@ -80,7 +88,7 @@ const CollectionList: React.FC<CollectionListProps> = ({ albums, onSelect, onDel
     });
 
     return result;
-  }, [albums, searchQuery, sortField, sortDir]);
+  }, [albums, searchQuery, sortField, sortDir, favoritesOnly]);
 
   const SortArrow = ({ field }: { field: SortField }) => {
     if (sortField !== field) return null;
@@ -115,6 +123,18 @@ const CollectionList: React.FC<CollectionListProps> = ({ albums, onSelect, onDel
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </div>
+        {onToggleFavoritesFilter && (
+          <button
+            onClick={onToggleFavoritesFilter}
+            className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] uppercase tracking-widest transition-all border ${favoritesOnly ? 'bg-rose-500/20 border-rose-500/40 text-rose-400' : 'bg-white/5 border-white/10 text-white/40 hover:text-white/70'}`}
+            title={favoritesOnly ? 'Show all records' : 'Show favorites only'}
+          >
+            <svg className={`w-3.5 h-3.5 ${favoritesOnly ? 'fill-current' : ''}`} viewBox="0 0 24 24" fill={favoritesOnly ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2}>
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+            </svg>
+            Favorites
+          </button>
+        )}
         <span className="text-white/30 text-xs font-syncopate tracking-widest uppercase">
           {sortedAlbums.length} {sortedAlbums.length === 1 ? 'record' : 'records'}
         </span>
@@ -123,8 +143,14 @@ const CollectionList: React.FC<CollectionListProps> = ({ albums, onSelect, onDel
       {/* Table */}
       <div className="glass-morphism rounded-2xl border border-white/10 overflow-hidden">
         {/* Header row */}
-        <div className="grid grid-cols-[48px_1fr_1fr_72px_100px_80px] md:grid-cols-[56px_1.5fr_1fr_80px_120px_90px_100px_72px] gap-x-3 px-4 py-3 border-b border-white/10 text-[9px] font-syncopate tracking-widest uppercase">
+        <div className="grid grid-cols-[48px_28px_1fr_1fr_72px_100px_80px] md:grid-cols-[56px_32px_1.5fr_1fr_80px_120px_90px_100px_72px] gap-x-3 px-4 py-3 border-b border-white/10 text-[9px] font-syncopate tracking-widest uppercase">
           <div></div>
+          <div className={colHeaderClass('favorite')} onClick={() => handleSort('favorite')} title="Sort by favorites">
+            <svg className={`w-3.5 h-3.5 ${sortField === 'favorite' ? 'text-rose-400' : ''}`} viewBox="0 0 24 24" fill={sortField === 'favorite' ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2}>
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+            </svg>
+            <SortArrow field="favorite" />
+          </div>
           <div className={colHeaderClass('title')} onClick={() => handleSort('title')}>
             Title <SortArrow field="title" />
           </div>
@@ -162,7 +188,7 @@ const CollectionList: React.FC<CollectionListProps> = ({ albums, onSelect, onDel
               <div
                 key={album.id}
                 onClick={() => onSelect(album)}
-                className="group grid grid-cols-[48px_1fr_1fr_72px_100px_80px] md:grid-cols-[56px_1.5fr_1fr_80px_120px_90px_100px_72px] gap-x-3 px-4 py-2 items-center cursor-pointer list-row-hover transition-colors"
+                className="group grid grid-cols-[48px_28px_1fr_1fr_72px_100px_80px] md:grid-cols-[56px_32px_1.5fr_1fr_80px_120px_90px_100px_72px] gap-x-3 px-4 py-2 items-center cursor-pointer list-row-hover transition-colors"
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) => {
@@ -185,14 +211,23 @@ const CollectionList: React.FC<CollectionListProps> = ({ albums, onSelect, onDel
                   />
                 </div>
 
+                {/* Favorite heart */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (album.id && onToggleFavorite) onToggleFavorite(album.id);
+                  }}
+                  className={`flex items-center justify-center transition-all ${onToggleFavorite ? 'hover:scale-125' : ''}`}
+                  title={album.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                >
+                  <svg className={`w-4 h-4 transition-colors ${album.isFavorite ? 'text-rose-500 fill-current' : 'text-white/15 hover:text-rose-400'}`} viewBox="0 0 24 24" fill={album.isFavorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2}>
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                  </svg>
+                </button>
+
                 {/* Title */}
                 <div className="min-w-0">
                   <p className="text-white text-sm font-medium truncate">{album.title}</p>
-                  {album.isFavorite && (
-                    <svg className="w-3 h-3 text-emerald-500 fill-current inline-block mt-0.5" viewBox="0 0 24 24">
-                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-                    </svg>
-                  )}
                 </div>
 
                 {/* Artist */}
