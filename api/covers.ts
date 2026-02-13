@@ -41,13 +41,22 @@ async function searchMusicBrainz(artist: string, title: string): Promise<CoverRe
     if (!resp.ok) return [];
     const json = await resp.json();
     const releases = json.releases || [];
-    return releases
+    const candidates = releases
       .filter((r: any) => r.id)
       .map((r: any) => ({
         url: `https://coverartarchive.org/release/${r.id}/front-500`,
-        source: 'MusicBrainz',
+        source: 'MusicBrainz' as const,
         label: r.title || undefined,
       }));
+
+    // Validate URLs exist (Cover Art Archive returns 404 for releases without art)
+    const checks = await Promise.allSettled(
+      candidates.map((c: CoverResult) => fetch(c.url, { method: 'HEAD', redirect: 'follow' }))
+    );
+    return candidates.filter((_: CoverResult, i: number) => {
+      const result = checks[i];
+      return result.status === 'fulfilled' && result.value.ok;
+    });
   } catch {
     return [];
   }

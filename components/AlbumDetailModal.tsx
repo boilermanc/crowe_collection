@@ -43,6 +43,7 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
   const [loadingTrack, setLoadingTrack] = useState<number | null>(null);
   const [showCoverPicker, setShowCoverPicker] = useState(false);
   const [displayCoverUrl, setDisplayCoverUrl] = useState(album.cover_url);
+  const [uploadingCover, setUploadingCover] = useState(false);
 
   const handleTrackClick = useCallback(async (index: number, trackName: string) => {
     if (expandedTrack === index) {
@@ -97,12 +98,30 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
     return new Date(dateStr).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
   };
 
-  const handleCoverSelect = (url: string) => {
-    setDisplayCoverUrl(url);
-    if (album.id && onUpdateAlbum) {
-      onUpdateAlbum(album.id, { cover_url: url });
+  const handleCoverSelect = async (url: string) => {
+    if (!album.id) return;
+    setUploadingCover(true);
+    try {
+      const resp = await fetch('/api/upload-cover', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageUrl: url, albumId: album.id }),
+      });
+      if (resp.ok) {
+        const { publicUrl } = await resp.json();
+        setDisplayCoverUrl(publicUrl);
+        if (onUpdateAlbum) {
+          onUpdateAlbum(album.id, { cover_url: publicUrl });
+        }
+        setToastMessage('Cover art saved');
+      } else {
+        setToastMessage('Failed to save cover');
+      }
+    } catch {
+      setToastMessage('Failed to save cover');
+    } finally {
+      setUploadingCover(false);
     }
-    setToastMessage('Cover art updated');
   };
 
   return (
@@ -122,8 +141,16 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
         </button>
 
         <div className="w-full md:w-5/12 overflow-hidden bg-black flex items-center justify-center p-6 md:p-12 relative flex-shrink-0">
-             <button onClick={() => setShowCoverPicker(true)} className="relative group cursor-pointer z-10">
-               <img src={proxyImageUrl(displayCoverUrl)} alt={album.title} className="w-full h-auto max-h-[40vh] md:max-h-full object-contain rounded-md shadow-[0_0_100px_rgba(0,0,0,0.8)]" />
+             <button onClick={() => !uploadingCover && setShowCoverPicker(true)} className="relative group cursor-pointer z-10">
+               <img src={proxyImageUrl(displayCoverUrl)} alt={album.title} className={`w-full h-auto max-h-[40vh] md:max-h-full object-contain rounded-md shadow-[0_0_100px_rgba(0,0,0,0.8)] transition-opacity ${uploadingCover ? 'opacity-50' : ''}`} />
+               {uploadingCover ? (
+                 <div className="absolute inset-0 bg-black/60 rounded-md flex items-center justify-center">
+                   <div className="flex flex-col items-center gap-3">
+                     <SpinningRecord size="w-10 h-10" />
+                     <span className="text-white/80 text-[9px] font-syncopate tracking-widest uppercase">Saving cover...</span>
+                   </div>
+                 </div>
+               ) : (
                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition-all duration-300 rounded-md flex items-center justify-center opacity-0 group-hover:opacity-100">
                  <div className="flex flex-col items-center gap-2">
                    <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -133,6 +160,7 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
                    <span className="text-white/80 text-[9px] font-syncopate tracking-widest uppercase">Tap to change cover</span>
                  </div>
                </div>
+               )}
              </button>
              <div className="absolute -bottom-10 -left-10 text-[80px] md:text-[120px] font-syncopate font-black text-white/5 select-none pointer-events-none uppercase whitespace-nowrap">
                {album.genre?.split(' ')[0]}
