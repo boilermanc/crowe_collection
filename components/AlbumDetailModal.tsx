@@ -1,7 +1,10 @@
 
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { Album } from '../types';
 import { proxyImageUrl } from '../services/imageProxy';
+import { geminiService } from '../services/geminiService';
+import SpinningRecord from './SpinningRecord';
+import CoverPicker from './CoverPicker';
 
 interface AlbumDetailModalProps {
   album: Album;
@@ -35,6 +38,27 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [notes, setNotes] = useState(album.personal_notes || '');
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [expandedTrack, setExpandedTrack] = useState<number | null>(null);
+  const [lyricsCache, setLyricsCache] = useState<Record<number, { lyrics: string | null; syncedLyrics: string | null }>>({});
+  const [loadingTrack, setLoadingTrack] = useState<number | null>(null);
+  const [showCoverPicker, setShowCoverPicker] = useState(false);
+  const [displayCoverUrl, setDisplayCoverUrl] = useState(album.cover_url);
+
+  const handleTrackClick = useCallback(async (index: number, trackName: string) => {
+    if (expandedTrack === index) {
+      setExpandedTrack(null);
+      return;
+    }
+
+    setExpandedTrack(index);
+
+    if (lyricsCache[index] !== undefined) return;
+
+    setLoadingTrack(index);
+    const result = await geminiService.fetchLyrics(album.artist, trackName, album.title);
+    setLyricsCache(prev => ({ ...prev, [index]: result }));
+    setLoadingTrack(null);
+  }, [expandedTrack, lyricsCache, album.artist, album.title]);
 
   useEffect(() => {
     if (toastMessage) {
@@ -73,6 +97,14 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
     return new Date(dateStr).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
   };
 
+  const handleCoverSelect = (url: string) => {
+    setDisplayCoverUrl(url);
+    if (album.id && onUpdateAlbum) {
+      onUpdateAlbum(album.id, { cover_url: url });
+    }
+    setToastMessage('Cover art updated');
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-2 md:p-8 backdrop-blur-xl animate-in fade-in duration-300">
       {toastMessage && (
@@ -90,7 +122,18 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
         </button>
 
         <div className="w-full md:w-5/12 overflow-hidden bg-black flex items-center justify-center p-6 md:p-12 relative flex-shrink-0">
-             <img src={proxyImageUrl(album.cover_url)} alt={album.title} className="w-full h-auto max-h-[40vh] md:max-h-full object-contain rounded-md shadow-[0_0_100px_rgba(0,0,0,0.8)] z-10" />
+             <button onClick={() => setShowCoverPicker(true)} className="relative group cursor-pointer z-10">
+               <img src={proxyImageUrl(displayCoverUrl)} alt={album.title} className="w-full h-auto max-h-[40vh] md:max-h-full object-contain rounded-md shadow-[0_0_100px_rgba(0,0,0,0.8)]" />
+               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition-all duration-300 rounded-md flex items-center justify-center opacity-0 group-hover:opacity-100">
+                 <div className="flex flex-col items-center gap-2">
+                   <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                     <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                     <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
+                   </svg>
+                   <span className="text-white/80 text-[9px] font-syncopate tracking-widest uppercase">Tap to change cover</span>
+                 </div>
+               </div>
+             </button>
              <div className="absolute -bottom-10 -left-10 text-[80px] md:text-[120px] font-syncopate font-black text-white/5 select-none pointer-events-none uppercase whitespace-nowrap">
                {album.genre?.split(' ')[0]}
              </div>
@@ -200,9 +243,39 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
               {album.tracklist && (
                 <section>
                   <h4 className="text-white/30 text-[9px] font-syncopate tracking-[0.3em] uppercase mb-4">Manifest</h4>
-                  <div className="space-y-1">
+                  <div className="space-y-0">
                     {album.tracklist.map((t, i) => (
-                      <div key={i} className="text-[10px] py-1 text-white/60 hover:text-white truncate border-b border-white/5">{t}</div>
+                      <div key={i}>
+                        <button
+                          onClick={() => handleTrackClick(i, t)}
+                          className="w-full text-left flex items-center gap-2 text-[10px] py-1.5 text-white/60 hover:text-white border-b border-white/5 transition-colors group"
+                        >
+                          <svg className="w-3 h-3 flex-shrink-0 text-white/20 group-hover:text-emerald-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                          </svg>
+                          <span className="truncate flex-1">{t}</span>
+                          <svg className={`w-3 h-3 flex-shrink-0 text-white/20 transition-transform duration-200 ${expandedTrack === i ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+                        <div
+                          className="overflow-hidden transition-all duration-300 ease-in-out"
+                          style={{ maxHeight: expandedTrack === i ? '400px' : '0px', opacity: expandedTrack === i ? 1 : 0 }}
+                        >
+                          <div className="py-3 pl-5">
+                            {loadingTrack === i ? (
+                              <div className="flex items-center gap-3 text-white/30 text-xs">
+                                <SpinningRecord size="w-5 h-5" />
+                                Fetching lyrics…
+                              </div>
+                            ) : lyricsCache[i]?.lyrics ? (
+                              <p className="text-white/50 text-xs whitespace-pre-line leading-relaxed">{lyricsCache[i].lyrics}</p>
+                            ) : lyricsCache[i] !== undefined ? (
+                              <p className="text-white/30 text-xs italic">Lyrics not found</p>
+                            ) : null}
+                          </div>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </section>
@@ -255,6 +328,16 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
           </div>
         </div>
       </div>
+
+      {showCoverPicker && (
+        <CoverPicker
+          artist={album.artist}
+          title={album.title}
+          currentCoverUrl={displayCoverUrl}
+          onSelectCover={handleCoverSelect}
+          onClose={() => setShowCoverPicker(false)}
+        />
+      )}
     </div>
   );
 };

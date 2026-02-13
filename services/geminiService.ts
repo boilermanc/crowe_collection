@@ -60,12 +60,49 @@ export const geminiService = {
     }
   },
 
+  async fetchLyrics(artist: string, track: string, album?: string): Promise<{ lyrics: string | null; syncedLyrics: string | null }> {
+    try {
+      const response = await fetch('/api/lyrics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ artist, track, album })
+      });
+
+      if (!response.ok) return { lyrics: null, syncedLyrics: null };
+      const data = await response.json();
+      return {
+        lyrics: typeof data.lyrics === 'string' ? data.lyrics : null,
+        syncedLyrics: typeof data.syncedLyrics === 'string' ? data.syncedLyrics : null,
+      };
+    } catch (error) {
+      console.error('Lyrics Fetch Error:', error);
+      return { lyrics: null, syncedLyrics: null };
+    }
+  },
+
+  async fetchCovers(artist: string, title: string): Promise<Array<{ url: string; source: string; label?: string }>> {
+    try {
+      const response = await fetch('/api/covers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ artist, title })
+      });
+
+      if (!response.ok) return [];
+      const data = await response.json();
+      return Array.isArray(data.covers) ? data.covers : [];
+    } catch (error) {
+      console.error('Cover Fetch Error:', error);
+      return [];
+    }
+  },
+
   async generatePlaylist(albums: Album[], mood: string, type: 'album' | 'side' | 'song'): Promise<Playlist> {
     const response = await fetch('/api/playlist', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        albums: albums.map(a => ({ id: a.id, artist: a.artist, title: a.title, genre: a.genre })),
+        albums: albums.map(a => ({ id: a.id, artist: a.artist, title: a.title, genre: a.genre, tracklist: a.tracklist })),
         mood,
         type
       })

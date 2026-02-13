@@ -34,6 +34,14 @@ const PlaylistStudio: React.FC<PlaylistStudioProps> = ({ albums, onClose }) => {
     window.print();
   };
 
+  const typeSubtitle = (item: PlaylistItem) => {
+    switch (item.type) {
+      case 'album': return '\u25B6 Play Full Album';
+      case 'side': return `${item.itemTitle} \u00B7 ${item.artist} \u2014 ${item.albumTitle}`;
+      case 'song': return `Track \u00B7 ${item.artist} \u2014 ${item.albumTitle}`;
+    }
+  };
+
   const currentItem = playlist?.items[currentIndex];
 
   if (step === 'loading') {
@@ -65,8 +73,10 @@ const PlaylistStudio: React.FC<PlaylistStudioProps> = ({ albums, onClose }) => {
               <img src={proxyImageUrl(item.cover_url)} className="w-24 h-24 md:w-40 md:h-40 object-cover border-4 border-black shadow-[8px_8px_0_rgba(0,0,0,0.1)]" />
               <div>
                 <span className="text-sm md:text-lg font-black opacity-20 block mb-1">TRACK {idx + 1}</span>
-                <h3 className="text-2xl md:text-4xl font-bold leading-tight">{item.itemTitle}</h3>
-                <p className="text-lg md:text-2xl opacity-60 font-medium">{item.artist} — {item.albumTitle}</p>
+                <h3 className="text-2xl md:text-4xl font-bold leading-tight">
+                  {focus === 'album' ? item.albumTitle : item.itemTitle}
+                </h3>
+                <p className="text-lg md:text-2xl opacity-60 font-medium">{typeSubtitle(item)}</p>
               </div>
             </div>
           ))}
@@ -99,14 +109,19 @@ const PlaylistStudio: React.FC<PlaylistStudioProps> = ({ albums, onClose }) => {
               <section>
                 <label className="text-white/40 font-syncopate text-[9px] tracking-widest uppercase mb-4 block">SELECT FOCUS</label>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
-                  {(['album', 'side', 'song'] as const).map((t) => (
-                    <button 
-                      key={t}
-                      onClick={() => setFocus(t)}
-                      className={`p-5 md:p-6 rounded-2xl border text-left transition-all ${focus === t ? 'bg-pink-600 border-pink-500 text-white shadow-xl scale-[1.02]' : 'bg-white/5 border-white/10 text-white/40 hover:border-white/20'}`}
+                  {([
+                    { key: 'album' as const, desc: 'Full records, front to back', hint: '(up to 8 albums)' },
+                    { key: 'side' as const, desc: 'Curate by Side A or Side B', hint: '(up to 12 sides)' },
+                    { key: 'song' as const, desc: 'Individual track picks', hint: '(up to 15 songs)' },
+                  ]).map(({ key, desc, hint }) => (
+                    <button
+                      key={key}
+                      onClick={() => setFocus(key)}
+                      className={`p-5 md:p-6 rounded-2xl border text-left transition-all ${focus === key ? 'bg-pink-600 border-pink-500 text-white shadow-xl scale-[1.02]' : 'bg-white/5 border-white/10 text-white/40 hover:border-white/20'}`}
                     >
-                      <h4 className="font-syncopate text-[10px] md:text-xs tracking-widest uppercase font-bold mb-1">{t}s</h4>
-                      <p className="text-[9px] md:text-[10px] opacity-60">Full immersion</p>
+                      <h4 className="font-syncopate text-[10px] md:text-xs tracking-widest uppercase font-bold mb-1">{key}s</h4>
+                      <p className="text-[9px] md:text-[10px] opacity-60">{desc}</p>
+                      <p className="text-[8px] md:text-[9px] opacity-40 mt-1">{hint}</p>
                     </button>
                   ))}
                 </div>
@@ -140,8 +155,12 @@ const PlaylistStudio: React.FC<PlaylistStudioProps> = ({ albums, onClose }) => {
 
               <div className="text-center space-y-3 md:space-y-4 mb-8 md:mb-12 px-4">
                 <span className="text-pink-500 font-syncopate text-[9px] md:text-[10px] tracking-widest uppercase font-bold">{focus} curation</span>
-                <h3 className="text-2xl md:text-4xl font-bold text-white leading-tight break-words">{currentItem?.itemTitle}</h3>
-                <p className="text-lg md:text-xl text-white/60 font-medium truncate">{currentItem?.artist} — {currentItem?.albumTitle}</p>
+                <h3 className="text-2xl md:text-4xl font-bold text-white leading-tight break-words">
+                  {focus === 'album' ? currentItem?.albumTitle : currentItem?.itemTitle}
+                </h3>
+                <p className="text-lg md:text-xl text-white/60 font-medium truncate">
+                  {currentItem && typeSubtitle(currentItem)}
+                </p>
               </div>
 
               <div className="flex items-center justify-center gap-6 md:gap-8">
@@ -202,8 +221,10 @@ const PlaylistStudio: React.FC<PlaylistStudioProps> = ({ albums, onClose }) => {
                   <span className="font-syncopate text-white/10 text-lg md:text-xl font-black w-8 md:w-12">{idx + 1}</span>
                   <img src={proxyImageUrl(item.cover_url)} className="w-16 h-16 md:w-20 md:h-20 rounded-md object-cover shadow-lg flex-shrink-0" />
                   <div className="min-w-0">
-                    <h4 className="text-sm md:text-xl font-bold text-white group-hover:text-pink-500 transition-colors truncate">{item.itemTitle}</h4>
-                    <p className="text-xs md:text-sm text-white/40 font-medium truncate">{item.artist}</p>
+                    <h4 className="text-sm md:text-xl font-bold text-white group-hover:text-pink-500 transition-colors truncate">
+                      {focus === 'album' ? item.albumTitle : item.itemTitle}
+                    </h4>
+                    <p className="text-xs md:text-sm text-white/40 font-medium truncate">{typeSubtitle(item)}</p>
                   </div>
                 </div>
               ))}
