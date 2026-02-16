@@ -15,7 +15,8 @@ import Landing from './pages/Landing';
 import { proxyImageUrl } from './services/imageProxy';
 import { useToast } from './contexts/ToastContext';
 import { useAuthContext } from './contexts/AuthContext';
-import { getProfile, createProfile } from './services/profileService';
+import { getProfile, createProfile, hasCompletedOnboarding } from './services/profileService';
+import OnboardingWizard from './components/OnboardingWizard';
 
 const PAGE_SIZE = 40;
 
@@ -50,6 +51,7 @@ const App: React.FC = () => {
   }, [currentView]);
 
   const [gridPage, setGridPage] = useState(1);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isSupabaseReady = !!supabase;
 
@@ -67,7 +69,7 @@ const App: React.FC = () => {
     }
   }, [isSupabaseReady]);
 
-  // Auto-create profile row on first signup
+  // Auto-create profile row on first signup & check onboarding
   const profileCheckedRef = useRef(false);
   useEffect(() => {
     if (!user || profileCheckedRef.current) return;
@@ -78,6 +80,12 @@ const App: React.FC = () => {
         const existing = await getProfile(user.id);
         if (!existing) {
           await createProfile({ id: user.id });
+          setShowOnboarding(true);
+          return;
+        }
+        const completed = await hasCompletedOnboarding(user.id);
+        if (!completed) {
+          setShowOnboarding(true);
         }
       } catch (err) {
         console.error('Failed to ensure profile exists:', err);
@@ -318,6 +326,24 @@ const App: React.FC = () => {
   // Not signed in — show landing page with auth dropdown
   if (!user) {
     return <Landing />;
+  }
+
+  // Onboarding wizard for new/incomplete users
+  if (showOnboarding) {
+    return (
+      <OnboardingWizard
+        userId={user.id}
+        onComplete={(action) => {
+          setShowOnboarding(false);
+          if (action === 'add') {
+            setCurrentView('landing');
+            setIsCameraOpen(true);
+          } else {
+            setCurrentView('landing');
+          }
+        }}
+      />
+    );
   }
 
   // Authenticated user with stale public-landing view — show in-app landing
