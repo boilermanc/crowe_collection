@@ -1,6 +1,7 @@
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { useToast } from '../contexts/ToastContext';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 interface CameraModalProps {
   onCapture: (base64: string) => void;
@@ -9,9 +10,13 @@ interface CameraModalProps {
 
 const CameraModal: React.FC<CameraModalProps> = ({ onCapture, onClose }) => {
   const { showToast } = useToast();
+  const modalRef = useRef<HTMLDivElement>(null);
+  const stableOnClose = useCallback(onClose, [onClose]);
+  useFocusTrap(modalRef, stableOnClose);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
 
   useEffect(() => {
     let activeStream: MediaStream | null = null;
@@ -40,7 +45,7 @@ const CameraModal: React.FC<CameraModalProps> = ({ onCapture, onClose }) => {
         activeStream.getTracks().forEach(track => track.stop());
       }
     };
-  }, []);
+  }, [showToast]);
 
   const captureImage = () => {
     if (videoRef.current && canvasRef.current) {
@@ -58,7 +63,7 @@ const CameraModal: React.FC<CameraModalProps> = ({ onCapture, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90 p-4">
+    <div ref={modalRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Scanning vinyl" className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90 p-4 outline-none">
       <div className="relative w-full max-w-xl glass-morphism rounded-3xl overflow-hidden neon-border border-pink-500/30">
         <div className="p-4 flex justify-between items-center border-b border-white/10">
           <h2 className="font-syncopate text-pink-500 font-bold tracking-widest text-sm">SCANNING VINYL</h2>
@@ -74,7 +79,7 @@ const CameraModal: React.FC<CameraModalProps> = ({ onCapture, onClose }) => {
             ref={videoRef} 
             autoPlay 
             playsInline 
-            className="w-full h-full object-cover scale-x-[-1]"
+            className={`w-full h-full object-cover${facingMode === 'user' ? ' scale-x-[-1]' : ''}`}
           />
           {!isStreaming && <div className="animate-pulse text-white/50">Initializing Lens...</div>}
           

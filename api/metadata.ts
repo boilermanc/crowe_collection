@@ -1,7 +1,13 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { GoogleGenAI, Type } from '@google/genai';
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+import { Type } from '@google/genai';
+import { requireAuth } from './_auth';
+import { cors } from './_cors';
+import { USER_AGENT } from './_constants';
+import { ai } from './_gemini';
+import { searchItunes } from './_itunes';
+import { rateLimit } from './_rateLimit';
+import { validateStringLength } from './_validate';
+import { sanitizePromptInput } from './_sanitize';
 
 export const config = {
   maxDuration: 60,
@@ -11,38 +17,41 @@ async function findCoverUrl(artist: string, title: string, geminiUrl?: string): 
   // Try the URL Gemini returned
   if (geminiUrl) {
     try {
-      const check = await fetch(geminiUrl, { method: 'HEAD', headers: { 'User-Agent': 'CroweCollection/1.0' } });
+      const check = await fetch(geminiUrl, { method: 'HEAD', headers: { 'User-Agent': USER_AGENT } });
       if (check.ok) return geminiUrl;
     } catch { /* fall through */ }
   }
 
   // Fallback: iTunes Search API (free, no auth, reliable artwork)
-  try {
-    const query = encodeURIComponent(`${artist} ${title}`);
-    const resp = await fetch(`https://itunes.apple.com/search?term=${query}&entity=album&limit=1`);
-    if (resp.ok) {
-      const json = await resp.json();
-      const artwork = json.results?.[0]?.artworkUrl100;
-      if (artwork) {
-        // Upscale from 100x100 to 600x600
-        return artwork.replace('100x100bb', '600x600bb');
-      }
-    }
-  } catch { /* fall through */ }
+  const results = await searchItunes(artist, title, 1);
+  if (results.length > 0) return results[0].url;
 
   return '';
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (cors(req, res, 'POST')) return;
+  if (!requireAuth(req, res)) return;
+  if (rateLimit(req, res)) return;
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const { artist, title } = req.body;
-    if (!artist || !title || typeof artist !== 'string' || typeof title !== 'string') {
+    const { artist: rawArtist, title: rawTitle } = req.body;
+    if (!rawArtist || !rawTitle || typeof rawArtist !== 'string' || typeof rawTitle !== 'string') {
       return res.status(400).json({ error: 'Missing artist or title' });
     }
+
+    const artistErr = validateStringLength(rawArtist, 500, 'artist');
+    if (artistErr) return res.status(400).json({ error: artistErr });
+    const titleErr = validateStringLength(rawTitle, 500, 'title');
+    if (titleErr) return res.status(400).json({ error: titleErr });
+
+    // Sanitize before prompt interpolation to prevent prompt injection
+    const artist = sanitizePromptInput(rawArtist, 500);
+    const title = sanitizePromptInput(rawTitle, 500);
 
     const prompt = `Search for the official high-quality album details for "${title}" by "${artist}".
       I need:
@@ -126,6 +135,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json(data);
   } catch (error) {
     console.error('Gemini Metadata Error:', error);
-    return res.status(200).json({ artist: req.body.artist, title: req.body.title, year: 'Unknown', genre: 'Unknown' });
+    return res.status(500).json({ error: 'Failed to fetch metadata' });
   }
 }

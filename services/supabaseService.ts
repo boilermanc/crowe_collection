@@ -1,9 +1,9 @@
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { Album } from '../types';
+import { Album, NewAlbum } from '../types';
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Fix: Export the supabase variable so it can be accessed in App.tsx
 export let supabase: SupabaseClient | null = null;
@@ -15,9 +15,15 @@ if (supabaseUrl && supabaseAnonKey) {
   console.warn("Supabase credentials missing. Database functionality will be disabled until SUPABASE_URL and SUPABASE_ANON_KEY are set in environment variables.");
 }
 
+function assertClient() {
+  if (!supabase) {
+    throw new Error('Supabase client is not initialized');
+  }
+}
+
 export const supabaseService = {
   async getAlbums(): Promise<Album[]> {
-    if (!supabase) return [];
+    assertClient();
     
     const { data, error } = await supabase
       .from('albums')
@@ -36,10 +42,20 @@ export const supabaseService = {
   },
 
   async uploadPhoto(base64Data: string): Promise<string | null> {
-    if (!supabase) return null;
+    assertClient();
     
     try {
-      const fileName = `${crypto.randomUUID()}.jpg`;
+      const mimeMatch = base64Data.match(/^data:(image\/\w+);base64,/);
+      const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+      const extMap: Record<string, string> = {
+        'image/jpeg': '.jpg',
+        'image/png': '.png',
+        'image/webp': '.webp',
+        'image/gif': '.gif',
+      };
+      const ext = extMap[mimeType] || '.jpg';
+
+      const fileName = `${crypto.randomUUID()}${ext}`;
       const base64Content = base64Data.split(',')[1];
       const byteCharacters = atob(base64Content);
       const byteNumbers = new Array(byteCharacters.length);
@@ -47,7 +63,7 @@ export const supabaseService = {
         byteNumbers[i] = byteCharacters.charCodeAt(i);
       }
       const byteArray = new Uint8Array(byteNumbers);
-      const blob = new Blob([byteArray], { type: 'image/jpeg' });
+      const blob = new Blob([byteArray], { type: mimeType });
 
       const { data, error } = await supabase.storage
         .from('album-photos')
@@ -66,15 +82,19 @@ export const supabaseService = {
     }
   },
 
-  async saveAlbum(album: Album): Promise<Album> {
-    if (!supabase) throw new Error("Supabase not initialized");
+  async saveAlbum(album: NewAlbum): Promise<Album> {
+    assertClient();
     
     let photoUrl: string | undefined = undefined;
 
     if (album.original_photo_url && album.original_photo_url.startsWith('data:image')) {
       const uploadedUrl = await this.uploadPhoto(album.original_photo_url);
-      if (uploadedUrl) photoUrl = uploadedUrl;
-      // If upload fails, don't store the raw base64 — it's too large for a text column
+      if (uploadedUrl) {
+        photoUrl = uploadedUrl;
+      } else {
+        console.warn('Failed to upload original photo to Storage; falling back to base64');
+        photoUrl = album.original_photo_url;
+      }
     } else if (album.original_photo_url) {
       photoUrl = album.original_photo_url;
     }
@@ -111,12 +131,26 @@ export const supabaseService = {
   },
 
   async updateAlbum(id: string, updates: Partial<Album>): Promise<void> {
-    if (!supabase) return;
-    
-    const { isFavorite, ...rest } = updates;
-    const dbUpdates: Record<string, unknown> = { ...rest };
-    if (isFavorite !== undefined) {
-      dbUpdates.is_favorite = isFavorite;
+    assertClient();
+
+    // Allowlist of fields that can be written to the database.
+    // Prevents client-only or protected columns (id, created_at) from being
+    // overwritten via the ...rest spread that was here before.
+    const UPDATABLE_FIELDS: (keyof NewAlbum)[] = [
+      'title', 'artist', 'year', 'genre', 'cover_url', 'original_photo_url',
+      'description', 'tracklist', 'tags', 'condition', 'personal_notes',
+      'price_low', 'price_median', 'price_high', 'play_count',
+      'discogs_url', 'musicbrainz_url', 'sample_url',
+    ];
+
+    const dbUpdates: Record<string, unknown> = {};
+    for (const key of UPDATABLE_FIELDS) {
+      if (key in updates) {
+        dbUpdates[key] = updates[key];
+      }
+    }
+    if (updates.isFavorite !== undefined) {
+      dbUpdates.is_favorite = updates.isFavorite;
     }
 
     const { error } = await supabase
@@ -131,7 +165,7 @@ export const supabaseService = {
   },
 
   async deleteAlbum(id: string): Promise<void> {
-    if (!supabase) return;
+    assertClient();
     
     const { error } = await supabase
       .from('albums')

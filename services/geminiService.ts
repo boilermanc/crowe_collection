@@ -1,5 +1,10 @@
 
-import { Album, Playlist, PlaylistItem } from '../types';
+import { Album, NewAlbum, Playlist, PlaylistItem, RawPlaylistItem } from '../types';
+
+const authHeaders: Record<string, string> = {
+  'Content-Type': 'application/json',
+  ...(import.meta.env.VITE_API_SECRET ? { Authorization: `Bearer ${import.meta.env.VITE_API_SECRET}` } : {}),
+};
 
 export const geminiService = {
   async identifyAlbum(base64DataUrl: string): Promise<{ artist: string; title: string } | null> {
@@ -9,7 +14,7 @@ export const geminiService = {
 
       const response = await fetch('/api/identify', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders,
         body: JSON.stringify({ base64Data, mimeType })
       });
 
@@ -25,11 +30,11 @@ export const geminiService = {
     }
   },
 
-  async fetchAlbumMetadata(artist: string, title: string): Promise<Partial<Album>> {
+  async fetchAlbumMetadata(artist: string, title: string): Promise<Partial<NewAlbum>> {
     try {
       const response = await fetch('/api/metadata', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders,
         body: JSON.stringify({ artist, title })
       });
 
@@ -64,7 +69,7 @@ export const geminiService = {
     try {
       const response = await fetch('/api/lyrics', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders,
         body: JSON.stringify({ artist, track, album })
       });
 
@@ -84,13 +89,32 @@ export const geminiService = {
     try {
       const response = await fetch('/api/covers', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders,
         body: JSON.stringify({ artist, title })
       });
 
       if (!response.ok) return [];
       const data = await response.json();
-      return Array.isArray(data.covers) ? data.covers : [];
+      if (!Array.isArray(data.covers)) return [];
+      return data.covers.filter((item: unknown) => {
+        if (!item || typeof item !== 'object') {
+          console.warn('fetchCovers: skipping non-object item', item);
+          return false;
+        }
+        const obj = item as Record<string, unknown>;
+        if (typeof obj.url !== 'string' || !obj.url.match(/^https?:\/\//)) {
+          console.warn('fetchCovers: skipping item with invalid url', obj.url);
+          return false;
+        }
+        if (typeof obj.source !== 'string' || obj.source.length === 0) {
+          console.warn('fetchCovers: skipping item with invalid source', obj.source);
+          return false;
+        }
+        if (obj.label !== undefined && typeof obj.label !== 'string') {
+          obj.label = undefined;
+        }
+        return true;
+      });
     } catch (error) {
       console.error('Cover Fetch Error:', error);
       return [];
@@ -98,42 +122,47 @@ export const geminiService = {
   },
 
   async generatePlaylist(albums: Album[], mood: string, type: 'album' | 'side' | 'song'): Promise<Playlist> {
-    const response = await fetch('/api/playlist', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        albums: albums.map(a => ({ id: a.id, artist: a.artist, title: a.title, genre: a.genre, tags: a.tags, tracklist: a.tracklist })),
-        mood,
-        type
-      })
-    });
+    try {
+      const response = await fetch('/api/playlist', {
+        method: 'POST',
+        headers: authHeaders,
+        body: JSON.stringify({
+          albums: albums.map(a => ({ id: a.id, artist: a.artist, title: a.title, genre: a.genre, tags: a.tags, tracklist: a.tracklist })),
+          mood,
+          type
+        })
+      });
 
-    if (!response.ok) throw new Error('Failed to generate playlist');
+      if (!response.ok) throw new Error('Failed to generate playlist');
 
-    const result = await response.json();
-    if (!result || typeof result !== 'object') {
-      throw new Error('Invalid playlist response');
+      const result = await response.json();
+      if (!result || typeof result !== 'object') {
+        throw new Error('Invalid playlist response');
+      }
+      const rawItems = Array.isArray(result.items) ? result.items : [];
+      const itemsWithArt: PlaylistItem[] = rawItems
+        .filter((item: RawPlaylistItem) =>
+          item && typeof item.albumId === 'string' && typeof item.artist === 'string' &&
+          typeof item.albumTitle === 'string' && typeof item.itemTitle === 'string'
+        )
+        .map((item: RawPlaylistItem) => {
+          const album = albums.find(a => a.id === item.albumId);
+          if (!album) return null;
+          return {
+            albumId: item.albumId,
+            artist: item.artist,
+            albumTitle: item.albumTitle,
+            itemTitle: item.itemTitle,
+            cover_url: album.cover_url || '',
+            type,
+          };
+        })
+        .filter((item): item is PlaylistItem => item !== null);
+
+      return { id: crypto.randomUUID(), name: typeof result.playlistName === 'string' ? result.playlistName : 'Crate Mix', mood, items: itemsWithArt };
+    } catch (error) {
+      console.error('Playlist Generation Error:', error);
+      return { id: crypto.randomUUID(), name: 'Crate Mix', mood, items: [] };
     }
-    const rawItems = Array.isArray(result.items) ? result.items : [];
-    const itemsWithArt: PlaylistItem[] = rawItems
-      .filter((item: any) =>
-        item && typeof item.albumId === 'string' && typeof item.artist === 'string' &&
-        typeof item.albumTitle === 'string' && typeof item.itemTitle === 'string'
-      )
-      .map((item: any) => {
-        const album = albums.find(a => a.id === item.albumId);
-        if (!album) return null;
-        return {
-          albumId: item.albumId,
-          artist: item.artist,
-          albumTitle: item.albumTitle,
-          itemTitle: item.itemTitle,
-          cover_url: album.cover_url || '',
-          type,
-        };
-      })
-      .filter((item): item is PlaylistItem => item !== null);
-
-    return { id: crypto.randomUUID(), name: typeof result.playlistName === 'string' ? result.playlistName : 'Crate Mix', mood, items: itemsWithArt };
   }
 };

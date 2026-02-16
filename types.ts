@@ -1,6 +1,6 @@
 
-export interface Album {
-  id?: string;
+/** Shape of an album before it has been persisted (no DB-generated fields). */
+export interface NewAlbum {
   artist: string;
   title: string;
   year?: string;
@@ -11,7 +11,6 @@ export interface Album {
   tracklist?: string[];
   tags?: string[];
   isFavorite?: boolean;
-  created_at?: string;
   discogs_url?: string;
   musicbrainz_url?: string;
   sample_url?: string;
@@ -22,6 +21,20 @@ export interface Album {
   price_median?: number;
   price_high?: number;
   play_count?: number;
+}
+
+/** A saved album — always has an id and created_at from the database. */
+export interface Album extends NewAlbum {
+  id: string;
+  created_at: string;
+}
+
+/** Unvalidated playlist item from Gemini / API response (before enrichment) */
+export interface RawPlaylistItem {
+  albumId?: string;
+  artist?: string;
+  albumTitle?: string;
+  itemTitle?: string;
 }
 
 export interface PlaylistItem {

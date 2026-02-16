@@ -1,4 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { cors } from './_cors';
+import { USER_AGENT } from './_constants';
 
 export const config = {
   maxDuration: 15,
@@ -11,7 +13,17 @@ const ALLOWED_HOSTS = [
   'images.unsplash.com',
 ];
 
+// Auth intentionally skipped: this endpoint is called via <img> src attributes in the
+// browser, which cannot attach Authorization headers. Security is enforced by the
+// ALLOWED_HOSTS allowlist above, which restricts proxying to known image CDNs only.
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (cors(req, res, 'GET')) return;
+
+  if (req.method !== 'GET') {
+    res.setHeader('Allow', 'GET');
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
   const { url } = req.query;
 
   if (!url || typeof url !== 'string') {
@@ -32,7 +44,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const upstream = await fetch(url, {
       headers: {
-        'User-Agent': 'CroweCollection/1.0',
+        'User-Agent': USER_AGENT,
         'Accept': 'image/*',
       },
     });
@@ -41,7 +53,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(upstream.status).json({ error: 'Upstream fetch failed' });
     }
 
-    const contentType = upstream.headers.get('content-type') || 'image/jpeg';
+    const contentType = upstream.headers.get('content-type');
+    if (!contentType || !contentType.startsWith('image/')) {
+      return res.status(502).json({ error: 'Upstream returned non-image content type' });
+    }
+
     const buffer = Buffer.from(await upstream.arrayBuffer());
 
     res.setHeader('Content-Type', contentType);

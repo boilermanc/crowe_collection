@@ -1,10 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { Album, Playlist, PlaylistItem } from '../types';
 import { geminiService } from '../services/geminiService';
 import SpinningRecord from './SpinningRecord';
 import { proxyImageUrl } from '../services/imageProxy';
 import { useToast } from '../contexts/ToastContext';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 interface PlaylistStudioProps {
   albums: Album[];
@@ -13,6 +14,9 @@ interface PlaylistStudioProps {
 
 const PlaylistStudio: React.FC<PlaylistStudioProps> = ({ albums, onClose }) => {
   const { showToast } = useToast();
+  const modalRef = useRef<HTMLDivElement>(null);
+  const stableOnClose = useCallback(onClose, [onClose]);
+  useFocusTrap(modalRef, stableOnClose);
   const [step, setStep] = useState<'config' | 'loading' | 'player' | 'manifest'>('config');
   const [mood, setMood] = useState('');
   const [focus, setFocus] = useState<'album' | 'side' | 'song'>('song');
@@ -30,6 +34,7 @@ const PlaylistStudio: React.FC<PlaylistStudioProps> = ({ albums, onClose }) => {
         return;
       }
       setPlaylist(result);
+      setCurrentIndex(0);
       setStep('player');
     } catch (error) {
       showToast("The Vibe Engine hit a snag. Try again!", "error");
@@ -53,7 +58,7 @@ const PlaylistStudio: React.FC<PlaylistStudioProps> = ({ albums, onClose }) => {
 
   if (step === 'loading') {
     return (
-      <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-8">
+      <div ref={modalRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Playlist Studio - generating" className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-8 outline-none">
         <SpinningRecord size="w-48 h-48 md:w-64 md:h-64" labelColor="bg-indigo-600" />
         <div className="mt-12 text-center">
           <h2 className="font-syncopate text-white text-lg md:text-xl tracking-widest animate-pulse mb-2 uppercase">CRATING THE VIBE</h2>
@@ -64,7 +69,7 @@ const PlaylistStudio: React.FC<PlaylistStudioProps> = ({ albums, onClose }) => {
   }
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl overflow-y-auto overflow-x-hidden">
+    <div ref={modalRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Playlist Studio" className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl overflow-y-auto overflow-x-hidden outline-none">
       {/* High-Performance Printable Manifest */}
       <div className="hidden print:block bg-white text-black p-8 md:p-12 min-h-screen">
         <div className="flex justify-between items-end border-b-4 border-black pb-8 mb-12">

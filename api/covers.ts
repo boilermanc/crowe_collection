@@ -1,4 +1,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { MusicBrainzRelease } from './_types';
+import { requireAuth } from './_auth';
+import { cors } from './_cors';
+import { USER_AGENT } from './_constants';
+import { searchItunes } from './_itunes';
+import { validateStringLength } from './_validate';
 
 export const config = {
   maxDuration: 30,
@@ -8,27 +14,6 @@ interface CoverResult {
   url: string;
   source: string;
   label?: string;
-}
-
-const USER_AGENT = 'TheCroweCollection/1.0 (https://github.com/boilermanc/crowe_collection)';
-
-async function searchiTunes(artist: string, title: string): Promise<CoverResult[]> {
-  try {
-    const query = encodeURIComponent(`${artist} ${title}`);
-    const resp = await fetch(`https://itunes.apple.com/search?term=${query}&entity=album&limit=5`);
-    if (!resp.ok) return [];
-    const json = await resp.json();
-    const results = json.results || [];
-    return results
-      .filter((r: any) => r.artworkUrl100)
-      .map((r: any) => ({
-        url: r.artworkUrl100.replace('100x100bb', '600x600bb'),
-        source: 'iTunes',
-        label: r.collectionName || undefined,
-      }));
-  } catch {
-    return [];
-  }
 }
 
 async function searchMusicBrainz(artist: string, title: string): Promise<CoverResult[]> {
@@ -42,8 +27,8 @@ async function searchMusicBrainz(artist: string, title: string): Promise<CoverRe
     const json = await resp.json();
     const releases = json.releases || [];
     const candidates = releases
-      .filter((r: any) => r.id)
-      .map((r: any) => ({
+      .filter((r: MusicBrainzRelease) => r.id)
+      .map((r: MusicBrainzRelease) => ({
         url: `https://coverartarchive.org/release/${r.id}/front-500`,
         source: 'MusicBrainz' as const,
         label: r.title || undefined,
@@ -63,6 +48,9 @@ async function searchMusicBrainz(artist: string, title: string): Promise<CoverRe
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (cors(req, res, 'POST')) return;
+  if (!requireAuth(req, res)) return;
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -73,8 +61,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Missing artist or title' });
     }
 
+    const artistErr = validateStringLength(artist, 500, 'artist');
+    if (artistErr) return res.status(400).json({ error: artistErr });
+    const titleErr = validateStringLength(title, 500, 'title');
+    if (titleErr) return res.status(400).json({ error: titleErr });
+
     const [itunesResults, mbResults] = await Promise.all([
-      searchiTunes(artist, title),
+      searchItunes(artist, title),
       searchMusicBrainz(artist, title),
     ]);
 

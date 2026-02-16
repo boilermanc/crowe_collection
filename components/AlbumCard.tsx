@@ -27,7 +27,7 @@ const AlbumCard: React.FC<AlbumCardProps> = ({ album, onDelete, onSelect }) => {
       <div className="aspect-square overflow-hidden bg-black/40 relative">
         <img
           src={proxyImageUrl(album.cover_url) || `https://picsum.photos/seed/${album.id}/400/400`}
-          alt={album.title}
+          alt={album.title && album.artist ? `Album cover for ${album.title} by ${album.artist}` : album.title ? `Album cover for ${album.title}` : 'Album cover'}
           loading="lazy"
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
           onError={(e) => {
@@ -67,7 +67,7 @@ const AlbumCard: React.FC<AlbumCardProps> = ({ album, onDelete, onSelect }) => {
           <button 
             onClick={(e) => {
               e.stopPropagation();
-              album.id && onDelete(album.id);
+              onDelete(album.id);
             }}
             className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-500 transition-all ml-2 p-1 rounded-md"
           >
@@ -86,4 +86,4 @@ const AlbumCard: React.FC<AlbumCardProps> = ({ album, onDelete, onSelect }) => {
   );
 };
 
-export default AlbumCard;
+export default React.memo(AlbumCard);

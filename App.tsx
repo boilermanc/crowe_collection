@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Album } from './types';
 import { supabaseService, supabase } from './services/supabaseService';
 import { geminiService } from './services/geminiService';
@@ -40,6 +40,12 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (isSupabaseReady) {
+      const loadAlbums = async () => {
+        setLoading(true);
+        const data = await supabaseService.getAlbums();
+        setAlbums(data);
+        setLoading(false);
+      };
       loadAlbums();
     } else {
       setLoading(false);
@@ -56,13 +62,6 @@ const App: React.FC = () => {
       }
     }
   }, [albums.length, isStudioOpen, isAlbumDeselected]);
-
-  const loadAlbums = async () => {
-    setLoading(true);
-    const data = await supabaseService.getAlbums();
-    setAlbums(data);
-    setLoading(false);
-  };
 
   const resetView = () => {
     setSearchQuery('');
@@ -144,10 +143,15 @@ const App: React.FC = () => {
   };
 
   const handleUpdateAlbum = async (albumId: string, updates: Partial<Album>) => {
-    await supabaseService.updateAlbum(albumId, updates);
-    setAlbums(prev => prev.map(a => a.id === albumId ? { ...a, ...updates } : a));
-    if (selectedAlbum?.id === albumId) {
-      setSelectedAlbum(prev => prev ? { ...prev, ...updates } : null);
+    try {
+      await supabaseService.updateAlbum(albumId, updates);
+      setAlbums(prev => prev.map(a => a.id === albumId ? { ...a, ...updates } : a));
+      if (selectedAlbum?.id === albumId) {
+        setSelectedAlbum(prev => prev ? { ...prev, ...updates } : null);
+      }
+    } catch (err) {
+      console.error('Failed to update album:', err);
+      showToast("Failed to update album. Please try again.", "error");
     }
   };
 
@@ -190,7 +194,7 @@ const App: React.FC = () => {
     e.target.value = '';
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = useCallback((id: string) => {
     showToast("Delete this masterpiece?", "warning", {
       action: "Delete",
       duration: 5000,
@@ -198,7 +202,7 @@ const App: React.FC = () => {
         try {
           await supabaseService.deleteAlbum(id);
           setAlbums(prev => prev.filter(a => a.id !== id));
-          if (selectedAlbum?.id === id) setSelectedAlbum(null);
+          setSelectedAlbum(prev => prev?.id === id ? null : prev);
           showToast("Album removed from crate.", "success");
         } catch (err) {
           console.error(err);
@@ -206,7 +210,7 @@ const App: React.FC = () => {
         }
       }
     });
-  };
+  }, [showToast]);
 
   const stats = useMemo(() => {
     const genres: Record<string, number> = {};
@@ -280,15 +284,16 @@ const App: React.FC = () => {
       <header className="sticky top-0 z-40 glass-morphism border-b border-white/10 px-4 md:px-6 py-4">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center justify-between md:justify-start gap-3">
-            <div 
+            <button
               onClick={resetView}
+              aria-label="The Crowe Collection home"
               title="Home / Reset Filters"
-              className="w-10 h-10 bg-gradient-to-tr from-emerald-500 to-indigo-500 rounded-lg flex items-center justify-center shadow-lg neon-border cursor-pointer active:scale-90 transition-transform flex-shrink-0"
+              className="w-10 h-10 bg-gradient-to-tr from-emerald-500 to-indigo-500 rounded-lg flex items-center justify-center shadow-lg neon-border cursor-pointer active:scale-90 transition-transform flex-shrink-0 border-none p-0"
             >
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-            </div>
+            </button>
             {currentView !== 'landing' && (
               <h1 className="font-syncopate text-lg md:text-2xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white to-white/60 truncate">
                 THE CROWE COLLECTION
@@ -390,12 +395,12 @@ const App: React.FC = () => {
                 </div>
               </div>
               <div className="flex items-end">
-                <label className="flex items-center gap-3 cursor-pointer group">
-                  <div onClick={() => setFavoritesOnly(!favoritesOnly)} className={`w-10 h-5 rounded-full transition-all relative border border-white/10 ${favoritesOnly ? 'bg-emerald-600' : 'bg-white/5'}`}>
+                <button role="switch" aria-checked={favoritesOnly} aria-label="Show favorites only" onClick={() => setFavoritesOnly(!favoritesOnly)} className="flex items-center gap-3 cursor-pointer group bg-transparent border-none p-0 outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-full">
+                  <div className={`w-10 h-5 rounded-full transition-all relative border border-white/10 ${favoritesOnly ? 'bg-emerald-600' : 'bg-white/5'}`}>
                     <div className={`absolute top-0.5 w-3.5 h-3.5 bg-white rounded-full transition-all ${favoritesOnly ? 'left-5.5' : 'left-1'}`}></div>
                   </div>
                   <span className="text-xs text-white/60 group-hover:text-white">Favorites Only</span>
-                </label>
+                </button>
               </div>
             </div>
           </div>
@@ -570,6 +575,7 @@ const App: React.FC = () => {
           onToggleFavorite={handleToggleFavorite}
           favoritesOnly={favoritesOnly}
           onToggleFavoritesFilter={() => setFavoritesOnly(prev => !prev)}
+          searchQuery={searchQuery}
         />
       ) : (
         <main className="max-w-7xl mx-auto px-4 md:px-6 mt-8">

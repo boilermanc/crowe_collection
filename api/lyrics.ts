@@ -1,10 +1,13 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { requireAuth } from './_auth';
+import { cors } from './_cors';
+import { USER_AGENT } from './_constants';
+import { validateStringLength } from './_validate';
 
 export const config = {
   maxDuration: 15,
 };
 
-const USER_AGENT = 'TheCroweCollection/1.0';
 const LRCLIB_BASE = 'https://lrclib.net/api';
 
 function cleanTrackName(track: string): string {
@@ -13,6 +16,9 @@ function cleanTrackName(track: string): string {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (cors(req, res, 'POST')) return;
+  if (!requireAuth(req, res)) return;
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -21,6 +27,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { artist, track, album } = req.body;
     if (!artist || !track || typeof artist !== 'string' || typeof track !== 'string') {
       return res.status(400).json({ error: 'Missing artist or track' });
+    }
+
+    const artistErr = validateStringLength(artist, 500, 'artist');
+    if (artistErr) return res.status(400).json({ error: artistErr });
+    const trackErr = validateStringLength(track, 500, 'track');
+    if (trackErr) return res.status(400).json({ error: trackErr });
+    if (album != null) {
+      const albumErr = validateStringLength(album, 500, 'album');
+      if (albumErr) return res.status(400).json({ error: albumErr });
     }
 
     const cleanedTrack = cleanTrackName(track);

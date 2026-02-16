@@ -6,6 +6,7 @@ import { geminiService } from '../services/geminiService';
 import SpinningRecord from './SpinningRecord';
 import CoverPicker from './CoverPicker';
 import { useToast } from '../contexts/ToastContext';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 interface AlbumDetailModalProps {
   album: Album;
@@ -17,16 +18,6 @@ interface AlbumDetailModalProps {
   onUpdateAlbum?: (albumId: string, updates: Partial<Album>) => void;
 }
 
-const CONDITION_GRADES = [
-  'Mint (M)', 
-  'Near Mint (NM)', 
-  'Very Good Plus (VG+)', 
-  'Very Good (VG)', 
-  'Good (G)', 
-  'Fair (F)', 
-  'Poor (P)'
-];
-
 const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({ 
   album, 
   allAlbums, 
@@ -37,8 +28,10 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
   onUpdateAlbum
 }) => {
   const { showToast } = useToast();
+  const modalRef = useRef<HTMLDivElement>(null);
+  const stableOnClose = useCallback(onClose, [onClose]);
+  useFocusTrap(modalRef, stableOnClose);
   const [notes, setNotes] = useState(album.personal_notes || '');
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [expandedTrack, setExpandedTrack] = useState<number | null>(null);
   const [lyricsCache, setLyricsCache] = useState<Record<number, { lyrics: string | null; syncedLyrics: string | null }>>({});
   const [loadingTrack, setLoadingTrack] = useState<number | null>(null);
@@ -57,9 +50,16 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
     if (lyricsCache[index] !== undefined) return;
 
     setLoadingTrack(index);
-    const result = await geminiService.fetchLyrics(album.artist, trackName, album.title);
-    setLyricsCache(prev => ({ ...prev, [index]: result }));
-    setLoadingTrack(null);
+    try {
+      const result = await geminiService.fetchLyrics(album.artist, trackName, album.title);
+      setLyricsCache(prev => ({ ...prev, [index]: result }));
+    } catch (err) {
+      console.error('Failed to fetch lyrics:', err);
+      showToast('Failed to fetch lyrics', 'error');
+      setLyricsCache(prev => ({ ...prev, [index]: { lyrics: null, syncedLyrics: null } }));
+    } finally {
+      setLoadingTrack(null);
+    }
   }, [expandedTrack, lyricsCache, album.artist, album.title]);
 
 
@@ -84,9 +84,21 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
 
   const handlePlaySample = () => {
     const currentPlays = album.play_count || 0;
-    if (album.id) onUpdateAlbum?.(album.id, { play_count: currentPlays + 1 });
-    if (album.sample_url) window.open(album.sample_url, '_blank');
-    else showToast('Sample playback not available.', 'info');
+    onUpdateAlbum?.(album.id, { play_count: currentPlays + 1 });
+    if (album.sample_url) {
+      try {
+        const parsed = new URL(album.sample_url);
+        if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+          showToast('Invalid sample URL.', 'error');
+          return;
+        }
+        window.open(album.sample_url, '_blank', 'noopener,noreferrer');
+      } catch {
+        showToast('Invalid sample URL.', 'error');
+      }
+    } else {
+      showToast('Sample playback not available.', 'info');
+    }
   };
 
   const formatDate = (dateStr?: string) => {
@@ -95,12 +107,14 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
   };
 
   const handleCoverSelect = async (url: string) => {
-    if (!album.id) return;
     setUploadingCover(true);
     try {
       const resp = await fetch('/api/upload-cover', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(import.meta.env.VITE_API_SECRET ? { Authorization: `Bearer ${import.meta.env.VITE_API_SECRET}` } : {}),
+        },
         body: JSON.stringify({ imageUrl: url, albumId: album.id }),
       });
       if (resp.ok) {
@@ -121,7 +135,7 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-2 md:p-8 backdrop-blur-xl animate-in fade-in duration-300">
+    <div ref={modalRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label={`${album.title} by ${album.artist}`} className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-2 md:p-8 backdrop-blur-xl animate-in fade-in duration-300 outline-none">
       <div className="relative w-full max-w-6xl max-h-[98vh] md:max-h-[95vh] glass-morphism rounded-3xl overflow-hidden border border-white/10 flex flex-col md:flex-row animate-in zoom-in-95 duration-500">
         
         <button onClick={onClose} className="absolute top-4 right-4 z-30 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-white hover:text-black transition-all">
@@ -130,7 +144,7 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
 
         <div className="w-full md:w-5/12 overflow-hidden bg-black flex items-center justify-center p-6 md:p-12 relative flex-shrink-0">
              <button onClick={() => !uploadingCover && setShowCoverPicker(true)} className="relative group cursor-pointer z-10">
-               <img src={proxyImageUrl(displayCoverUrl)} alt={album.title} className={`w-full h-auto max-h-[40vh] md:max-h-full object-contain rounded-md shadow-[0_0_100px_rgba(0,0,0,0.8)] transition-opacity ${uploadingCover ? 'opacity-50' : ''}`} />
+               <img src={proxyImageUrl(displayCoverUrl)} alt={album.title && album.artist ? `Album cover for ${album.title} by ${album.artist}` : album.title ? `Album cover for ${album.title}` : 'Album cover'} className={`w-full h-auto max-h-[40vh] md:max-h-full object-contain rounded-md shadow-[0_0_100px_rgba(0,0,0,0.8)] transition-opacity ${uploadingCover ? 'opacity-50' : ''}`} />
                {uploadingCover ? (
                  <div className="absolute inset-0 bg-black/60 rounded-md flex items-center justify-center">
                    <div className="flex flex-col items-center gap-3">
@@ -210,7 +224,7 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
 
             {/* Quick Actions */}
             <section className="flex flex-col sm:flex-row gap-4">
-              <button onClick={() => album.id && onToggleFavorite?.(album.id)} className={`flex-1 font-bold py-4 rounded-xl transition-all uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-3 ${album.isFavorite ? 'bg-rose-600 text-white' : 'bg-white text-black hover:bg-rose-500 hover:text-white'}`}>
+              <button onClick={() => onToggleFavorite?.(album.id)} className={`flex-1 font-bold py-4 rounded-xl transition-all uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-3 ${album.isFavorite ? 'bg-rose-600 text-white' : 'bg-white text-black hover:bg-rose-500 hover:text-white'}`}>
                 <svg className={`w-4 h-4 ${album.isFavorite ? 'fill-current' : ''}`} viewBox="0 0 24 24" fill={album.isFavorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2}>
                   <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
                 </svg>
@@ -306,9 +320,9 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
                   {album.tags.map((tag, i) => (
                     <span key={i} className="inline-flex items-center gap-1 bg-white/5 border border-white/10 rounded-full px-3 py-1 text-[10px] text-white/60">
                       {tag}
-                      {album.id && onUpdateTags && (
+                      {onUpdateTags && (
                         <button
-                          onClick={() => onUpdateTags(album.id!, album.tags!.filter((_, j) => j !== i))}
+                          onClick={() => onUpdateTags(album.id, album.tags!.filter((_, j) => j !== i))}
                           className="ml-1 text-white/30 hover:text-red-400 transition-colors"
                         >
                           &times;
@@ -321,7 +335,7 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
             )}
 
             {/* Personal Notes */}
-            {album.id && onUpdateAlbum && (
+            {onUpdateAlbum && (
               <section>
                 <h4 className="text-white/30 text-[9px] font-syncopate tracking-[0.3em] uppercase mb-4">Personal Notes</h4>
                 <textarea
@@ -333,7 +347,7 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
                 />
                 {notes !== (album.personal_notes || '') && (
                   <button
-                    onClick={() => onUpdateAlbum(album.id!, { personal_notes: notes })}
+                    onClick={() => onUpdateAlbum(album.id, { personal_notes: notes })}
                     className="mt-2 bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[10px] uppercase tracking-widest px-4 py-2 rounded-lg hover:bg-emerald-500/30 transition-all"
                   >
                     Save Notes

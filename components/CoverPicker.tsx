@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { geminiService } from '../services/geminiService';
 import { proxyImageUrl } from '../services/imageProxy';
 import SpinningRecord from './SpinningRecord';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 interface CoverResult {
   url: string;
@@ -18,6 +19,9 @@ interface CoverPickerProps {
 }
 
 const CoverPicker: React.FC<CoverPickerProps> = ({ artist, title, currentCoverUrl, onSelectCover, onClose }) => {
+  const modalRef = useRef<HTMLDivElement>(null);
+  const stableOnClose = useCallback(onClose, [onClose]);
+  useFocusTrap(modalRef, stableOnClose);
   const [searchQuery, setSearchQuery] = useState(`${artist} ${title}`);
   const [covers, setCovers] = useState<CoverResult[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,7 +63,7 @@ const CoverPicker: React.FC<CoverPickerProps> = ({ artist, title, currentCoverUr
   const visibleCovers = covers.filter(c => !failedUrls.has(c.url));
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/95 p-4 md:p-8 backdrop-blur-xl animate-in fade-in duration-300">
+    <div ref={modalRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Choose cover art" className="fixed inset-0 z-[70] flex items-center justify-center bg-black/95 p-4 md:p-8 backdrop-blur-xl animate-in fade-in duration-300 outline-none">
       <div className="relative w-full max-w-4xl max-h-[90vh] glass-morphism rounded-3xl overflow-hidden border border-white/10 flex flex-col animate-in zoom-in-95 duration-500">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/5">

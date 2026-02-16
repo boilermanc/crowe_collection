@@ -1,28 +1,48 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { GoogleGenAI, Type } from '@google/genai';
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+import { Type } from '@google/genai';
+import type { PlaylistAlbumInput } from './_types';
+import type { RawPlaylistItem } from '../types';
+import { requireAuth } from './_auth';
+import { cors } from './_cors';
+import { ai } from './_gemini';
+import { rateLimit } from './_rateLimit';
+import { validateStringLength } from './_validate';
+import { sanitizePromptInput } from './_sanitize';
 
 export const config = {
   maxDuration: 60,
 };
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (cors(req, res, 'POST')) return;
+  if (!requireAuth(req, res)) return;
+  if (rateLimit(req, res)) return;
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const { albums, mood, type: rawType } = req.body;
-    if (!Array.isArray(albums) || !mood || typeof mood !== 'string') {
+    const { albums, mood: rawMood, type: rawType } = req.body;
+    if (!Array.isArray(albums) || !rawMood || typeof rawMood !== 'string') {
       return res.status(400).json({ error: 'Missing albums array or mood' });
     }
+
+    const moodErr = validateStringLength(rawMood, 1000, 'mood');
+    if (moodErr) return res.status(400).json({ error: moodErr });
+    if (rawType != null) {
+      const typeErr = validateStringLength(rawType, 50, 'type');
+      if (typeErr) return res.status(400).json({ error: typeErr });
+    }
+
+    // Sanitize before prompt interpolation to prevent prompt injection
+    const mood = sanitizePromptInput(rawMood, 1000);
 
     const type = ['album', 'side', 'song'].includes(rawType) ? rawType : 'song';
     const maxItems = type === 'album' ? 8 : type === 'side' ? 12 : 15;
 
     const MAX_ALBUMS = 200;
-    const simplifiedCollection = albums.slice(0, MAX_ALBUMS).map((a: any) => ({
+    const simplifiedCollection = albums.slice(0, MAX_ALBUMS).map((a: PlaylistAlbumInput) => ({
       id: a.id,
       artist: a.artist,
       title: a.title,
@@ -37,7 +57,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       song: 'Pick individual songs/tracks. itemTitle should be the actual song name. Use each album\'s tracklist data (if available) to pick real track names.'
     };
 
-    const validIds = new Set(simplifiedCollection.map((a: any) => a.id));
+    const validIds = new Set(simplifiedCollection.map((a: PlaylistAlbumInput) => a.id));
 
     const prompt = `You are a strict playlist curator for a vinyl record collection. The user wants a "${mood}" listening session.
 
@@ -85,7 +105,7 @@ ${JSON.stringify(simplifiedCollection)}`;
     let name = typeof result.playlistName === 'string' ? result.playlistName.trim() : 'Crate Mix';
     if (name.length > 60) name = name.slice(0, 57) + '...';
     const rawItems = Array.isArray(result.items) ? result.items : [];
-    const verifiedItems = rawItems.filter((item: any) => item && validIds.has(item.albumId));
+    const verifiedItems = rawItems.filter((item: RawPlaylistItem) => item && validIds.has(item.albumId));
     return res.status(200).json({
       playlistName: name || 'Crate Mix',
       items: verifiedItems
