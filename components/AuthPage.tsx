@@ -73,7 +73,7 @@ const AuthPage: React.FC = () => {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <h1 className="font-label text-[#e8e2d6] text-3xl md:text-4xl font-bold tracking-widest text-center mb-10">
-          REKKRD
+          REKK<span className="text-[#c45a30]">R</span>D
         </h1>
 
         {/* Form card */}

@@ -77,7 +77,7 @@ const PlaylistStudio: React.FC<PlaylistStudioProps> = ({ albums, onClose }) => {
             <h1 className="text-4xl md:text-6xl font-black uppercase mb-2 leading-none">{playlist?.name}</h1>
             <p className="text-lg md:text-2xl text-[#2d3a3e]/60 font-medium">Listening Guide: {playlist?.mood}</p>
           </div>
-          <p className="text-xs font-black opacity-30 uppercase tracking-[0.3em] whitespace-nowrap">REKKRD ARCHIVE</p>
+          <p className="text-xs font-black opacity-30 uppercase tracking-[0.3em] whitespace-nowrap">REKK<span className="text-[#c45a30]">R</span>D ARCHIVE</p>
         </div>
         <div className="space-y-12">
           {playlist?.items.map((item, idx) => (

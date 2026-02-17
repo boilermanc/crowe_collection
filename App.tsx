@@ -382,8 +382,8 @@ const App: React.FC = () => {
               </svg>
             </button>
             {currentView !== 'landing' && (
-              <h1 className="font-label text-lg md:text-2xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-[#e8e2d6] to-[#e8e2d6]/60 truncate">
-                REKKRD
+              <h1 className="font-label text-lg md:text-2xl font-bold tracking-tighter text-[#e8e2d6] truncate">
+                REKK<span className="text-[#c45a30]">R</span>D
               </h1>
             )}
           </div>
@@ -560,8 +560,8 @@ const App: React.FC = () => {
           </div>
 
           <div className="text-center mb-12 md:mb-16 relative z-10">
-            <h2 className="font-label text-3xl md:text-5xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-[#e8e2d6] to-[#e8e2d6]/60 mb-3">
-              REKKRD
+            <h2 className="font-label text-3xl md:text-5xl font-bold tracking-tight text-[#e8e2d6] mb-3">
+              REKK<span className="text-[#c45a30]">R</span>D
             </h2>
             <p className="text-[#7d9199]/70 text-sm md:text-base tracking-wide">
               {albums.length > 0 ? 'Your vinyl archive awaits' : 'Scan your first record to start your archive'}
