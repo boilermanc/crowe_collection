@@ -102,7 +102,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId, onComplete 
   };
 
   return (
-    <div className="landing-page" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px 16px' }}>
+    <div className="landing-page" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px 16px', overflowX: 'visible' }}>
       {/* Decorative vinyl */}
       <div style={{ position: 'fixed', top: '50%', right: -100, transform: 'translateY(-50%)', width: 500, height: 500, pointerEvents: 'none', opacity: 0.04, zIndex: 0 }} aria-hidden="true">
         <svg viewBox="0 0 400 400" fill="none" style={{ width: '100%', height: '100%' }}>
@@ -144,12 +144,12 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId, onComplete 
           background: t.white, borderRadius: t.radius, border: `2px solid ${t.beige}`,
           padding: 'clamp(24px, 4vw, 40px) clamp(16px, 3vw, 36px)', minHeight: 400, display: 'flex', flexDirection: 'column',
           boxShadow: '0 12px 36px rgba(79,109,122,.12)', animation: 'auth-slide-up .3s ease-out',
-          overflow: 'hidden',
+          width: '100%',
         }}>
           <div
             key={animKey}
             style={{
-              flex: 1, display: 'flex', flexDirection: 'column',
+              flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0,
               animation: direction === 'forward' ? 'auth-slide-up .35s ease-out' : 'auth-fade-in .3s ease-out',
             }}
           >
@@ -256,7 +256,7 @@ interface StepHabitsProps {
 const StepHabits: React.FC<StepHabitsProps> = ({
   selectedGenres, selectedSetup, selectedGoal, onToggleGenre, onSelectSetup, onSelectGoal,
 }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', gap: 24, flex: 1, overflowY: 'auto' }}>
+  <div style={{ display: 'flex', flexDirection: 'column', gap: 24, flex: 1, overflowY: 'auto', minWidth: 0, maxWidth: '100%' }}>
     <div style={{ textAlign: 'center' }}>
       <div style={labelStyle}>// Your Habits</div>
       <h3 style={{ fontFamily: "'Playfair Display',serif", fontSize: '1.5rem', fontWeight: 700, color: t.slateDark }}>
@@ -293,7 +293,7 @@ const StepHabits: React.FC<StepHabitsProps> = ({
     {/* Setup */}
     <div>
       <p style={labelStyle}>Listening Setup</p>
-      <div role="radiogroup" aria-label="Select your listening setup" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 8 }}>
+      <div role="radiogroup" aria-label="Select your listening setup" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(120px, 100%), 1fr))', gap: 8 }}>
         {SETUP_OPTIONS.map(opt => {
           const sel = selectedSetup === opt.id;
           return (
@@ -319,7 +319,7 @@ const StepHabits: React.FC<StepHabitsProps> = ({
     {/* Goals */}
     <div>
       <p style={labelStyle}>Collecting Goal</p>
-      <div role="radiogroup" aria-label="Select your collecting goal" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 8 }}>
+      <div role="radiogroup" aria-label="Select your collecting goal" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(160px, 100%), 1fr))', gap: 8 }}>
         {GOAL_OPTIONS.map(opt => {
           const sel = selectedGoal === opt.id;
           return (
