@@ -38,6 +38,7 @@ const App: React.FC = () => {
   const [albums, setAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(true);
   const [upgradeFeature, setUpgradeFeature] = useState<string | null>(null);
+  const [showPricingPage, setShowPricingPage] = useState(false);
   const [trialBannerDismissed, setTrialBannerDismissed] = useState(false);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [isStudioOpen, setIsStudioOpen] = useState(false);
@@ -373,6 +374,11 @@ const App: React.FC = () => {
     return <Landing />;
   }
 
+  // Logged-in user viewing pricing page (from upgrade prompt)
+  if (showPricingPage) {
+    return <Landing onEnterApp={() => setShowPricingPage(false)} scrollToPricing />;
+  }
+
   // Onboarding wizard for new/incomplete users
   if (showOnboarding) {
     return (
@@ -604,14 +610,14 @@ const App: React.FC = () => {
           {/* Spinning vinyl record background */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none" aria-hidden="true">
             <svg
-              className="animate-spin-vinyl w-[600px] h-[600px] md:w-[750px] md:h-[750px] opacity-[0.04]"
+              className="animate-spin-vinyl w-[600px] h-[600px] md:w-[750px] md:h-[750px] opacity-[0.04] text-th-text"
               viewBox="0 0 400 400"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
             >
               {/* Outer disc */}
-              <circle cx="200" cy="200" r="195" fill="#c0d6df" />
-              <circle cx="200" cy="200" r="195" stroke="#c0d6df" strokeWidth="2" />
+              <circle cx="200" cy="200" r="195" fill="currentColor" />
+              <circle cx="200" cy="200" r="195" stroke="currentColor" strokeWidth="2" />
 
               {/* Grooves */}
               {[175, 165, 155, 145, 135, 125, 115, 105, 95, 85, 78, 71].map((r) => (
@@ -620,7 +626,7 @@ const App: React.FC = () => {
 
               {/* Groove highlight arcs — gives depth */}
               {[170, 150, 130, 110, 90].map((r) => (
-                <circle key={`h-${r}`} cx="200" cy="200" r={r} stroke="#c0d6df" strokeWidth="0.3" opacity="0.15" />
+                <circle key={`h-${r}`} cx="200" cy="200" r={r} stroke="currentColor" strokeWidth="0.3" opacity="0.15" />
               ))}
 
               {/* Center label */}
@@ -880,8 +886,7 @@ const App: React.FC = () => {
           onClose={() => setUpgradeFeature(null)}
           onUpgrade={() => {
             setUpgradeFeature(null);
-            // Navigate to pricing — for now, switch to landing page
-            setCurrentView('public-landing');
+            setShowPricingPage(true);
           }}
         />
       )}

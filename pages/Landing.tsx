@@ -5,6 +5,7 @@ import { supabase } from '../services/supabaseService';
 
 interface LandingProps {
   onEnterApp?: () => void;
+  scrollToPricing?: boolean;
 }
 
 const Check: React.FC = () => (
@@ -70,7 +71,7 @@ const faqs = [
   { q: "What if a scan doesn't recognize my record?", a: 'If the AI can\'t identify a cover, you can always search and add the album manually. Rekkrd pulls from iTunes and MusicBrainz databases with millions of releases.' },
 ];
 
-const Landing: React.FC<LandingProps> = ({ onEnterApp }) => {
+const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
   const { user, signOut } = useAuthContext();
   const [isAnnual, setIsAnnual] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
@@ -86,6 +87,14 @@ const Landing: React.FC<LandingProps> = ({ onEnterApp }) => {
       .then(data => { if (data) setPricing(data); })
       .catch(() => {});
   }, []);
+
+  // Scroll to pricing section when navigating from upgrade prompt
+  useEffect(() => {
+    if (scrollToPricing) {
+      const el = document.getElementById('pricing');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [scrollToPricing]);
 
   // Auth overlay state
   const [showAuth, setShowAuth] = useState(false);
