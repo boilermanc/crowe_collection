@@ -235,7 +235,7 @@ const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
               <circle cx="12" cy="12" r="5.2" fill="#c45a30"/>
               <text x="12" y="12.5" textAnchor="middle" dominantBaseline="central" fontFamily="Georgia,serif" fontWeight="bold" fontSize="7" fill="#f0a882">R</text>
             </svg>
-            Rekk<span>r</span>d
+            <span>Rekk<span>r</span>d</span>
           </a>
           <div className="nav-links">
             <a href="#features">Features</a>
@@ -612,7 +612,7 @@ const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
                   <circle cx="12" cy="12" r="5.2" fill="#c45a30"/>
                   <text x="12" y="12.5" textAnchor="middle" dominantBaseline="central" fontFamily="Georgia,serif" fontWeight="bold" fontSize="7" fill="#f0a882">R</text>
                 </svg>
-                Rekk<span>r</span>d
+                <span>Rekk<span>r</span>d</span>
               </a>
               <p>The AI-powered vinyl collection manager for serious crate diggers and casual collectors alike.</p>
             </div>
