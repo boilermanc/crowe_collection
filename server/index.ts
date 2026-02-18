@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
+import { existsSync } from 'fs';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -27,8 +28,37 @@ import identifyGearRouter from './routes/identifyGear.js';
 import findManualRouter from './routes/findManual.js';
 import setupGuideRouter from './routes/setupGuide.js';
 
+// ── Boot diagnostics: verify all imports resolved ────────────────────
+console.log('[boot] All static imports loaded');
+const _routerMap: Record<string, unknown> = {
+  identifyRouter, metadataRouter, playlistRouter, coversRouter,
+  lyricsRouter, uploadCoverRouter, imageProxyRouter, subscriptionRouter,
+  checkoutRouter, pricesRouter, stripeWebhookRouter, customerPortalRouter,
+  adminRouter, blogRouter, gearRouter, identifyGearRouter,
+  findManualRouter, setupGuideRouter,
+};
+for (const [name, r] of Object.entries(_routerMap)) {
+  if (typeof r !== 'function') {
+    console.error(`[boot] PROBLEM: ${name} is ${typeof r}, expected function`);
+  }
+}
+
+// Catch uncaught errors that might silently break routing
+process.on('uncaughtException', (err) => {
+  console.error('[fatal] Uncaught exception:', err);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('[fatal] Unhandled rejection:', reason);
+});
+
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// ── Request logger (first middleware — before helmet/cors) ───────────
+app.use((req, _res, next) => {
+  console.log(`[req] ${req.method} ${req.url}`);
+  next();
+});
 
 // Security headers
 app.use(helmet());
@@ -53,34 +83,46 @@ app.use(cors({
 
 // Stripe webhook needs raw body for signature verification — mount BEFORE json parser
 app.use('/api/stripe-webhook', express.raw({ type: 'application/json' }));
-app.use(stripeWebhookRouter);
+try { app.use(stripeWebhookRouter); } catch (err) { console.error('[boot] FAILED to mount stripeWebhookRouter:', err); }
 
 // Parse JSON bodies (10mb limit for base64 image payloads) — after webhook route
 app.use(express.json({ limit: '10mb' }));
 
 // Health check
 app.get('/api/health', (_req, res) => {
+  console.log('[health] Health check hit');
   res.json({ status: 'ok' });
 });
+console.log('[boot] Health check registered');
 
-// API routes
-app.use(identifyRouter);
-app.use(metadataRouter);
-app.use(playlistRouter);
-app.use(coversRouter);
-app.use(lyricsRouter);
-app.use(uploadCoverRouter);
-app.use(imageProxyRouter);
-app.use(subscriptionRouter);
-app.use(checkoutRouter);
-app.use(customerPortalRouter);
-app.use(pricesRouter);
-app.use(adminRouter);
-app.use(blogRouter);
-app.use(gearRouter);
-app.use(identifyGearRouter);
-app.use(findManualRouter);
-app.use(setupGuideRouter);
+// API routes — each wrapped in try/catch to detect silent mount failures
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mountRouter(name: string, router: any) {
+  try {
+    app.use(router);
+  } catch (err) {
+    console.error(`[boot] FAILED to mount ${name}:`, err);
+  }
+}
+
+mountRouter('identifyRouter', identifyRouter);
+mountRouter('metadataRouter', metadataRouter);
+mountRouter('playlistRouter', playlistRouter);
+mountRouter('coversRouter', coversRouter);
+mountRouter('lyricsRouter', lyricsRouter);
+mountRouter('uploadCoverRouter', uploadCoverRouter);
+mountRouter('imageProxyRouter', imageProxyRouter);
+mountRouter('subscriptionRouter', subscriptionRouter);
+mountRouter('checkoutRouter', checkoutRouter);
+mountRouter('customerPortalRouter', customerPortalRouter);
+mountRouter('pricesRouter', pricesRouter);
+mountRouter('adminRouter', adminRouter);
+mountRouter('blogRouter', blogRouter);
+mountRouter('gearRouter', gearRouter);
+mountRouter('identifyGearRouter', identifyGearRouter);
+mountRouter('findManualRouter', findManualRouter);
+mountRouter('setupGuideRouter', setupGuideRouter);
+console.log('[boot] All routes registered');
 
 // Ensure gear-photos storage bucket exists
 async function ensureGearPhotosBucket() {
@@ -110,13 +152,22 @@ ensureGearPhotosBucket().catch(err =>
 
 // Serve static files from the Vite build output
 const distPath = path.join(__dirname, '..', 'dist');
+console.log(`[boot] distPath = ${distPath}`);
+if (!existsSync(distPath)) {
+  console.warn(`[boot] WARNING: dist directory does not exist at ${distPath}`);
+} else if (!existsSync(path.join(distPath, 'index.html'))) {
+  console.warn(`[boot] WARNING: dist/index.html does not exist`);
+}
 app.use(express.static(distPath));
 
 // SPA fallback — serve index.html for all non-API routes so React Router handles client-side routing
 app.get('/{*splat}', (_req, res) => {
+  console.log(`[spa] Fallback hit: ${_req.method} ${_req.url}`);
   res.sendFile(path.join(distPath, 'index.html'));
 });
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`[boot] Node ${process.version} | __dirname=${__dirname}`);
+  console.log(`[boot] Router stack size: ${(app as any).router?.stack?.length ?? 'unknown'}`);
 });
