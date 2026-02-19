@@ -1,7 +1,7 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import './index.css';
 import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -16,8 +16,13 @@ import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
 import BlogList from './pages/BlogList';
 import BlogPost from './pages/BlogPost';
-import NotFound from './pages/NotFound';
+import ErrorPage from './components/ErrorPage';
 import SupportPage from './components/SupportPage';
+
+function NotFoundPage() {
+  const navigate = useNavigate();
+  return <ErrorPage type="404" onGoHome={() => navigate('/')} />;
+}
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -45,7 +50,7 @@ root.render(
                   <Route path="/blog/:slug" element={<BlogPost />} />
                   <Route path="/support" element={<SupportPage />} />
                   <Route path="/" element={<App />} />
-                  <Route path="*" element={<NotFound />} />
+                  <Route path="*" element={<NotFoundPage />} />
                 </Routes>
               </SubscriptionProvider>
             </AuthProvider>

@@ -24,6 +24,7 @@ import OnboardingWizard from './components/OnboardingWizard';
 import UpgradeModal from './components/UpgradeModal';
 import SubscriptionBanner from './components/SubscriptionBanner';
 import PlanBadge from './components/PlanBadge';
+import ErrorPage from './components/ErrorPage';
 
 const PAGE_SIZE = 40;
 
@@ -65,6 +66,18 @@ const App: React.FC = () => {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isSupabaseReady = !!supabase;
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  useEffect(() => {
+    const goOffline = () => setIsOffline(true);
+    const goOnline = () => setIsOffline(false);
+    window.addEventListener('offline', goOffline);
+    window.addEventListener('online', goOnline);
+    return () => {
+      window.removeEventListener('offline', goOffline);
+      window.removeEventListener('online', goOnline);
+    };
+  }, []);
 
   useEffect(() => {
     if (isSupabaseReady) {
@@ -376,6 +389,11 @@ const App: React.FC = () => {
 
   const gridTotalPages = Math.ceil(filteredAlbums.length / PAGE_SIZE);
   const paginatedAlbums = filteredAlbums.slice((gridPage - 1) * PAGE_SIZE, gridPage * PAGE_SIZE);
+
+  // Offline — show standby page, auto-dismisses when back online
+  if (isOffline) {
+    return <ErrorPage type="offline" />;
+  }
 
   // Auth loading screen
   if (authLoading) {

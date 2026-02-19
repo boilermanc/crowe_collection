@@ -27,6 +27,7 @@ import gearRouter from './routes/gear.js';
 import identifyGearRouter from './routes/identifyGear.js';
 import findManualRouter from './routes/findManual.js';
 import setupGuideRouter from './routes/setupGuide.js';
+import supportRouter from './routes/support.js';
 
 // ── Boot diagnostics: verify all imports resolved ────────────────────
 console.log('[boot] All static imports loaded');
@@ -35,7 +36,7 @@ const _routerMap: Record<string, unknown> = {
   lyricsRouter, uploadCoverRouter, imageProxyRouter, subscriptionRouter,
   checkoutRouter, pricesRouter, stripeWebhookRouter, customerPortalRouter,
   adminRouter, blogRouter, gearRouter, identifyGearRouter,
-  findManualRouter, setupGuideRouter,
+  findManualRouter, setupGuideRouter, supportRouter,
 };
 for (const [name, r] of Object.entries(_routerMap)) {
   if (typeof r !== 'function') {
@@ -122,6 +123,7 @@ mountRouter('gearRouter', gearRouter);
 mountRouter('identifyGearRouter', identifyGearRouter);
 mountRouter('findManualRouter', findManualRouter);
 mountRouter('setupGuideRouter', setupGuideRouter);
+mountRouter('supportRouter', supportRouter);
 console.log('[boot] All routes registered');
 
 // Ensure gear-photos storage bucket exists

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useToast } from '../contexts/ToastContext';
 
 interface FAQItem {
   category: string;
@@ -122,7 +123,9 @@ const FaqSection: React.FC = () => {
 };
 
 const SupportForm: React.FC = () => {
+  const { showToast } = useToast();
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -130,10 +133,30 @@ const SupportForm: React.FC = () => {
     message: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Support form data:', formData);
-    setSubmitted(true);
+    setSending(true);
+    try {
+      const res = await fetch('/api/support', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          subject: formData.subject,
+          message: formData.message,
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error || 'Failed to send message');
+      }
+      setSubmitted(true);
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Failed to send message. Please try again.', 'error');
+    } finally {
+      setSending(false);
+    }
   };
 
   if (submitted) {
@@ -242,9 +265,10 @@ const SupportForm: React.FC = () => {
 
         <button
           type="submit"
-          className="w-full bg-[var(--peach)] text-white font-bold py-4 rounded-xl shadow-lg shadow-[var(--peach)]/30 hover:bg-[var(--peach-dark)] hover:-translate-y-0.5 transition-all active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--peach)] focus-visible:ring-offset-2"
+          disabled={sending}
+          className="w-full bg-[var(--peach)] text-white font-bold py-4 rounded-xl shadow-lg shadow-[var(--peach)]/30 hover:bg-[var(--peach-dark)] hover:-translate-y-0.5 transition-all active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--peach)] focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
         >
-          Send Message
+          {sending ? 'Sending...' : 'Send Message'}
         </button>
 
         <p className="text-center text-sm text-th-text3">
