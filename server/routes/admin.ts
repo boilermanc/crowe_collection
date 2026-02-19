@@ -221,6 +221,139 @@ async function handleSendEmail(req: Request, res: Response) {
   });
 }
 
+// ── CMS Content ───────────────────────────────────────────────────
+const VALID_CMS_PAGES = ['landing', 'privacy', 'terms'];
+
+async function handleCmsContent(req: Request, res: Response) {
+  const supabase = getSupabaseAdmin();
+
+  switch (req.method) {
+    case 'GET': {
+      const page = req.query.page as string;
+      if (!page) { res.status(400).json({ error: 'page query param required' }); return; }
+      if (!VALID_CMS_PAGES.includes(page)) {
+        res.status(400).json({ error: 'Invalid page' });
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('cms_content')
+        .select('*')
+        .eq('page', page)
+        .order('section');
+      if (error) throw error;
+      res.status(200).json(data || []);
+      return;
+    }
+
+    case 'PUT': {
+      const { page, section, content } = req.body;
+      if (!page || !section || content === undefined) {
+        res.status(400).json({ error: 'page, section, and content are required' });
+        return;
+      }
+      if (!VALID_CMS_PAGES.includes(page)) {
+        res.status(400).json({ error: 'Invalid page' });
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('cms_content')
+        .upsert(
+          { page, section, content, updated_at: new Date().toISOString() },
+          { onConflict: 'page,section' }
+        )
+        .select()
+        .single();
+      if (error) throw error;
+      res.status(200).json(data);
+      return;
+    }
+
+    default:
+      res.status(405).json({ error: 'Method not allowed' });
+  }
+}
+
+// ── UTM Stats ─────────────────────────────────────────────────────
+interface ProfileUtmRow {
+  utm_source: string | null;
+  utm_medium: string | null;
+  utm_campaign: string | null;
+  subscription_tier: string | null;
+  created_at: string;
+}
+
+function groupBy(rows: ProfileUtmRow[], key: keyof ProfileUtmRow): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const row of rows) {
+    const val = row[key] as string | null;
+    if (val) {
+      counts[val] = (counts[val] || 0) + 1;
+    }
+  }
+  return counts;
+}
+
+async function handleUtmStats(_req: Request, res: Response) {
+  const supabase = getSupabaseAdmin();
+
+  const { data: profiles, error } = await supabase
+    .from('profiles')
+    .select('utm_source, utm_medium, utm_campaign, subscription_tier, created_at')
+    .not('utm_source', 'is', null)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+
+  const rows = (profiles || []) as ProfileUtmRow[];
+
+  const total_signups = rows.length;
+  const by_source = groupBy(rows, 'utm_source');
+  const by_medium = groupBy(rows, 'utm_medium');
+  const by_campaign = groupBy(rows, 'utm_campaign');
+  const by_tier = groupBy(rows, 'subscription_tier');
+
+  const recent_signups = rows.slice(0, 10).map(r => ({
+    created_at: r.created_at,
+    utm_source: r.utm_source,
+    utm_medium: r.utm_medium,
+    utm_campaign: r.utm_campaign,
+    subscription_tier: r.subscription_tier,
+  }));
+
+  // Daily signup counts for last 30 days
+  const now = new Date();
+  const thirtyDaysAgo = new Date(now);
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  const dailyCounts: Record<string, number> = {};
+  for (let i = 0; i < 30; i++) {
+    const d = new Date(thirtyDaysAgo);
+    d.setDate(d.getDate() + i);
+    dailyCounts[d.toISOString().slice(0, 10)] = 0;
+  }
+  for (const row of rows) {
+    const date = row.created_at.slice(0, 10);
+    if (date in dailyCounts) {
+      dailyCounts[date]++;
+    }
+  }
+  const by_date = Object.entries(dailyCounts)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, count]) => ({ date, count }));
+
+  res.status(200).json({
+    total_signups,
+    by_source,
+    by_medium,
+    by_campaign,
+    by_tier,
+    recent_signups,
+    by_date,
+  });
+}
+
 // ── Admin sub-routes ───────────────────────────────────────────────
 // All admin routes require admin auth
 router.get('/api/admin/customers', requireAdmin, async (req, res, next) => {
@@ -248,6 +381,19 @@ router.route('/api/admin/email-templates')
 
 router.post('/api/admin/send-email', requireAdmin, async (req, res, next) => {
   try { await handleSendEmail(req, res); } catch (err) { next(err); }
+});
+
+router.route('/api/admin/cms-content')
+  .all(requireAdmin)
+  .get(async (req, res, next) => {
+    try { await handleCmsContent(req, res); } catch (err) { next(err); }
+  })
+  .put(async (req, res, next) => {
+    try { await handleCmsContent(req, res); } catch (err) { next(err); }
+  });
+
+router.get('/api/admin/utm-stats', requireAdmin, async (req, res, next) => {
+  try { await handleUtmStats(req, res); } catch (err) { next(err); }
 });
 
 export default router;

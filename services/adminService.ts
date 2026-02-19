@@ -133,28 +133,28 @@ const API_BASE = import.meta.env.VITE_API_URL || '';
 export const adminService = {
   async getCustomers(): Promise<AdminCustomer[]> {
     const headers = await getAuthHeaders();
-    const resp = await fetch('/api/admin?action=customers', { headers });
+    const resp = await fetch('/api/admin/customers', { headers });
     if (!resp.ok) throw new Error(`Failed to fetch customers: ${resp.status}`);
     return resp.json();
   },
 
   async getCollections(): Promise<{ albums: AdminAlbum[]; stats: AdminCollectionStats }> {
     const headers = await getAuthHeaders();
-    const resp = await fetch('/api/admin?action=collections', { headers });
+    const resp = await fetch('/api/admin/collections', { headers });
     if (!resp.ok) throw new Error(`Failed to fetch collections: ${resp.status}`);
     return resp.json();
   },
 
   async getEmailTemplates(): Promise<EmailTemplate[]> {
     const headers = await getAuthHeaders();
-    const resp = await fetch('/api/admin?action=email-templates', { headers });
+    const resp = await fetch('/api/admin/email-templates', { headers });
     if (!resp.ok) throw new Error(`Failed to fetch templates: ${resp.status}`);
     return resp.json();
   },
 
   async createEmailTemplate(template: { name: string; subject: string; html_body: string }): Promise<EmailTemplate> {
     const headers = await getAuthHeaders();
-    const resp = await fetch('/api/admin?action=email-templates', {
+    const resp = await fetch('/api/admin/email-templates', {
       method: 'POST',
       headers,
       body: JSON.stringify(template),
@@ -165,7 +165,7 @@ export const adminService = {
 
   async updateEmailTemplate(id: string, updates: { name?: string; subject?: string; html_body?: string }): Promise<EmailTemplate> {
     const headers = await getAuthHeaders();
-    const resp = await fetch('/api/admin?action=email-templates', {
+    const resp = await fetch('/api/admin/email-templates', {
       method: 'PUT',
       headers,
       body: JSON.stringify({ id, ...updates }),
@@ -176,7 +176,7 @@ export const adminService = {
 
   async deleteEmailTemplate(id: string): Promise<void> {
     const headers = await getAuthHeaders();
-    const resp = await fetch('/api/admin?action=email-templates', {
+    const resp = await fetch('/api/admin/email-templates', {
       method: 'DELETE',
       headers,
       body: JSON.stringify({ id }),
@@ -186,14 +186,14 @@ export const adminService = {
 
   async getCmsContent(page: string): Promise<CmsContentRow[]> {
     const headers = await getAuthHeaders();
-    const resp = await fetch(`/api/admin?action=cms-content&page=${encodeURIComponent(page)}`, { headers });
+    const resp = await fetch(`/api/admin/cms-content?page=${encodeURIComponent(page)}`, { headers });
     if (!resp.ok) throw new Error(`Failed to fetch CMS content: ${resp.status}`);
     return resp.json();
   },
 
   async saveCmsSection(page: string, section: string, content: unknown): Promise<CmsContentRow> {
     const headers = await getAuthHeaders();
-    const resp = await fetch('/api/admin?action=cms-content', {
+    const resp = await fetch('/api/admin/cms-content', {
       method: 'PUT',
       headers,
       body: JSON.stringify({ page, section, content }),
@@ -204,7 +204,7 @@ export const adminService = {
 
   async sendTestEmail(payload: { to: string; subject: string; html: string }): Promise<SendEmailResult> {
     const headers = await getAuthHeaders();
-    const resp = await fetch('/api/admin?action=send-email', {
+    const resp = await fetch('/api/admin/send-email', {
       method: 'POST',
       headers,
       body: JSON.stringify(payload),
