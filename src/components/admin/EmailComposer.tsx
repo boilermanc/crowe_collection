@@ -44,6 +44,123 @@ const INITIAL_FIELDS: FormFields = {
   feature_2_text: '',
 };
 
+interface ModalState {
+  open: boolean;
+  type: 'success' | 'error';
+  result: ComposerSendResult | null;
+  error: string | null;
+}
+
+// ── Result Modal ──────────────────────────────────────────────────────
+const SendResultModal: React.FC<{ state: ModalState; onClose: () => void }> = ({ state, onClose }) => {
+  if (!state.open) return null;
+
+  const isSuccess = state.type === 'success';
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-modal="true" aria-label="Send result">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
+
+      {/* Modal */}
+      <div className="relative w-full max-w-md mx-4 rounded-2xl shadow-xl overflow-hidden" style={{ backgroundColor: 'rgb(255,255,255)' }}>
+        {/* Header */}
+        <div
+          className="px-6 py-5 flex items-center justify-between"
+          style={{
+            backgroundColor: isSuccess ? 'rgb(240,253,244)' : 'rgb(254,242,242)',
+            borderBottom: `1px solid ${isSuccess ? 'rgb(134,239,172)' : 'rgb(252,165,165)'}`,
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: isSuccess ? 'rgb(34,197,94)' : 'rgb(239,68,68)' }}
+            >
+              {isSuccess ? (
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              )}
+            </div>
+            <div>
+              <h3 className="text-base font-semibold" style={{ color: 'rgb(17,24,39)' }}>
+                {isSuccess ? 'Email Sent' : 'Send Failed'}
+              </h3>
+              <p className="text-xs" style={{ color: 'rgb(107,114,128)' }}>
+                {isSuccess ? 'Delivered via Resend' : 'See details below'}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg hover:bg-black/5 transition-colors"
+            aria-label="Close"
+          >
+            <svg className="w-5 h-5" style={{ color: 'rgb(156,163,175)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="px-6 py-5">
+          {isSuccess && state.result ? (
+            <div className="space-y-3">
+              <DetailRow label="Resend ID" value={state.result.id} mono />
+              <DetailRow label="From" value={state.result.from} />
+              <DetailRow label="To" value={state.result.to?.join(', ')} />
+              <DetailRow label="Subject" value={state.result.subject} />
+              <DetailRow label="Sent at" value={new Date(state.result.created_at).toLocaleString()} />
+              <DetailRow label="Status" value="Accepted by Resend" highlight />
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="p-4 rounded-lg" style={{ backgroundColor: 'rgb(254,242,242)' }}>
+                <p className="text-xs font-semibold mb-1" style={{ color: 'rgb(239,68,68)' }}>Error</p>
+                <p className="text-sm font-mono break-all" style={{ color: 'rgb(127,29,29)' }}>
+                  {state.error || 'Unknown error'}
+                </p>
+              </div>
+              <p className="text-xs" style={{ color: 'rgb(107,114,128)' }}>
+                Check that <code className="px-1 py-0.5 rounded text-xs" style={{ backgroundColor: 'rgb(243,244,246)' }}>RESEND_API_KEY</code> is set in your server environment and the Resend account is active.
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t flex justify-end" style={{ borderColor: 'rgb(229,231,235)' }}>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-sm font-medium rounded-lg transition-colors"
+            style={{ backgroundColor: 'rgb(243,244,246)', color: 'rgb(17,24,39)' }}
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const DetailRow: React.FC<{ label: string; value?: string; mono?: boolean; highlight?: boolean }> = ({ label, value, mono, highlight }) => (
+  <div className="flex items-start gap-3">
+    <span className="text-xs font-medium w-20 shrink-0 pt-0.5" style={{ color: 'rgb(107,114,128)' }}>{label}</span>
+    <span
+      className={`text-sm break-all ${mono ? 'font-mono text-xs' : ''}`}
+      style={{ color: highlight ? 'rgb(34,197,94)' : 'rgb(17,24,39)' }}
+    >
+      {value || '—'}
+    </span>
+  </div>
+);
+
+// ── EmailComposer ─────────────────────────────────────────────────────
 const EmailComposer: React.FC = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateId | null>(null);
   const [fields, setFields] = useState<FormFields>(INITIAL_FIELDS);
@@ -52,7 +169,7 @@ const EmailComposer: React.FC = () => {
   const [testEmail, setTestEmail] = useState('');
   const [subject, setSubject] = useState('');
   const [sending, setSending] = useState(false);
-  const [sendResult, setSendResult] = useState<ComposerSendResult | null>(null);
+  const [modal, setModal] = useState<ModalState>({ open: false, type: 'success', result: null, error: null });
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
@@ -100,7 +217,6 @@ const EmailComposer: React.FC = () => {
   const handleSendTest = async () => {
     if (!selectedTemplate || !canSend) return;
     setSending(true);
-    setSendResult(null);
     try {
       const result = await adminService.sendComposerTestEmail({
         templateId: selectedTemplate,
@@ -108,10 +224,10 @@ const EmailComposer: React.FC = () => {
         to: testEmail.trim(),
         subject: subject.trim(),
       });
-      setSendResult(result);
-      showStatus('success', 'Test email sent successfully');
+      setModal({ open: true, type: 'success', result, error: null });
     } catch (err) {
-      showStatus('error', err instanceof Error ? err.message : 'Failed to send test');
+      const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+      setModal({ open: true, type: 'error', result: null, error: errorMsg });
     } finally {
       setSending(false);
     }
@@ -132,6 +248,9 @@ const EmailComposer: React.FC = () => {
 
   return (
     <div className="p-8">
+      {/* Send Result Modal */}
+      <SendResultModal state={modal} onClose={() => setModal(prev => ({ ...prev, open: false }))} />
+
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-semibold" style={{ color: 'rgb(17,24,39)' }}>Email Composer</h1>
@@ -438,7 +557,7 @@ const EmailComposer: React.FC = () => {
             Copy HTML
           </button>
 
-          {/* Status toast */}
+          {/* Status toast (for copy) */}
           {statusMsg && (
             <div
               className="ml-auto px-4 py-2 rounded-lg text-sm font-medium transition-opacity"
@@ -451,37 +570,6 @@ const EmailComposer: React.FC = () => {
               {statusMsg.text}
             </div>
           )}
-        </div>
-      )}
-
-      {/* Resend Response */}
-      {sendResult && (
-        <div className="mt-6 rounded-xl border" style={{ backgroundColor: 'rgb(240,253,244)', borderColor: 'rgb(134,239,172)' }}>
-          <div className="px-5 py-4 border-b" style={{ borderColor: 'rgb(134,239,172)' }}>
-            <h3 className="text-sm font-semibold" style={{ color: 'rgb(34,197,94)' }}>Sent Successfully</h3>
-          </div>
-          <div className="p-5 space-y-2 text-sm">
-            <div className="flex items-start gap-2">
-              <span className="font-medium w-20 shrink-0" style={{ color: 'rgb(107,114,128)' }}>ID</span>
-              <span className="font-mono text-xs break-all" style={{ color: 'rgb(17,24,39)' }}>{sendResult.id}</span>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="font-medium w-20 shrink-0" style={{ color: 'rgb(107,114,128)' }}>From</span>
-              <span style={{ color: 'rgb(17,24,39)' }}>{sendResult.from}</span>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="font-medium w-20 shrink-0" style={{ color: 'rgb(107,114,128)' }}>To</span>
-              <span style={{ color: 'rgb(17,24,39)' }}>{sendResult.to?.join(', ')}</span>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="font-medium w-20 shrink-0" style={{ color: 'rgb(107,114,128)' }}>Subject</span>
-              <span style={{ color: 'rgb(17,24,39)' }}>{sendResult.subject}</span>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="font-medium w-20 shrink-0" style={{ color: 'rgb(107,114,128)' }}>Sent at</span>
-              <span style={{ color: 'rgb(17,24,39)' }}>{new Date(sendResult.created_at).toLocaleString()}</span>
-            </div>
-          </div>
         </div>
       )}
     </div>

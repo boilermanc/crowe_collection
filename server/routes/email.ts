@@ -120,8 +120,9 @@ router.post('/api/email/send-test', requireAdmin, async (req: Request, res: Resp
       created_at: new Date().toISOString(),
     });
   } catch (err) {
-    console.error(`[email] Failed to send test email:`, err);
-    res.status(500).json({ error: 'Failed to send test email' });
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    console.error(`[email] Failed to send test email:`, message, err);
+    res.status(500).json({ error: message });
   }
 });
 
