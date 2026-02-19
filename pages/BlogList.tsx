@@ -96,7 +96,7 @@ const BlogList: React.FC = () => {
       <header className="blog-header">
         <div className="container">
           <p className="section-label">From the Crate</p>
-          <h1>The Rekkrd Blog</h1>
+          <h1>The Rekk<span style={{ color: 'var(--peach-dark)' }}>r</span>d Blog</h1>
           <p>Stories, tips, and deep cuts from the world of vinyl collecting.</p>
         </div>
       </header>

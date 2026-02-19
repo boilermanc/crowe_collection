@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, FormEvent } from 'react';
 import { useAuthContext } from '../contexts/AuthContext';
 import { isAdmin } from '../services/profileService';
+import { supabase } from '../services/supabaseService';
 
 interface AdminAuthGuardProps {
   children: React.ReactNode;
@@ -10,6 +11,12 @@ const AdminAuthGuard: React.FC<AdminAuthGuardProps> = ({ children }) => {
   const { user, loading: authLoading } = useAuthContext();
   const [checking, setChecking] = useState(true);
   const [authorized, setAuthorized] = useState(false);
+
+  // Login form state
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [loginLoading, setLoginLoading] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -26,6 +33,34 @@ const AdminAuthGuard: React.FC<AdminAuthGuardProps> = ({ children }) => {
     });
   }, [user, authLoading]);
 
+  const handleLogin = async (e: FormEvent) => {
+    e.preventDefault();
+    setLoginError(null);
+
+    if (!supabase) {
+      setLoginError('Database connection is not available.');
+      return;
+    }
+
+    if (!email.trim() || !password.trim()) {
+      setLoginError('Email and password are required.');
+      return;
+    }
+
+    setLoginLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+      if (error) throw error;
+    } catch (err: unknown) {
+      setLoginError(err instanceof Error ? err.message : 'Sign in failed.');
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
   if (authLoading || checking) {
     return (
       <div className="admin-root flex items-center justify-center min-h-screen">
@@ -37,7 +72,81 @@ const AdminAuthGuard: React.FC<AdminAuthGuardProps> = ({ children }) => {
     );
   }
 
-  if (!user || !authorized) {
+  // Not signed in — show login form
+  if (!user) {
+    return (
+      <div className="admin-root flex items-center justify-center min-h-screen" style={{ background: '#f9fafb' }}>
+        <div className="w-full max-w-sm px-6">
+          <div className="text-center mb-8">
+            <div className="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center mx-auto mb-4">
+              <svg className="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <h2 className="text-lg font-semibold" style={{ color: 'rgb(17,24,39)' }}>Admin Sign In</h2>
+            <p className="text-sm mt-1" style={{ color: 'rgb(107,114,128)' }}>Sign in to access the admin panel.</p>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            {loginError && (
+              <p className="text-red-600 text-sm text-center" role="alert">{loginError}</p>
+            )}
+            <div>
+              <label htmlFor="admin-email" className="block text-xs font-medium mb-1.5" style={{ color: 'rgb(55,65,81)' }}>Email</label>
+              <input
+                id="admin-email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                className="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                style={{ borderColor: 'rgb(209,213,219)', color: 'rgb(17,24,39)' }}
+                placeholder="you@example.com"
+              />
+            </div>
+            <div>
+              <label htmlFor="admin-password" className="block text-xs font-medium mb-1.5" style={{ color: 'rgb(55,65,81)' }}>Password</label>
+              <input
+                id="admin-password"
+                type="password"
+                autoComplete="current-password"
+                required
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                className="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                style={{ borderColor: 'rgb(209,213,219)', color: 'rgb(17,24,39)' }}
+                placeholder="••••••••"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={loginLoading}
+              className="w-full py-2.5 rounded-lg text-white text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              style={{ background: loginLoading ? 'rgb(129,140,248)' : 'rgb(99,102,241)' }}
+            >
+              {loginLoading ? (
+                <>
+                  <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  Signing in...
+                </>
+              ) : 'Sign In'}
+            </button>
+          </form>
+
+          <div className="text-center mt-6">
+            <a href="/" className="text-sm hover:underline" style={{ color: 'rgb(99,102,241)' }}>Back to Rekkrd</a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Signed in but not admin — access denied
+  if (!authorized) {
     return (
       <div className="admin-root flex items-center justify-center min-h-screen">
         <div className="text-center max-w-sm px-6">
