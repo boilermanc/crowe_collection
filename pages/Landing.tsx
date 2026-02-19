@@ -702,6 +702,7 @@ const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
                 <li><a href="#faq">FAQ</a></li>
                 <li><a href="#">API Reference</a></li>
                 <li><a href="#">Status</a></li>
+                <li><a href="/support">Support</a></li>
               </ul>
             </div>
             <div className="footer-col">

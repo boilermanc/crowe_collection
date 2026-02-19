@@ -462,7 +462,7 @@ const App: React.FC = () => {
             )}
           </div>
 
-          {currentView !== 'landing' && <div className="flex-1 max-w-xl flex items-center gap-2">
+          {currentView !== 'landing' && currentView !== 'stakkd' && <div className="flex-1 max-w-xl flex items-center gap-2">
             <button
               onClick={() => setShowStats(!showStats)}
               className={`p-3 rounded-full border transition-all flex-shrink-0 ${showStats ? 'bg-[#dd6e42] border-[#dd6e42] text-th-text shadow-lg' : 'bg-th-surface/[0.04] border-th-surface/[0.10] text-th-text2 hover:text-th-text'}`}
@@ -946,7 +946,7 @@ const App: React.FC = () => {
         </main>
       )}
 
-      {currentView !== 'landing' && (
+      {currentView !== 'landing' && currentView !== 'stakkd' && (
         <div className="fixed bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-3 md:gap-4 z-50 w-full px-4 justify-center">
           <button
             onClick={() => {

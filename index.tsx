@@ -17,6 +17,7 @@ import Privacy from './pages/Privacy';
 import BlogList from './pages/BlogList';
 import BlogPost from './pages/BlogPost';
 import NotFound from './pages/NotFound';
+import SupportPage from './components/SupportPage';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -42,6 +43,7 @@ root.render(
                   <Route path="/privacy" element={<Privacy />} />
                   <Route path="/blog" element={<BlogList />} />
                   <Route path="/blog/:slug" element={<BlogPost />} />
+                  <Route path="/support" element={<SupportPage />} />
                   <Route path="/" element={<App />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
