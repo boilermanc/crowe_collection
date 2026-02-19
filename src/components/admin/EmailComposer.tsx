@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { adminService } from '../../../services/adminService';
+import { adminService, ComposerSendResult } from '../../../services/adminService';
 
 type TemplateId = 'light' | 'orange' | 'dark-blue';
 
@@ -49,7 +49,10 @@ const EmailComposer: React.FC = () => {
   const [fields, setFields] = useState<FormFields>(INITIAL_FIELDS);
   const [templateHtml, setTemplateHtml] = useState<string>('');
   const [loadingTemplate, setLoadingTemplate] = useState(false);
+  const [testEmail, setTestEmail] = useState('');
+  const [subject, setSubject] = useState('');
   const [sending, setSending] = useState(false);
+  const [sendResult, setSendResult] = useState<ComposerSendResult | null>(null);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
@@ -92,16 +95,21 @@ const EmailComposer: React.FC = () => {
   }, [templateHtml, fields]);
 
   const canSubmit = selectedTemplate && fields.headline.trim() && fields.body_content.trim();
+  const canSend = canSubmit && testEmail.trim() && subject.trim();
 
   const handleSendTest = async () => {
-    if (!selectedTemplate || !canSubmit) return;
+    if (!selectedTemplate || !canSend) return;
     setSending(true);
+    setSendResult(null);
     try {
-      await adminService.sendComposerTestEmail({
+      const result = await adminService.sendComposerTestEmail({
         templateId: selectedTemplate,
         variables: fields,
+        to: testEmail.trim(),
+        subject: subject.trim(),
       });
-      showStatus('success', 'Test email processed successfully');
+      setSendResult(result);
+      showStatus('success', 'Test email sent successfully');
     } catch (err) {
       showStatus('error', err instanceof Error ? err.message : 'Failed to send test');
     } finally {
@@ -192,6 +200,32 @@ const EmailComposer: React.FC = () => {
               <h3 className="text-sm font-semibold" style={{ color: 'rgb(17,24,39)' }}>Content</h3>
             </div>
             <div className="p-5 space-y-4">
+              <div>
+                <label className={labelClasses} style={{ color: 'rgb(107,114,128)' }}>Test Email Address *</label>
+                <input
+                  type="email"
+                  value={testEmail}
+                  onChange={e => setTestEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className={inputClasses}
+                  style={{ borderColor: 'rgb(229,231,235)' }}
+                />
+              </div>
+
+              <div>
+                <label className={labelClasses} style={{ color: 'rgb(107,114,128)' }}>Subject Line *</label>
+                <input
+                  type="text"
+                  value={subject}
+                  onChange={e => setSubject(e.target.value)}
+                  placeholder="e.g. Welcome to Rekkrd!"
+                  className={inputClasses}
+                  style={{ borderColor: 'rgb(229,231,235)' }}
+                />
+              </div>
+
+              <div className="border-t pt-4" style={{ borderColor: 'rgb(229,231,235)' }} />
+
               <div>
                 <label className={labelClasses} style={{ color: 'rgb(107,114,128)' }}>Preheader Text</label>
                 <input
@@ -373,7 +407,7 @@ const EmailComposer: React.FC = () => {
         <div className="mt-6 flex items-center gap-3">
           <button
             onClick={handleSendTest}
-            disabled={!canSubmit || sending}
+            disabled={!canSend || sending}
             className="px-5 py-2.5 text-sm font-medium rounded-lg text-white transition-colors disabled:opacity-50 flex items-center gap-2"
             style={{ backgroundColor: 'rgb(99,102,241)' }}
           >
@@ -417,6 +451,37 @@ const EmailComposer: React.FC = () => {
               {statusMsg.text}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Resend Response */}
+      {sendResult && (
+        <div className="mt-6 rounded-xl border" style={{ backgroundColor: 'rgb(240,253,244)', borderColor: 'rgb(134,239,172)' }}>
+          <div className="px-5 py-4 border-b" style={{ borderColor: 'rgb(134,239,172)' }}>
+            <h3 className="text-sm font-semibold" style={{ color: 'rgb(34,197,94)' }}>Sent Successfully</h3>
+          </div>
+          <div className="p-5 space-y-2 text-sm">
+            <div className="flex items-start gap-2">
+              <span className="font-medium w-20 shrink-0" style={{ color: 'rgb(107,114,128)' }}>ID</span>
+              <span className="font-mono text-xs break-all" style={{ color: 'rgb(17,24,39)' }}>{sendResult.id}</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="font-medium w-20 shrink-0" style={{ color: 'rgb(107,114,128)' }}>From</span>
+              <span style={{ color: 'rgb(17,24,39)' }}>{sendResult.from}</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="font-medium w-20 shrink-0" style={{ color: 'rgb(107,114,128)' }}>To</span>
+              <span style={{ color: 'rgb(17,24,39)' }}>{sendResult.to?.join(', ')}</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="font-medium w-20 shrink-0" style={{ color: 'rgb(107,114,128)' }}>Subject</span>
+              <span style={{ color: 'rgb(17,24,39)' }}>{sendResult.subject}</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="font-medium w-20 shrink-0" style={{ color: 'rgb(107,114,128)' }}>Sent at</span>
+              <span style={{ color: 'rgb(17,24,39)' }}>{new Date(sendResult.created_at).toLocaleString()}</span>
+            </div>
+          </div>
         </div>
       )}
     </div>

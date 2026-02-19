@@ -71,6 +71,15 @@ export interface SendEmailResult {
   created_at: string;
 }
 
+export interface ComposerSendResult {
+  success: boolean;
+  id: string;
+  from: string;
+  to: string[];
+  subject: string;
+  created_at: string;
+}
+
 export interface CmsContentRow {
   id: string;
   page: string;
@@ -293,7 +302,7 @@ export const adminService = {
     return resp.text();
   },
 
-  async sendComposerTestEmail(payload: { templateId: string; variables: Record<string, string> }): Promise<{ success: boolean; html: string }> {
+  async sendComposerTestEmail(payload: { templateId: string; variables: Record<string, string>; to: string; subject: string }): Promise<ComposerSendResult> {
     const headers = await getAuthHeaders();
     const resp = await fetch('/api/email/send-test', {
       method: 'POST',

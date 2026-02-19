@@ -2,6 +2,7 @@ import { Router, type Request, type Response } from 'express';
 import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { Resend } from 'resend';
 import { requireAdmin } from '../middleware/adminAuth.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -58,9 +59,15 @@ router.get('/api/email/templates/:templateId', (req: Request, res: Response) => 
 });
 
 // ── POST /api/email/send-test ────────────────────────────────────────
-// Processes template with variables — requires admin auth
+// Processes template with variables, sends via Resend — requires admin auth
 router.post('/api/email/send-test', requireAdmin, async (req: Request, res: Response) => {
-  const { templateId, variables } = req.body;
+  const resendKey = process.env.RESEND_API_KEY;
+  if (!resendKey) {
+    res.status(500).json({ error: 'RESEND_API_KEY not configured' });
+    return;
+  }
+
+  const { templateId, variables, to, subject } = req.body;
 
   if (!templateId || !isValidTemplateId(templateId)) {
     res.status(400).json({ error: 'Valid templateId required (light, orange, dark-blue)' });
@@ -72,13 +79,49 @@ router.post('/api/email/send-test', requireAdmin, async (req: Request, res: Resp
     return;
   }
 
+  if (!to || typeof to !== 'string') {
+    res.status(400).json({ error: 'to (email address) is required' });
+    return;
+  }
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
+    res.status(400).json({ error: 'Invalid email address' });
+    return;
+  }
+
+  if (!subject || typeof subject !== 'string') {
+    res.status(400).json({ error: 'subject is required' });
+    return;
+  }
+
   try {
     const rawHtml = readTemplate(templateId);
     const processedHtml = processTemplate(rawHtml, variables);
-    res.status(200).json({ success: true, html: processedHtml });
+
+    const resend = new Resend(resendKey);
+    const result = await resend.emails.send({
+      from: 'Rekkrd <onboarding@resend.dev>',
+      to: [to],
+      subject,
+      html: processedHtml,
+    });
+
+    if (result.error) {
+      res.status(400).json({ error: result.error.message, details: result.error });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      id: result.data?.id,
+      from: 'Rekkrd <onboarding@resend.dev>',
+      to: [to],
+      subject,
+      created_at: new Date().toISOString(),
+    });
   } catch (err) {
-    console.error(`[email] Failed to process template "${templateId}":`, err);
-    res.status(500).json({ error: 'Failed to process template' });
+    console.error(`[email] Failed to send test email:`, err);
+    res.status(500).json({ error: 'Failed to send test email' });
   }
 });
 
