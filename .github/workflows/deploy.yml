@@ -19,7 +19,7 @@ jobs:
           script: |
             cd ~/app
             git pull origin main
-            npm install
+            npm install --legacy-peer-deps
             npm run build
             cp -r dist/* ~/httpdocs/
             pm2 restart rekkrd-api
