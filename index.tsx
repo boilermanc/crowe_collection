@@ -19,6 +19,8 @@ import BlogList from './pages/BlogList';
 import BlogPost from './pages/BlogPost';
 import ErrorPage from './components/ErrorPage';
 import SupportPage from './components/SupportPage';
+import WelcomeLandingPage from './src/components/WelcomeLandingPage';
+
 
 function NotFoundPage() {
   const navigate = useNavigate();
@@ -51,6 +53,7 @@ root.render(
                   <Route path="/blog" element={<BlogList />} />
                   <Route path="/blog/:slug" element={<BlogPost />} />
                   <Route path="/support" element={<SupportPage />} />
+                  <Route path="/welcome" element={<WelcomeLandingPage />} />
                   <Route path="/" element={<App />} />
                   <Route path="*" element={<NotFoundPage />} />
                 </Routes>

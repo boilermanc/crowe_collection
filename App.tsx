@@ -104,7 +104,17 @@ const App: React.FC = () => {
       try {
         const existing = await getProfile(user.id);
         if (!existing) {
-          await createProfile({ id: user.id });
+          // Capture UTM params from sessionStorage (set by /welcome page)
+          const utmFields: Record<string, string> = {};
+          for (const key of ['utm_source', 'utm_medium', 'utm_campaign'] as const) {
+            const val = sessionStorage.getItem(key);
+            if (val) utmFields[key] = val;
+          }
+          await createProfile({ id: user.id, ...utmFields });
+          // Clear UTM params after saving
+          for (const key of ['utm_source', 'utm_medium', 'utm_campaign'] as const) {
+            sessionStorage.removeItem(key);
+          }
           setShowOnboarding(true);
           return;
         }
@@ -421,8 +431,37 @@ const App: React.FC = () => {
     return (
       <OnboardingWizard
         userId={user.id}
-        onComplete={(action) => {
+        onComplete={async (action, tier) => {
           setShowOnboarding(false);
+
+          // Trigger Stripe checkout for paid tiers selected via /welcome CTAs
+          if (tier === 'curator' || tier === 'archivist') {
+            try {
+              // Welcome page "archivist" maps to Stripe product tier "enthusiast"
+              const stripeTier = tier === 'archivist' ? 'enthusiast' : tier;
+              const pricesRes = await fetch('/api/prices');
+              if (pricesRes.ok) {
+                const { tiers } = await pricesRes.json();
+                const priceId = tiers?.[stripeTier]?.monthly?.priceId;
+                if (priceId) {
+                  const session = await supabase?.auth.getSession();
+                  const token = session?.data?.session?.access_token;
+                  if (token) {
+                    const checkoutRes = await fetch('/api/checkout', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                      body: JSON.stringify({ priceId }),
+                    });
+                    const { url } = await checkoutRes.json();
+                    if (url) { window.location.href = url; return; }
+                  }
+                }
+              }
+            } catch (err) {
+              console.error('Post-onboarding checkout failed:', err);
+            }
+          }
+
           if (action === 'add') {
             setCurrentView('landing');
             setIsCameraOpen(true);

@@ -10,6 +10,10 @@ export interface Profile {
   collecting_goal: string | null;
   onboarding_completed: boolean;
   role: UserRole;
+  subscription_tier: string | null;
+  utm_source: string | null;
+  utm_medium: string | null;
+  utm_campaign: string | null;
   created_at: string;
   updated_at: string;
 }

@@ -166,6 +166,34 @@ const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
     setShowAuth(true);
   };
 
+  // Auto-open signup panel from /welcome CTA query params
+  const queryParamsHandled = useRef(false);
+  useEffect(() => {
+    if (queryParamsHandled.current) return;
+    queryParamsHandled.current = true;
+
+    const params = new URLSearchParams(window.location.search);
+    const wantSignup = params.get('signup') === 'true';
+    const tier = params.get('tier');
+
+    if (tier && ['collector', 'curator', 'archivist'].includes(tier)) {
+      sessionStorage.setItem('selected_tier', tier);
+    }
+
+    // Clean query params from URL
+    if (wantSignup || tier) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('signup');
+      url.searchParams.delete('tier');
+      const clean = url.pathname + (url.searchParams.toString() ? `?${url.searchParams}` : '');
+      window.history.replaceState({}, '', clean);
+    }
+
+    if (wantSignup && !user) {
+      openAuthPanel('signup');
+    }
+  }, [user]);
+
   const handleAuthSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setAuthError(null);

@@ -409,9 +409,13 @@ const GearCaptureGuide: React.FC<GearCaptureGuideProps> = ({ isOpen, onClose, on
                 </button>
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="text-th-text3/60 text-xs hover:text-th-text3 transition-colors underline underline-offset-2"
+                  aria-label="Upload photo from device"
+                  className="flex items-center gap-2 border border-th-surface/[0.15] text-th-text3/70 hover:text-th-text hover:border-th-surface/[0.30] py-2 px-4 rounded-xl transition-all"
                 >
-                  Upload Photo
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                  </svg>
+                  <span className="text-xs uppercase tracking-[0.15em] font-medium">Upload</span>
                 </button>
               </div>
             )}
@@ -503,9 +507,13 @@ const GearCaptureGuide: React.FC<GearCaptureGuideProps> = ({ isOpen, onClose, on
               </button>
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="text-th-text3/60 text-xs hover:text-th-text3 transition-colors underline underline-offset-2"
+                aria-label="Upload photo from device"
+                className="flex items-center gap-2 border border-th-surface/[0.15] text-th-text3/70 hover:text-th-text hover:border-th-surface/[0.30] py-2 px-4 rounded-xl transition-all"
               >
-                Upload Photo
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                </svg>
+                <span className="text-xs uppercase tracking-[0.15em] font-medium">Upload</span>
               </button>
             </div>
           </div>
@@ -616,7 +624,6 @@ const GearCaptureGuide: React.FC<GearCaptureGuideProps> = ({ isOpen, onClose, on
         ref={fileInputRef}
         type="file"
         accept="image/*"
-        capture="environment"
         onChange={handleFileUpload}
         className="hidden"
         aria-hidden="true"

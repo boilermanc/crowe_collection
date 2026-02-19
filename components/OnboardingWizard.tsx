@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { updateProfile } from '../services/profileService';
 import '../pages/Landing.css';
 
+type SelectedTier = 'collector' | 'curator' | 'archivist' | null;
+const VALID_TIERS = ['collector', 'curator', 'archivist'];
+
 interface OnboardingWizardProps {
   userId: string;
-  onComplete: (action: 'add' | 'explore') => void;
+  onComplete: (action: 'add' | 'explore', tier: SelectedTier) => void;
 }
 
 const STEPS = ['Welcome', 'Your Habits', 'Feature Tour', 'Get Started'] as const;
@@ -71,6 +74,15 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId, onComplete 
   const [selectedGenres, setSelectedGenres] = useState<Set<string>>(new Set());
   const [selectedSetup, setSelectedSetup] = useState<SetupId | null>(null);
   const [selectedGoal, setSelectedGoal] = useState<GoalId | null>(null);
+
+  // Read pre-selected tier from /welcome CTA
+  const [selectedTier, setSelectedTier] = useState<SelectedTier>(null);
+  useEffect(() => {
+    const tier = sessionStorage.getItem('selected_tier');
+    if (tier && VALID_TIERS.includes(tier)) {
+      setSelectedTier(tier as SelectedTier);
+    }
+  }, []);
 
   const isFirst = currentStep === 0;
   const isLast = currentStep === STEPS.length - 1;
@@ -162,7 +174,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId, onComplete 
             )}
             {currentStep === 2 && <StepFeatureTour />}
             {currentStep === 3 && (
-              <StepGetStarted userId={userId} selectedGenres={selectedGenres} selectedSetup={selectedSetup} selectedGoal={selectedGoal} onComplete={onComplete} />
+              <StepGetStarted userId={userId} selectedGenres={selectedGenres} selectedSetup={selectedSetup} selectedGoal={selectedGoal} selectedTier={selectedTier} onComplete={onComplete} />
             )}
           </div>
 
@@ -524,10 +536,11 @@ interface StepGetStartedProps {
   selectedGenres: Set<string>;
   selectedSetup: SetupId | null;
   selectedGoal: GoalId | null;
-  onComplete: (action: 'add' | 'explore') => void;
+  selectedTier: SelectedTier;
+  onComplete: (action: 'add' | 'explore', tier: SelectedTier) => void;
 }
 
-const StepGetStarted: React.FC<StepGetStartedProps> = ({ userId, selectedGenres, selectedSetup, selectedGoal, onComplete }) => {
+const StepGetStarted: React.FC<StepGetStartedProps> = ({ userId, selectedGenres, selectedSetup, selectedGoal, selectedTier, onComplete }) => {
   const [saving, setSaving] = useState<'add' | 'explore' | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -542,13 +555,15 @@ const StepGetStarted: React.FC<StepGetStartedProps> = ({ userId, selectedGenres,
         favorite_genres: [...selectedGenres],
         listening_setup: selectedSetup,
         collecting_goal: selectedGoal,
+        subscription_tier: selectedTier ?? 'collector',
         onboarding_completed: true,
       });
     } catch (err) {
       console.error('Failed to save onboarding profile:', err);
       setError('Could not save preferences \u2014 you can update them later.');
     }
-    onComplete(action);
+    sessionStorage.removeItem('selected_tier');
+    onComplete(action, selectedTier);
   };
 
   return (
