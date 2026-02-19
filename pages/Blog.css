@@ -145,10 +145,9 @@
   justify-content:center;
 }
 .blog-card-image-placeholder svg {
-  width:48px;
-  height:48px;
-  opacity:.3;
-  color:#fff;
+  width:80px;
+  height:80px;
+  opacity:1;
 }
 
 .blog-card-body {

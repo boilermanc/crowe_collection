@@ -131,9 +131,17 @@ const BlogList: React.FC = () => {
                     />
                   ) : (
                     <div className="blog-card-image-placeholder">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                        <circle cx="12" cy="12" r="10" />
-                        <circle cx="12" cy="12" r="3" />
+                      <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="256" cy="256" r="250" fill="#f0a882"/>
+                        <circle cx="256" cy="256" r="250" fill="none" stroke="#dd6e42" strokeWidth="4" opacity="0.3"/>
+                        <circle cx="256" cy="256" r="225" fill="none" stroke="#d48a6a" strokeWidth="2" opacity="0.35"/>
+                        <circle cx="256" cy="256" r="200" fill="none" stroke="#d48a6a" strokeWidth="1.5" opacity="0.3"/>
+                        <circle cx="256" cy="256" r="175" fill="none" stroke="#d48a6a" strokeWidth="1.5" opacity="0.3"/>
+                        <circle cx="256" cy="256" r="150" fill="none" stroke="#d48a6a" strokeWidth="1.5" opacity="0.25"/>
+                        <circle cx="256" cy="256" r="120" fill="#c45a30"/>
+                        <circle cx="256" cy="256" r="105" fill="none" stroke="#a8481f" strokeWidth="1" opacity="0.3"/>
+                        <text x="256" y="264" textAnchor="middle" dominantBaseline="central" fontFamily="Georgia,'Times New Roman',serif" fontWeight="bold" fontSize="140" fill="#f0a882">R</text>
+                        <circle cx="256" cy="256" r="12" fill="#f0a882" opacity="0.4"/>
                       </svg>
                     </div>
                   )}

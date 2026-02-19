@@ -56,6 +56,17 @@ const PlusIcon: React.FC<{ open: boolean }> = ({ open }) => (
   </svg>
 );
 
+/** Replace plain "Rekkrd" in text with orange-styled brand span */
+const brandify = (text: string): React.ReactNode => {
+  const parts = text.split('Rekkrd');
+  if (parts.length === 1) return text;
+  return parts.flatMap((part, i) =>
+    i < parts.length - 1
+      ? [part, <span key={i} className="brand-name">Rekkrd</span>]
+      : [part]
+  );
+};
+
 const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
   const { user, signOut } = useAuthContext();
   const [isAnnual, setIsAnnual] = useState(false);
@@ -231,12 +242,12 @@ const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
         <div className="container">
           <a href="#" className="nav-logo">
             <svg className="nav-logo-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <circle cx="12" cy="12" r="11" fill="#f0a882"/>
-              <circle cx="12" cy="12" r="9.5" fill="none" stroke="#d48a6a" strokeWidth="0.4" opacity="0.5"/>
-              <circle cx="12" cy="12" r="8" fill="none" stroke="#d48a6a" strokeWidth="0.3" opacity="0.4"/>
-              <circle cx="12" cy="12" r="6.5" fill="none" stroke="#d48a6a" strokeWidth="0.3" opacity="0.3"/>
-              <circle cx="12" cy="12" r="5.2" fill="#c45a30"/>
-              <text x="12" y="12.5" textAnchor="middle" dominantBaseline="central" fontFamily="Georgia,serif" fontWeight="bold" fontSize="7" fill="#f0a882">R</text>
+              <circle cx="12" cy="12" r="11" fill="#3a525d"/>
+              <circle cx="12" cy="12" r="9.5" fill="none" stroke="#4f6d7a" strokeWidth="0.4" opacity="0.5"/>
+              <circle cx="12" cy="12" r="8" fill="none" stroke="#4f6d7a" strokeWidth="0.3" opacity="0.4"/>
+              <circle cx="12" cy="12" r="6.5" fill="none" stroke="#4f6d7a" strokeWidth="0.3" opacity="0.3"/>
+              <circle cx="12" cy="12" r="5.2" fill="#2a3d46"/>
+              <text x="12" y="12.5" textAnchor="middle" dominantBaseline="central" fontFamily="Georgia,serif" fontWeight="bold" fontSize="7" fill="#dd6e42">R</text>
             </svg>
             <span>Rekk<span>r</span>d</span>
           </a>
@@ -326,7 +337,7 @@ const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
           <div className="section-header">
             <div className="section-label">{content.features_header.label}</div>
             <h2 className="section-title">{content.features_header.title}</h2>
-            <p className="section-sub">{content.features_header.subtitle}</p>
+            <p className="section-sub">{brandify(content.features_header.subtitle)}</p>
           </div>
           <div className="features-grid">
             {content.features.map(f => (
@@ -415,7 +426,7 @@ const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
           <div className="playlist-text">
             <div className="section-label">{content.playlist_header.label}</div>
             <h2 className="section-title">{content.playlist_header.title}<br /><em style={{ color: 'var(--peach)', fontWeight: 400 }}>{content.playlist_header.title_em}</em></h2>
-            <p className="section-sub">{content.playlist_header.subtitle}</p>
+            <p className="section-sub">{brandify(content.playlist_header.subtitle)}</p>
             <ul className="showcase-list" style={{ marginTop: 28 }}>
               {content.playlist_header.checklist.map(checkItem)}
             </ul>
@@ -639,7 +650,7 @@ const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
                   <PlusIcon open={openFaq === i} />
                 </button>
                 <div className="faq-a">
-                  <div className="faq-a-inner">{f.a}</div>
+                  <div className="faq-a-inner">{brandify(f.a)}</div>
                 </div>
               </div>
             ))}
@@ -664,16 +675,16 @@ const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
             <div className="footer-brand">
               <a href="#" className="nav-logo">
                 <svg className="nav-logo-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <circle cx="12" cy="12" r="11" fill="#f0a882"/>
-                  <circle cx="12" cy="12" r="9.5" fill="none" stroke="#d48a6a" strokeWidth="0.4" opacity="0.5"/>
-                  <circle cx="12" cy="12" r="8" fill="none" stroke="#d48a6a" strokeWidth="0.3" opacity="0.4"/>
-                  <circle cx="12" cy="12" r="6.5" fill="none" stroke="#d48a6a" strokeWidth="0.3" opacity="0.3"/>
-                  <circle cx="12" cy="12" r="5.2" fill="#c45a30"/>
-                  <text x="12" y="12.5" textAnchor="middle" dominantBaseline="central" fontFamily="Georgia,serif" fontWeight="bold" fontSize="7" fill="#f0a882">R</text>
+                  <circle cx="12" cy="12" r="11" fill="#3a525d"/>
+                  <circle cx="12" cy="12" r="9.5" fill="none" stroke="#4f6d7a" strokeWidth="0.4" opacity="0.5"/>
+                  <circle cx="12" cy="12" r="8" fill="none" stroke="#4f6d7a" strokeWidth="0.3" opacity="0.4"/>
+                  <circle cx="12" cy="12" r="6.5" fill="none" stroke="#4f6d7a" strokeWidth="0.3" opacity="0.3"/>
+                  <circle cx="12" cy="12" r="5.2" fill="#2a3d46"/>
+                  <text x="12" y="12.5" textAnchor="middle" dominantBaseline="central" fontFamily="Georgia,serif" fontWeight="bold" fontSize="7" fill="#dd6e42">R</text>
                 </svg>
                 <span>Rekk<span>r</span>d</span>
               </a>
-              <p>{content.footer.brand_description}</p>
+              <p>{brandify(content.footer.brand_description)}</p>
             </div>
             <div className="footer-col">
               <h4>Product</h4>
@@ -704,7 +715,7 @@ const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
             </div>
           </div>
           <div className="footer-bottom">
-            <span>{content.footer.copyright}</span>
+            <span>{brandify(content.footer.copyright)}</span>
             <span>{content.footer.tagline}</span>
           </div>
         </div>

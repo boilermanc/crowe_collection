@@ -153,7 +153,7 @@ export const DEFAULT_FAQS: CmsFaq[] = [
 ];
 
 export const DEFAULT_FINAL_CTA: CmsFinalCta = {
-  heading: 'Ready to <em>Rekkrd</em><br/>Your Collection?',
+  heading: 'Ready to <em>Rekk<span>r</span>d</em><br/>Your Collection?',
   description: 'Join thousands of collectors who\u2019ve digitized, valued, and rediscovered their vinyl with AI.',
   cta_primary: 'Start Free \u2014 No Card Required',
   cta_secondary: 'View Pricing',

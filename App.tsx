@@ -10,6 +10,7 @@ import AlbumDetailModal from './components/AlbumDetailModal';
 import PlaylistStudio from './components/PlaylistStudio';
 import CollectionList from './components/CollectionList';
 import Pagination from './components/Pagination';
+import StakkdPage from './components/StakkdPage';
 import Landing from './pages/Landing';
 // AuthPage kept as standalone fallback; Landing page handles auth via dropdown
 import { proxyImageUrl } from './services/imageProxy';
@@ -27,7 +28,7 @@ import PlanBadge from './components/PlanBadge';
 const PAGE_SIZE = 40;
 
 type SortOption = 'recent' | 'year' | 'artist' | 'title' | 'value';
-type ViewMode = 'public-landing' | 'landing' | 'grid' | 'list';
+type ViewMode = 'public-landing' | 'landing' | 'grid' | 'list' | 'stakkd';
 
 const DEFAULT_BG = 'https://images.unsplash.com/photo-1603048588665-791ca8aea617?q=80&w=2000&auto=format&fit=crop';
 
@@ -498,6 +499,18 @@ const App: React.FC = () => {
               )}
             </button>
             <button
+              onClick={() => setCurrentView('stakkd')}
+              className={`p-3 rounded-full border transition-all flex-shrink-0 ${currentView === 'stakkd' ? 'bg-[#dd6e42] border-[#dd6e42] text-th-text shadow-lg' : 'bg-th-surface/[0.04] border-th-surface/[0.10] text-th-text2 hover:text-th-text'}`}
+              title="Stakkd — your gear"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                {/* Speaker outline icon */}
+                <rect x="5" y="2" width="14" height="20" rx="2" />
+                <circle cx="12" cy="14" r="4" />
+                <circle cx="12" cy="6" r="2" />
+              </svg>
+            </button>
+            <button
               onClick={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
               className={`p-3 rounded-full border transition-all flex-shrink-0 ${isFilterPanelOpen ? 'bg-[#dd6e42] border-[#dd6e42] text-th-text shadow-lg' : 'bg-th-surface/[0.04] border-th-surface/[0.10] text-th-text2 hover:text-th-text'}`}
             >
@@ -756,6 +769,116 @@ const App: React.FC = () => {
             )}
           </div>
 
+          {/* Stakkd Banner */}
+          <div
+            className="relative z-10 mt-6 w-full flex justify-center animate-in fade-in slide-in-from-bottom-4 duration-700"
+            style={{ animationDelay: '150ms' }}
+          >
+            <div
+              role="button"
+              tabIndex={0}
+              aria-label="Open Stakkd — your audio gear catalog"
+              onClick={() => setCurrentView('stakkd')}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setCurrentView('stakkd'); } }}
+              className="flex flex-col items-center gap-4 px-8 py-6 rounded-2xl cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_24px_rgba(221,110,66,0.12)] border group"
+              style={{ maxWidth: 500, background: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.06)' }}
+            >
+              {/* Illustration row: speaker — receiver — speaker */}
+              <div className="flex items-center justify-center gap-3 relative">
+                {/* Left Speaker */}
+                <svg width="80" height="100" viewBox="0 0 80 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  {/* Cabinet */}
+                  <rect x="8" y="4" width="58" height="92" rx="6" stroke="#c0d6df" strokeWidth="1.5" />
+                  {/* Right edge shadow */}
+                  <line x1="66" y1="12" x2="66" y2="88" stroke="#c0d6df" strokeWidth="0.5" opacity="0.3" />
+                  <line x1="68" y1="14" x2="68" y2="86" stroke="#c0d6df" strokeWidth="0.3" opacity="0.15" />
+                  {/* Wood grain lines */}
+                  <line x1="12" y1="20" x2="12" y2="80" stroke="#c0d6df" strokeWidth="0.4" opacity="0.2" />
+                  <line x1="62" y1="15" x2="62" y2="85" stroke="#c0d6df" strokeWidth="0.4" opacity="0.2" />
+                  {/* Tweeter */}
+                  <circle cx="37" cy="24" r="10" stroke="#c0d6df" strokeWidth="1.5" />
+                  <circle cx="37" cy="24" r="6" stroke="#c0d6df" strokeWidth="0.8" opacity="0.5" />
+                  <circle cx="37" cy="24" r="2.5" fill="#dd6e42" opacity="0.4" />
+                  {/* Woofer */}
+                  <circle cx="37" cy="62" r="22" stroke="#c0d6df" strokeWidth="1.5" />
+                  <circle cx="37" cy="62" r="17" stroke="#c0d6df" strokeWidth="0.8" opacity="0.4" />
+                  <circle cx="37" cy="62" r="11" stroke="#c0d6df" strokeWidth="0.6" opacity="0.3" />
+                  <circle cx="37" cy="62" r="5" stroke="#c0d6df" strokeWidth="1" opacity="0.5" />
+                  <circle cx="37" cy="62" r="2" fill="#c0d6df" opacity="0.3" />
+                  {/* Port hole */}
+                  <rect x="30" y="88" width="14" height="4" rx="2" stroke="#c0d6df" strokeWidth="0.8" opacity="0.4" />
+                </svg>
+
+                {/* Dashed connection line — left */}
+                <svg width="16" height="4" viewBox="0 0 16 4" aria-hidden="true" className="opacity-40">
+                  <line x1="0" y1="2" x2="16" y2="2" stroke="#c0d6df" strokeWidth="1" strokeDasharray="3 2" />
+                </svg>
+
+                {/* Center Receiver */}
+                <svg width="200" height="80" viewBox="0 0 200 80" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  {/* Main chassis */}
+                  <rect x="4" y="8" width="192" height="64" rx="4" stroke="#c0d6df" strokeWidth="1.5" />
+                  {/* Top vent slits */}
+                  {[40, 65, 90, 115, 140, 160].map((x) => (
+                    <line key={x} x1={x} y1="12" x2={x + 18} y2="12" stroke="#c0d6df" strokeWidth="0.6" opacity="0.25" />
+                  ))}
+                  {/* Rack handles */}
+                  <rect x="8" y="30" width="4" height="20" rx="2" stroke="#c0d6df" strokeWidth="1" opacity="0.4" />
+                  <rect x="188" y="30" width="4" height="20" rx="2" stroke="#c0d6df" strokeWidth="1" opacity="0.4" />
+                  {/* Display window */}
+                  <rect x="28" y="20" width="144" height="24" rx="3" stroke="#c0d6df" strokeWidth="1" opacity="0.5" />
+                  <rect x="30" y="22" width="140" height="20" rx="2" fill="#c0d6df" opacity="0.04" />
+                  {/* STAKKD text in display */}
+                  <text x="100" y="36" textAnchor="middle" dominantBaseline="central" fontFamily="'Space Mono', monospace" fontWeight="700" fontSize="14" letterSpacing="0.15em" fill="#dd6e42">STAKKD</text>
+                  {/* Power LED */}
+                  <circle cx="24" cy="58" r="2.5" fill="#dd6e42" opacity="0.8" />
+                  <circle cx="24" cy="58" r="4" stroke="#dd6e42" strokeWidth="0.4" opacity="0.3" />
+                  {/* Knobs row */}
+                  {[55, 80, 105, 130, 155].map((x) => (
+                    <g key={x}>
+                      <circle cx={x} cy="58" r="5" stroke="#c0d6df" strokeWidth="1" opacity="0.5" />
+                      <line x1={x} y1="53" x2={x} y2="56" stroke="#c0d6df" strokeWidth="0.8" opacity="0.4" />
+                    </g>
+                  ))}
+                  {/* Bottom edge shadow */}
+                  <line x1="8" y1="72" x2="192" y2="72" stroke="#c0d6df" strokeWidth="0.4" opacity="0.15" />
+                </svg>
+
+                {/* Dashed connection line — right */}
+                <svg width="16" height="4" viewBox="0 0 16 4" aria-hidden="true" className="opacity-40">
+                  <line x1="0" y1="2" x2="16" y2="2" stroke="#c0d6df" strokeWidth="1" strokeDasharray="3 2" />
+                </svg>
+
+                {/* Right Speaker (mirrored) */}
+                <svg width="80" height="100" viewBox="0 0 80 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ transform: 'scaleX(-1)' }}>
+                  {/* Cabinet */}
+                  <rect x="8" y="4" width="58" height="92" rx="6" stroke="#c0d6df" strokeWidth="1.5" />
+                  {/* Right edge shadow */}
+                  <line x1="66" y1="12" x2="66" y2="88" stroke="#c0d6df" strokeWidth="0.5" opacity="0.3" />
+                  <line x1="68" y1="14" x2="68" y2="86" stroke="#c0d6df" strokeWidth="0.3" opacity="0.15" />
+                  {/* Wood grain lines */}
+                  <line x1="12" y1="20" x2="12" y2="80" stroke="#c0d6df" strokeWidth="0.4" opacity="0.2" />
+                  <line x1="62" y1="15" x2="62" y2="85" stroke="#c0d6df" strokeWidth="0.4" opacity="0.2" />
+                  {/* Tweeter */}
+                  <circle cx="37" cy="24" r="10" stroke="#c0d6df" strokeWidth="1.5" />
+                  <circle cx="37" cy="24" r="6" stroke="#c0d6df" strokeWidth="0.8" opacity="0.5" />
+                  <circle cx="37" cy="24" r="2.5" fill="#dd6e42" opacity="0.4" />
+                  {/* Woofer */}
+                  <circle cx="37" cy="62" r="22" stroke="#c0d6df" strokeWidth="1.5" />
+                  <circle cx="37" cy="62" r="17" stroke="#c0d6df" strokeWidth="0.8" opacity="0.4" />
+                  <circle cx="37" cy="62" r="11" stroke="#c0d6df" strokeWidth="0.6" opacity="0.3" />
+                  <circle cx="37" cy="62" r="5" stroke="#c0d6df" strokeWidth="1" opacity="0.5" />
+                  <circle cx="37" cy="62" r="2" fill="#c0d6df" opacity="0.3" />
+                  {/* Port hole */}
+                  <rect x="30" y="88" width="14" height="4" rx="2" stroke="#c0d6df" strokeWidth="0.8" opacity="0.4" />
+                </svg>
+              </div>
+
+              {/* Tagline */}
+              <p className="text-[#7d9199] text-xs tracking-[0.1em] uppercase font-label">Your audio gear, identified</p>
+            </div>
+          </div>
+
           {albums.length > 0 && (
             <div className="relative z-10 mt-10 flex items-center gap-4">
               <p className="text-th-text3/50 text-xs font-label tracking-widest uppercase">{albums.length} records in your crate</p>
@@ -784,6 +907,8 @@ const App: React.FC = () => {
           onToggleFavoritesFilter={() => setFavoritesOnly(prev => !prev)}
           searchQuery={searchQuery}
         />
+      ) : currentView === 'stakkd' ? (
+        <StakkdPage onUpgradeRequired={(feature: string) => setUpgradeFeature(feature)} />
       ) : (
         <main className="max-w-7xl mx-auto px-4 md:px-6 mt-8">
           {albums.length === 0 ? (
