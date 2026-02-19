@@ -356,12 +356,16 @@ const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
           </div>
           <div className="hero-video">
             <div className="hero-video-inner">
-              <div className="video-placeholder">
-                <div className="play-btn">
-                  <svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21" /></svg>
-                </div>
-                <span>Watch Demo</span>
-              </div>
+              <video
+                autoPlay
+                loop
+                muted
+                playsInline
+                aria-label="Product demo video"
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              >
+                <source src="/hero-bg.mp4" type="video/mp4" />
+              </video>
             </div>
           </div>
         </div>
