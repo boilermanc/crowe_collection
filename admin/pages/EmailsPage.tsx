@@ -1,6 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { adminService, EmailTemplate, SendEmailResult } from '../../services/adminService';
 import EmailComposer from '../../src/components/admin/EmailComposer';
+
+/** Strip script tags from HTML for safe iframe preview */
+function stripScripts(html: string): string {
+  return html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+}
 
 type Tab = 'templates' | 'send' | 'compose';
 
@@ -224,7 +229,7 @@ const EmailsPage: React.FC = () => {
                 </div>
                 <div className="border rounded-lg overflow-hidden" style={{ borderColor: 'rgb(229,231,235)' }}>
                   <iframe
-                    srcDoc={templateHtml || '<p style="color:#999;text-align:center;padding:40px">Paste HTML to preview</p>'}
+                    srcDoc={templateHtml ? stripScripts(templateHtml) : '<p style="color:#999;text-align:center;padding:40px">Paste HTML to preview</p>'}
                     className="w-full min-h-[400px] bg-white"
                     sandbox="allow-same-origin"
                     title="Email preview"
@@ -368,7 +373,7 @@ const EmailsPage: React.FC = () => {
               <div className="p-5">
                 <div className="border rounded-lg overflow-hidden" style={{ borderColor: 'rgb(229,231,235)' }}>
                   <iframe
-                    srcDoc={sendHtml || '<p style="color:#999;text-align:center;padding:40px;font-family:sans-serif">Email preview will appear here</p>'}
+                    srcDoc={sendHtml ? stripScripts(sendHtml) : '<p style="color:#999;text-align:center;padding:40px;font-family:sans-serif">Email preview will appear here</p>'}
                     className="w-full min-h-[250px] bg-white"
                     sandbox="allow-same-origin"
                     title="Send preview"

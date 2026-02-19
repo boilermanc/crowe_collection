@@ -137,6 +137,29 @@ export interface UtmStats {
   by_date: UtmDateCount[];
 }
 
+export interface EmailPreset {
+  id: string;
+  name: string;
+  category: 'transactional' | 'engagement' | 'marketing' | 'operational';
+  description: string;
+  templateId: 'light' | 'orange' | 'dark-blue';
+  automated: boolean;
+  variables: {
+    preheader_text: string;
+    headline: string;
+    hero_body: string;
+    body_content: string;
+    cta_text: string;
+    cta_url: string;
+    secondary_content: string;
+    subject: string;
+    feature_1_label?: string;
+    feature_1_text?: string;
+    feature_2_label?: string;
+    feature_2_text?: string;
+  };
+}
+
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
 export const adminService = {
@@ -293,6 +316,12 @@ export const adminService = {
       body: JSON.stringify(data),
     });
     if (!resp.ok) throw new Error(`Failed to submit blog idea: ${resp.status}`);
+    return resp.json();
+  },
+
+  async fetchEmailPresets(): Promise<EmailPreset[]> {
+    const resp = await fetch('/api/email/presets');
+    if (!resp.ok) throw new Error(`Failed to fetch presets: ${resp.status}`);
     return resp.json();
   },
 

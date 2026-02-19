@@ -4,6 +4,7 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { Resend } from 'resend';
 import { requireAdmin } from '../middleware/adminAuth.js';
+import { emailPresets, getPresetById } from '../data/emailPresets.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const router = Router();
@@ -37,6 +38,23 @@ function processTemplate(html: string, variables: Record<string, string>): strin
   }
   return result;
 }
+
+// ── GET /api/email/presets ────────────────────────────────────────────
+// Returns all email presets — no auth required
+router.get('/api/email/presets', (_req: Request, res: Response) => {
+  res.json(emailPresets);
+});
+
+// ── GET /api/email/presets/:presetId ─────────────────────────────────
+// Returns a single preset by ID or 404 — no auth required
+router.get('/api/email/presets/:presetId', (req: Request, res: Response) => {
+  const preset = getPresetById(req.params.presetId as string);
+  if (!preset) {
+    res.status(404).json({ error: 'Preset not found' });
+    return;
+  }
+  res.json(preset);
+});
 
 // ── GET /api/email/templates/:templateId ─────────────────────────────
 // Returns raw HTML template file — no auth required

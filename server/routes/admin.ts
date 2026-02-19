@@ -198,27 +198,33 @@ async function handleSendEmail(req: Request, res: Response) {
     return;
   }
 
-  const resend = new Resend(resendKey);
-  const result = await resend.emails.send({
-    from: 'Rekkrd <onboarding@resend.dev>',
-    to: [to],
-    subject,
-    html,
-  });
+  try {
+    const resend = new Resend(resendKey);
+    const result = await resend.emails.send({
+      from: 'Rekkrd <onboarding@resend.dev>',
+      to: [to],
+      subject,
+      html,
+    });
 
-  if (result.error) {
-    res.status(400).json({ error: result.error.message, details: result.error });
-    return;
+    if (result.error) {
+      res.status(400).json({ error: result.error.message, details: result.error });
+      return;
+    }
+
+    res.status(200).json({
+      id: result.data?.id,
+      from: 'Rekkrd <onboarding@resend.dev>',
+      to: [to],
+      subject,
+      created_at: new Date().toISOString(),
+      status: 'sent',
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    console.error('[admin] Failed to send email:', message, err);
+    res.status(500).json({ error: message });
   }
-
-  res.status(200).json({
-    id: result.data?.id,
-    from: 'Rekkrd <onboarding@resend.dev>',
-    to: [to],
-    subject,
-    created_at: new Date().toISOString(),
-    status: 'sent',
-  });
 }
 
 // ── CMS Content ───────────────────────────────────────────────────
