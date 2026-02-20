@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { NewGear, Gear, IdentifiedGear } from '../types';
 import { geminiService, ScanLimitError, UpgradeRequiredError } from '../services/geminiService';
 import { gearService } from '../services/gearService';
@@ -16,6 +16,7 @@ interface AddGearFlowProps {
   onClose: () => void;
   onGearSaved: (gear: Gear) => void;
   onUpgradeRequired?: (feature: string) => void;
+  initialImage?: string;
 }
 
 const AddGearFlow: React.FC<AddGearFlowProps> = ({
@@ -23,6 +24,7 @@ const AddGearFlow: React.FC<AddGearFlowProps> = ({
   onClose,
   onGearSaved,
   onUpgradeRequired,
+  initialImage,
 }) => {
   const { showToast } = useToast();
   const { canUse } = useSubscription();
@@ -36,9 +38,6 @@ const AddGearFlow: React.FC<AddGearFlowProps> = ({
     setIdentifiedGear(null);
     onClose();
   }, [onClose]);
-
-  // Start flow when isOpen becomes true
-  const effectiveStep = isOpen && flowStep === null ? 'camera' : flowStep;
 
   const handleCaptureComplete = useCallback(async (images: { front: string; label?: string }) => {
     // Check scan limit before calling the API
@@ -79,6 +78,23 @@ const AddGearFlow: React.FC<AddGearFlowProps> = ({
       }
     }
   }, [canUse, showToast, onUpgradeRequired, resetFlow]);
+
+  // Start flow when isOpen becomes true
+  const effectiveStep = isOpen && flowStep === null
+    ? (initialImage ? 'identifying' : 'camera')
+    : flowStep;
+
+  // When opened with an initialImage, kick off identification immediately
+  const initialImageTriggered = useRef(false);
+  useEffect(() => {
+    if (isOpen && initialImage && flowStep === null && !initialImageTriggered.current) {
+      initialImageTriggered.current = true;
+      handleCaptureComplete({ front: initialImage });
+    }
+    if (!isOpen) {
+      initialImageTriggered.current = false;
+    }
+  }, [isOpen, initialImage, flowStep, handleCaptureComplete]);
 
   const handleSave = useCallback(async (gear: NewGear) => {
     try {

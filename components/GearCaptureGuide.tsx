@@ -135,7 +135,6 @@ const GearCaptureGuide: React.FC<GearCaptureGuideProps> = ({ isOpen, onClose, on
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
   const [step, setStep] = useState<CaptureStep>(1);
@@ -234,29 +233,6 @@ const GearCaptureGuide: React.FC<GearCaptureGuideProps> = ({ isOpen, onClose, on
     setLabelImage(null);
     goToStep(3);
   }, [goToStep]);
-
-  /* ── File upload fallback ──────────────────────────────────── */
-  const handleFileUpload = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        const base64 = reader.result as string;
-        if (step === 1) {
-          setFrontImage(base64);
-          setTimeout(() => goToStep(2), 1000);
-        } else if (step === 2) {
-          setLabelImage(base64);
-          setTimeout(() => goToStep(3), 1000);
-        }
-      };
-      reader.readAsDataURL(file);
-      // Reset so the same file can be re-selected
-      e.target.value = '';
-    },
-    [step, goToStep],
-  );
 
   /* ── Step 3: Identify ──────────────────────────────────────── */
   const handleIdentify = useCallback(() => {
@@ -357,15 +333,9 @@ const GearCaptureGuide: React.FC<GearCaptureGuideProps> = ({ isOpen, onClose, on
             <div className="flex-1 relative bg-black flex items-center justify-center overflow-hidden">
               {cameraError ? (
                 <div className="text-center px-6">
-                  <p className="text-th-text3 text-sm mb-4">
-                    Camera access denied. You can upload a photo instead.
+                  <p className="text-th-text3 text-sm">
+                    Camera access denied. Close and use Upload Image instead.
                   </p>
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="bg-[#dd6e42] text-th-text font-bold py-3 px-6 rounded-xl hover:bg-[#c45e38] transition-all uppercase tracking-[0.2em] text-[10px]"
-                  >
-                    Upload Photo
-                  </button>
                 </div>
               ) : (
                 <>
@@ -407,16 +377,6 @@ const GearCaptureGuide: React.FC<GearCaptureGuideProps> = ({ isOpen, onClose, on
                 >
                   <div className="w-16 h-16 rounded-full bg-th-text hover:bg-[#dd6e42] transition-colors" />
                 </button>
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  aria-label="Upload photo from device"
-                  className="flex items-center gap-2 border border-th-surface/[0.15] text-th-text3/70 hover:text-th-text hover:border-th-surface/[0.30] py-2 px-4 rounded-xl transition-all"
-                >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                  </svg>
-                  <span className="text-xs uppercase tracking-[0.15em] font-medium">Upload</span>
-                </button>
               </div>
             )}
           </div>
@@ -447,15 +407,9 @@ const GearCaptureGuide: React.FC<GearCaptureGuideProps> = ({ isOpen, onClose, on
             <div className="flex-1 relative bg-black flex items-center justify-center overflow-hidden">
               {cameraError ? (
                 <div className="text-center px-6">
-                  <p className="text-th-text3 text-sm mb-4">
-                    Camera access denied. You can upload a photo instead.
+                  <p className="text-th-text3 text-sm">
+                    Camera access denied. Close and use Upload Image instead.
                   </p>
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="bg-[#dd6e42] text-th-text font-bold py-3 px-6 rounded-xl hover:bg-[#c45e38] transition-all uppercase tracking-[0.2em] text-[10px]"
-                  >
-                    Upload Photo
-                  </button>
                 </div>
               ) : (
                 <>
@@ -504,16 +458,6 @@ const GearCaptureGuide: React.FC<GearCaptureGuideProps> = ({ isOpen, onClose, on
                 className="border border-th-surface/[0.10] text-th-text font-bold py-2.5 px-6 rounded-xl hover:bg-th-surface/[0.08] transition-all uppercase tracking-[0.2em] text-[10px] disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Skip — Front Shot is Enough
-              </button>
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                aria-label="Upload photo from device"
-                className="flex items-center gap-2 border border-th-surface/[0.15] text-th-text3/70 hover:text-th-text hover:border-th-surface/[0.30] py-2 px-4 rounded-xl transition-all"
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                </svg>
-                <span className="text-xs uppercase tracking-[0.15em] font-medium">Upload</span>
               </button>
             </div>
           </div>
@@ -620,14 +564,6 @@ const GearCaptureGuide: React.FC<GearCaptureGuideProps> = ({ isOpen, onClose, on
 
       {/* Hidden elements */}
       <canvas ref={canvasRef} className="hidden" />
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleFileUpload}
-        className="hidden"
-        aria-hidden="true"
-      />
     </div>
   );
 };

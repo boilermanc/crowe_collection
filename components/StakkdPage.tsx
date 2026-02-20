@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Gear, SetupGuide, GearCategory } from '../types';
 import { gearService } from '../services/gearService';
 import { geminiService, UpgradeRequiredError } from '../services/geminiService';
@@ -55,6 +55,8 @@ const StakkdPage: React.FC<StakkdPageProps> = ({ onUpgradeRequired }) => {
   const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const [manualModalOpen, setManualModalOpen] = useState(false);
+  const [uploadImage, setUploadImage] = useState<string | null>(null);
+  const uploadInputRef = useRef<HTMLInputElement>(null);
   const [hintDismissed, setHintDismissed] = useState(false);
   const [activeCategory, setActiveCategory] = useState<GearCategory | null>(null);
   const [sortMode, setSortMode] = useState<SortMode>('position');
@@ -223,6 +225,26 @@ const StakkdPage: React.FC<StakkdPageProps> = ({ onUpgradeRequired }) => {
     setManualModalOpen(true);
   }, [gearLimitReached, onUpgradeRequired]);
 
+  const handleUploadGear = useCallback(() => {
+    if (gearLimitReached) {
+      onUpgradeRequired?.('gear_limit');
+      return;
+    }
+    uploadInputRef.current?.click();
+  }, [gearLimitReached, onUpgradeRequired]);
+
+  const handleFileSelected = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setUploadImage(reader.result as string);
+      setAddFlowOpen(true);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  }, []);
+
   // ── Setup Guide ─────────────────────────────────────────────────
 
   const handleGenerateGuide = useCallback(async () => {
@@ -343,6 +365,15 @@ const StakkdPage: React.FC<StakkdPageProps> = ({ onUpgradeRequired }) => {
             Scan Gear
           </button>
           <button
+            onClick={handleUploadGear}
+            className="border border-th-surface/[0.2] text-th-text2 font-bold py-3 px-8 rounded-xl hover:bg-th-surface/[0.08] hover:text-th-text transition-all uppercase tracking-[0.2em] text-[10px] flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            Upload Image
+          </button>
+          <button
             onClick={handleAddManual}
             className="border border-th-surface/[0.2] text-th-text2 font-bold py-3 px-8 rounded-xl hover:bg-th-surface/[0.08] hover:text-th-text transition-all uppercase tracking-[0.2em] text-[10px] flex items-center gap-2"
           >
@@ -392,15 +423,25 @@ const StakkdPage: React.FC<StakkdPageProps> = ({ onUpgradeRequired }) => {
 
         <AddGearFlow
           isOpen={addFlowOpen}
-          onClose={() => setAddFlowOpen(false)}
+          onClose={() => { setAddFlowOpen(false); setUploadImage(null); }}
           onGearSaved={handleGearSaved}
           onUpgradeRequired={onUpgradeRequired}
+          initialImage={uploadImage ?? undefined}
         />
 
         <AddGearManualModal
           isOpen={manualModalOpen}
           onClose={() => setManualModalOpen(false)}
           onGearSaved={handleGearSaved}
+        />
+
+        <input
+          ref={uploadInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileSelected}
+          className="hidden"
+          aria-hidden="true"
         />
       </div>
     );
@@ -458,6 +499,16 @@ const StakkdPage: React.FC<StakkdPageProps> = ({ onUpgradeRequired }) => {
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
             Add Gear
+          </button>
+          <button
+            onClick={handleUploadGear}
+            className="border border-th-surface/[0.2] text-th-text2 font-bold py-2.5 px-4 rounded-xl hover:bg-th-surface/[0.08] hover:text-th-text transition-all uppercase tracking-[0.2em] text-[10px]"
+            aria-label="Upload gear image"
+            title="Upload a photo for AI identification"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
           </button>
           <button
             onClick={handleAddManual}
@@ -660,6 +711,16 @@ const StakkdPage: React.FC<StakkdPageProps> = ({ onUpgradeRequired }) => {
         loading={isGuideLoading}
         isOpen={isGuideModalOpen}
         onClose={() => { setIsGuideModalOpen(false); setSetupGuide(null); }}
+      />
+
+      {/* Hidden file input for upload */}
+      <input
+        ref={uploadInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileSelected}
+        className="hidden"
+        aria-hidden="true"
       />
 
       {/* Upgrade banner for free-tier users */}
