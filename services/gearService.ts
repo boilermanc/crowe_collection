@@ -118,9 +118,16 @@ export const gearService = {
     // For v1, use the uploaded photo as the display image if no separate image_url is provided
     const imageUrl = gear.image_url || photoUrl;
 
+    // RLS requires user_id = auth.uid(); get it from the current session
+    const { data: { session } } = await supabase!.auth.getSession();
+    if (!session?.user?.id) {
+      throw new Error('Not authenticated — cannot save gear');
+    }
+
     const { data, error } = await supabase!
       .from('gear')
       .insert([{
+        user_id: session.user.id,
         category: gear.category,
         brand: gear.brand,
         model: gear.model,
