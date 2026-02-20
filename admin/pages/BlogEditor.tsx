@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Markdown from 'react-markdown';
 import { adminService, BlogPostAdmin } from '../../services/adminService';
 import '../../pages/Blog.css';
@@ -74,6 +74,15 @@ const BlogEditor: React.FC<BlogEditorProps> = ({ post, onSave, onCancel }) => {
     }
   };
 
+  // Poll for updated image after generation is triggered
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, []);
+
   const handleGenerateImage = async () => {
     if (!post) return;
     setGeneratingImage(true);
@@ -90,10 +99,36 @@ const BlogEditor: React.FC<BlogEditorProps> = ({ post, onSave, onCancel }) => {
         }),
       });
       if (!resp.ok) throw new Error(`Webhook returned ${resp.status}`);
-      setStatusMsg({ text: 'Image generation started — it may take 30–60 seconds to appear.', isError: false });
+      setStatusMsg({ text: 'Image generation started — polling for update...', isError: false });
+
+      // Poll every 5s for up to 90s to detect updated featured_image
+      const originalImage = featuredImage;
+      let elapsed = 0;
+      if (pollRef.current) clearInterval(pollRef.current);
+      pollRef.current = setInterval(async () => {
+        elapsed += 5;
+        if (elapsed > 90) {
+          if (pollRef.current) clearInterval(pollRef.current);
+          pollRef.current = null;
+          setStatusMsg({ text: 'Image may still be generating. Close and reopen the editor to check.', isError: false });
+          setGeneratingImage(false);
+          return;
+        }
+        try {
+          const updated = await adminService.getBlogPost(post.slug);
+          if (updated.featured_image && updated.featured_image !== originalImage) {
+            setFeaturedImage(updated.featured_image);
+            setStatusMsg({ text: 'Image updated successfully.', isError: false });
+            setGeneratingImage(false);
+            if (pollRef.current) clearInterval(pollRef.current);
+            pollRef.current = null;
+          }
+        } catch {
+          // Silently continue polling
+        }
+      }, 5000);
     } catch (err) {
       setStatusMsg({ text: err instanceof Error ? err.message : 'Failed to trigger image generation', isError: true });
-    } finally {
       setGeneratingImage(false);
     }
   };
