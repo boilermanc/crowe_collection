@@ -542,7 +542,7 @@ const App: React.FC = () => {
           {currentView !== 'landing' && currentView !== 'stakkd' && <div className="flex-1 max-w-xl flex items-center gap-2">
             <button
               onClick={() => setShowStats(!showStats)}
-              className={`p-3 rounded-full border transition-all flex-shrink-0 ${showStats ? 'bg-[#dd6e42] border-[#dd6e42] text-th-text shadow-lg' : 'bg-th-surface/[0.04] border-th-surface/[0.10] text-th-text2 hover:text-th-text'}`}
+              className={`hidden md:flex p-3 rounded-full border transition-all flex-shrink-0 ${showStats ? 'bg-[#dd6e42] border-[#dd6e42] text-th-text shadow-lg' : 'bg-th-surface/[0.04] border-th-surface/[0.10] text-th-text2 hover:text-th-text'}`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -577,7 +577,7 @@ const App: React.FC = () => {
             </button>
             <button
               onClick={() => setCurrentView('stakkd')}
-              className={`p-3 rounded-full border transition-all flex-shrink-0 ${currentView === 'stakkd' ? 'bg-[#dd6e42] border-[#dd6e42] text-th-text shadow-lg' : 'bg-th-surface/[0.04] border-th-surface/[0.10] text-th-text2 hover:text-th-text'}`}
+              className={`hidden md:flex p-3 rounded-full border transition-all flex-shrink-0 ${currentView === 'stakkd' ? 'bg-[#dd6e42] border-[#dd6e42] text-th-text shadow-lg' : 'bg-th-surface/[0.04] border-th-surface/[0.10] text-th-text2 hover:text-th-text'}`}
               title="Stakkd — your gear"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
@@ -589,7 +589,7 @@ const App: React.FC = () => {
             </button>
             <button
               onClick={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
-              className={`p-3 rounded-full border transition-all flex-shrink-0 ${isFilterPanelOpen ? 'bg-[#dd6e42] border-[#dd6e42] text-th-text shadow-lg' : 'bg-th-surface/[0.04] border-th-surface/[0.10] text-th-text2 hover:text-th-text'}`}
+              className={`hidden md:flex p-3 rounded-full border transition-all flex-shrink-0 ${isFilterPanelOpen ? 'bg-[#dd6e42] border-[#dd6e42] text-th-text shadow-lg' : 'bg-th-surface/[0.04] border-th-surface/[0.10] text-th-text2 hover:text-th-text'}`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
@@ -873,7 +873,7 @@ const App: React.FC = () => {
               style={{ maxWidth: 500, background: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.06)' }}
             >
               {/* Illustration row: speaker — receiver — speaker */}
-              <div className="flex items-center justify-center gap-3 relative">
+              <div className="flex items-center justify-center gap-3 relative scale-[0.65] sm:scale-100 origin-center">
                 {/* Left Speaker */}
                 <svg width="80" height="100" viewBox="0 0 80 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                   {/* Cabinet */}

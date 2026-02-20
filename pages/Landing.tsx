@@ -318,7 +318,10 @@ const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
             )}
           </div>
           {!user && (
-            <button className="nav-mobile-auth" onClick={() => openAuthPanel('signin')}>Sign In</button>
+            <div className="nav-mobile-auth-group">
+              <button className="nav-mobile-auth" onClick={() => openAuthPanel('signin')}>Sign In</button>
+              <button className="nav-mobile-cta" onClick={() => openAuthPanel('signup')}>Get Started</button>
+            </div>
           )}
         </div>
       </nav>

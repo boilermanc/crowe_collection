@@ -436,7 +436,7 @@ const StakkdPage: React.FC<StakkdPageProps> = ({ onUpgradeRequired }) => {
   return (
     <div className="w-full max-w-3xl mx-auto px-4 py-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
           <h2 className="font-label text-lg md:text-2xl font-bold tracking-tighter text-th-text">
             Stakkd
@@ -463,7 +463,7 @@ const StakkdPage: React.FC<StakkdPageProps> = ({ onUpgradeRequired }) => {
             </p>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {gear.length >= 2 && (
             <button
               onClick={handleGenerateGuide}

@@ -31,3 +31,7 @@ dist-ssr
 .vercel
 .env*.local
 nul
+
+# Design / scratch files
+CARD_DESIGN_PROMPT.md
+RekkrdCard.tsx

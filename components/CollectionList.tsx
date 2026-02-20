@@ -149,7 +149,7 @@ const CollectionList: React.FC<CollectionListProps> = ({ albums, onSelect, onDel
       {/* Table */}
       <div className="glass-morphism rounded-2xl border border-th-surface/[0.10] overflow-hidden" role="table" aria-label="Album collection">
         {/* Header row */}
-        <div className="grid grid-cols-[48px_28px_1fr_1fr_72px_100px_80px] md:grid-cols-[56px_32px_1.5fr_1fr_80px_120px_90px_100px_72px] gap-x-3 px-4 py-3 border-b border-th-surface/[0.10] text-[9px] font-label tracking-widest uppercase" role="row">
+        <div className="grid grid-cols-[48px_28px_1fr_1fr] md:grid-cols-[56px_32px_1.5fr_1fr_80px_120px_90px_100px_72px] gap-x-3 px-4 py-3 border-b border-th-surface/[0.10] text-[9px] font-label tracking-widest uppercase" role="row">
           <div role="columnheader"></div>
           <div className={colHeaderClass('favorite')} onClick={() => handleSort('favorite')} onKeyDown={(e) => handleHeaderKeyDown(e, 'favorite')} tabIndex={0} role="columnheader" aria-sort={getAriaSort('favorite')} title="Sort by favorites">
             <svg className={`w-3.5 h-3.5 ${sortField === 'favorite' ? 'text-[#dd6e42]' : ''}`} viewBox="0 0 24 24" fill={sortField === 'favorite' ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2}>
@@ -163,7 +163,7 @@ const CollectionList: React.FC<CollectionListProps> = ({ albums, onSelect, onDel
           <div className={colHeaderClass('artist')} onClick={() => handleSort('artist')} onKeyDown={(e) => handleHeaderKeyDown(e, 'artist')} tabIndex={0} role="columnheader" aria-sort={getAriaSort('artist')}>
             Artist <SortArrow field="artist" currentSortField={sortField} sortDir={sortDir} />
           </div>
-          <div className={colHeaderClass('year')} onClick={() => handleSort('year')} onKeyDown={(e) => handleHeaderKeyDown(e, 'year')} tabIndex={0} role="columnheader" aria-sort={getAriaSort('year')}>
+          <div className={`${colHeaderClass('year')} hidden md:flex`} onClick={() => handleSort('year')} onKeyDown={(e) => handleHeaderKeyDown(e, 'year')} tabIndex={0} role="columnheader" aria-sort={getAriaSort('year')}>
             Year <SortArrow field="year" currentSortField={sortField} sortDir={sortDir} />
           </div>
           <div className={`${colHeaderClass('genre')} hidden md:block`} onClick={() => handleSort('genre')} onKeyDown={(e) => handleHeaderKeyDown(e, 'genre')} tabIndex={0} role="columnheader" aria-sort={getAriaSort('genre')}>
@@ -172,7 +172,7 @@ const CollectionList: React.FC<CollectionListProps> = ({ albums, onSelect, onDel
           <div className={`${colHeaderClass('condition')} hidden md:block`} onClick={() => handleSort('condition')} onKeyDown={(e) => handleHeaderKeyDown(e, 'condition')} tabIndex={0} role="columnheader" aria-sort={getAriaSort('condition')}>
             Cond. <SortArrow field="condition" currentSortField={sortField} sortDir={sortDir} />
           </div>
-          <div className={colHeaderClass('value')} onClick={() => handleSort('value')} onKeyDown={(e) => handleHeaderKeyDown(e, 'value')} tabIndex={0} role="columnheader" aria-sort={getAriaSort('value')}>
+          <div className={`${colHeaderClass('value')} hidden md:flex`} onClick={() => handleSort('value')} onKeyDown={(e) => handleHeaderKeyDown(e, 'value')} tabIndex={0} role="columnheader" aria-sort={getAriaSort('value')}>
             Value <SortArrow field="value" currentSortField={sortField} sortDir={sortDir} />
           </div>
           <div className={`${colHeaderClass('plays')} hidden md:block text-right`} onClick={() => handleSort('plays')} onKeyDown={(e) => handleHeaderKeyDown(e, 'plays')} tabIndex={0} role="columnheader" aria-sort={getAriaSort('plays')}>
@@ -194,7 +194,7 @@ const CollectionList: React.FC<CollectionListProps> = ({ albums, onSelect, onDel
               <div
                 key={album.id}
                 onClick={() => onSelect(album)}
-                className="group grid grid-cols-[48px_28px_1fr_1fr_72px_100px_80px] md:grid-cols-[56px_32px_1.5fr_1fr_80px_120px_90px_100px_72px] gap-x-3 px-4 py-2 items-center cursor-pointer list-row-hover transition-colors"
+                className="group grid grid-cols-[48px_28px_1fr_1fr] md:grid-cols-[56px_32px_1.5fr_1fr_80px_120px_90px_100px_72px] gap-x-3 px-4 py-2 items-center cursor-pointer list-row-hover transition-colors"
                 role="row"
                 tabIndex={0}
                 onKeyDown={(e) => {
@@ -241,8 +241,8 @@ const CollectionList: React.FC<CollectionListProps> = ({ albums, onSelect, onDel
                 {/* Artist */}
                 <p className="text-[#dd6e42] text-sm truncate" role="cell">{album.artist}</p>
 
-                {/* Year */}
-                <p className="text-th-text3 text-xs" role="cell">{album.year || '—'}</p>
+                {/* Year (hidden on mobile) */}
+                <p className="text-th-text3 text-xs hidden md:block" role="cell">{album.year || '—'}</p>
 
                 {/* Genre (hidden on mobile) */}
                 <p className="text-th-text3 text-xs truncate hidden md:block" role="cell">{album.genre || '—'}</p>
@@ -250,8 +250,8 @@ const CollectionList: React.FC<CollectionListProps> = ({ albums, onSelect, onDel
                 {/* Condition (hidden on mobile) */}
                 <p className="text-th-text3 text-xs truncate hidden md:block" role="cell">{album.condition || '—'}</p>
 
-                {/* Value */}
-                <p className={`text-xs font-medium ${album.price_median ? 'text-[#f0a882]' : 'text-th-text3/50'}`} role="cell">
+                {/* Value (hidden on mobile) */}
+                <p className={`text-xs font-medium hidden md:block ${album.price_median ? 'text-[#f0a882]' : 'text-th-text3/50'}`} role="cell">
                   {album.price_median ? `$${Math.round(album.price_median)}` : '—'}
                 </p>
 
@@ -272,22 +272,6 @@ const CollectionList: React.FC<CollectionListProps> = ({ albums, onSelect, onDel
                   </button>
                 </div>
 
-                {/* Delete button (mobile only) */}
-                <div className="flex md:hidden items-center justify-end" role="cell">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDelete(album.id);
-                    }}
-                    className="min-w-[44px] min-h-[44px] flex items-center justify-center text-th-text3/50 active:text-red-400 transition-colors rounded-md"
-                    title="Delete album"
-                    aria-label={`Delete ${album.title}`}
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
-                </div>
               </div>
             ))
           )}

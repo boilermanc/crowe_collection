@@ -1662,19 +1662,35 @@
   color:var(--peach);
 }
 
-/* Mobile-only sign-in button */
-.landing-page .nav-mobile-auth {
+/* Mobile-only auth buttons */
+.landing-page .nav-mobile-auth-group {
   display:none;
+  align-items:center;
+  gap:12px;
+}
+
+.landing-page .nav-mobile-auth {
   background:none;
-  color:var(--peach);
+  color:var(--text2);
   font-size:.85rem;
-  font-weight:700;
+  font-weight:600;
   text-transform:uppercase;
   letter-spacing:.05em;
 }
 
+.landing-page .nav-mobile-cta {
+  background:var(--peach);
+  color:#fff;
+  font-size:.75rem;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  padding:6px 14px;
+  border-radius:999px;
+}
+
 @media(max-width:768px) {
-  .landing-page .nav-mobile-auth { display:block; }
+  .landing-page .nav-mobile-auth-group { display:flex; }
 }
 
 /* —— Auth Overlay —— */
