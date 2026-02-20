@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { Type } from '@google/genai';
 import { requireAuthWithUser, type AuthResult } from '../middleware/auth.js';
 import { createRateLimit } from '../middleware/rateLimit.js';
 import { sanitizePromptInput } from '../middleware/sanitize.js';
@@ -63,29 +62,21 @@ Return JSON with:
 - alternative_urls: up to 3 other possible source URLs (array of strings, can be empty)
 - search_url: a Google search URL as fallback: "${searchFallback}"
 
-Important: Only return URLs you are confident actually exist. If unsure, set manual_url to null and provide the search_url fallback.`;
+Important: Only return URLs you are confident actually exist. If unsure, set manual_url to null and provide the search_url fallback.
+
+Respond with valid JSON only — no markdown, no code fences.`;
 
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: prompt,
         config: {
           tools: [{ googleSearch: {} }],
-          responseMimeType: 'application/json',
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              manual_url: { type: Type.STRING, nullable: true },
-              source: { type: Type.STRING },
-              confidence: { type: Type.STRING },
-              alternative_urls: { type: Type.ARRAY, items: { type: Type.STRING } },
-              search_url: { type: Type.STRING },
-            },
-            required: ['manual_url', 'source', 'confidence', 'alternative_urls', 'search_url'],
-          },
         },
       });
 
-      const raw = response.text || '{}';
+      let raw = response.text || '{}';
+      // Strip markdown code fences if present
+      raw = raw.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
       let data: Record<string, unknown>;
       try {
         data = JSON.parse(raw);

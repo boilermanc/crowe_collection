@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { Type } from '@google/genai';
 import { requireAuthWithUser, type AuthResult } from '../middleware/auth.js';
 import { createRateLimit } from '../middleware/rateLimit.js';
 import { validateStringLength } from '../middleware/validate.js';
@@ -55,38 +54,20 @@ router.post(
       4. Discogs marketplace pricing: I need "price_low", "price_median", and "price_high" in USD based on recent sales.
       5. Official links to Discogs and MusicBrainz.
       6. A "sample_url" (YouTube or Preview).
-      7. The tracklist.`;
+      7. The tracklist.
+
+Respond with valid JSON only — no markdown, no code fences.`;
 
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: prompt,
         config: {
           tools: [{ googleSearch: {} }],
-          responseMimeType: 'application/json',
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              artist: { type: Type.STRING },
-              title: { type: Type.STRING },
-              year: { type: Type.STRING },
-              genre: { type: Type.STRING },
-              description: { type: Type.STRING },
-              cover_url: { type: Type.STRING },
-              price_low: { type: Type.NUMBER, description: 'Low sale price in USD' },
-              price_median: { type: Type.NUMBER, description: 'Median sale price in USD' },
-              price_high: { type: Type.NUMBER, description: 'High sale price in USD' },
-              tracklist: { type: Type.ARRAY, items: { type: Type.STRING } },
-              tags: { type: Type.ARRAY, items: { type: Type.STRING } },
-              discogs_url: { type: Type.STRING },
-              musicbrainz_url: { type: Type.STRING },
-              sample_url: { type: Type.STRING }
-            },
-            required: ['artist', 'title']
-          }
         }
       });
 
-      let data = JSON.parse(response.text || '{}');
+      let rawText = (response.text || '{}').replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
+      let data = JSON.parse(rawText);
       // Ensure required string fields
       if (typeof data.artist !== 'string') data.artist = artist;
       if (typeof data.title !== 'string') data.title = title;
@@ -102,24 +83,16 @@ router.post(
       data.cover_url = await findCoverUrl(artist, title, data.cover_url);
 
       if (!data.year || !data.genre || !data.price_median) {
-        const fallbackPrompt = `Find missing info for "${title}" by "${artist}": year, genre, and median Discogs price (USD).`;
+        const fallbackPrompt = `Find missing info for "${title}" by "${artist}": year, genre, and median Discogs price (USD). Respond with valid JSON only — no markdown, no code fences.`;
         const fallbackResponse = await ai.models.generateContent({
           model: 'gemini-2.5-flash',
           contents: fallbackPrompt,
           config: {
             tools: [{ googleSearch: {} }],
-            responseMimeType: 'application/json',
-            responseSchema: {
-              type: Type.OBJECT,
-              properties: {
-                year: { type: Type.STRING },
-                genre: { type: Type.STRING },
-                price_median: { type: Type.NUMBER }
-              }
-            }
           }
         });
-        const fallbackData = JSON.parse(fallbackResponse.text || '{}');
+        const fallbackRaw = (fallbackResponse.text || '{}').replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
+        const fallbackData = JSON.parse(fallbackRaw);
         // Only fill in missing fields, don't overwrite existing data
         if (!data.year && fallbackData.year) data.year = fallbackData.year;
         if (!data.genre && fallbackData.genre) data.genre = fallbackData.genre;
