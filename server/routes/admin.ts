@@ -377,59 +377,73 @@ async function handleUpdateSubscription(req: Request, res: Response) {
     return;
   }
 
-  const supabase = getSupabaseAdmin();
+  try {
+    const supabase = getSupabaseAdmin();
 
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('id')
-    .eq('id', userId)
-    .single();
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', userId)
+      .single();
 
-  if (profileError || !profile) {
-    res.status(404).json({ error: 'User not found' });
-    return;
+    if (profileError || !profile) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    const now = new Date();
+    const isActivating = ['active', 'trialing'].includes(status);
+    const periodEnd = isActivating
+      ? new Date(now.getFullYear() + 1, now.getMonth(), now.getDate()).toISOString()
+      : now.toISOString();
+
+    const nextReset = new Date(now);
+    nextReset.setMonth(nextReset.getMonth() + 1);
+    nextReset.setDate(1);
+    nextReset.setHours(0, 0, 0, 0);
+
+    // Map status for profiles table (uses 'inactive' instead of 'expired'/'incomplete')
+    const profileStatus = ['expired', 'incomplete'].includes(status) ? 'inactive' : status;
+
+    const { error: subError } = await supabase
+      .from('subscriptions')
+      .update({
+        plan,
+        status,
+        current_period_start: now.toISOString(),
+        current_period_end: periodEnd,
+        ai_scans_used: 0,
+        ai_scans_reset_at: nextReset.toISOString(),
+      })
+      .eq('user_id', userId);
+
+    if (subError) {
+      console.error('[admin] Subscription update failed:', subError);
+      res.status(500).json({ error: `Failed to update subscription: ${subError.message}` });
+      return;
+    }
+
+    const { error: profError } = await supabase
+      .from('profiles')
+      .update({
+        plan,
+        subscription_status: profileStatus,
+        plan_period_end: periodEnd,
+      })
+      .eq('id', userId);
+
+    if (profError) {
+      console.error('[admin] Profile update failed:', profError);
+      res.status(500).json({ error: `Failed to update profile: ${profError.message}` });
+      return;
+    }
+
+    res.status(200).json({ user_id: userId, plan, status, period_end: periodEnd, scans_reset: true });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    console.error('[admin] Subscription override error:', message, err);
+    res.status(500).json({ error: message });
   }
-
-  const now = new Date();
-  const isActivating = ['active', 'trialing'].includes(status);
-  const periodEnd = isActivating
-    ? new Date(now.getFullYear() + 1, now.getMonth(), now.getDate()).toISOString()
-    : now.toISOString();
-
-  const nextReset = new Date(now);
-  nextReset.setMonth(nextReset.getMonth() + 1);
-  nextReset.setDate(1);
-  nextReset.setHours(0, 0, 0, 0);
-
-  // Map status for profiles table (uses 'inactive' instead of 'expired'/'incomplete')
-  const profileStatus = ['expired', 'incomplete'].includes(status) ? 'inactive' : status;
-
-  const { error: subError } = await supabase
-    .from('subscriptions')
-    .update({
-      plan,
-      status,
-      current_period_start: now.toISOString(),
-      current_period_end: periodEnd,
-      ai_scans_used: 0,
-      ai_scans_reset_at: nextReset.toISOString(),
-    })
-    .eq('user_id', userId);
-
-  if (subError) throw subError;
-
-  const { error: profError } = await supabase
-    .from('profiles')
-    .update({
-      plan,
-      subscription_status: profileStatus,
-      plan_period_end: periodEnd,
-    })
-    .eq('id', userId);
-
-  if (profError) throw profError;
-
-  res.status(200).json({ user_id: userId, plan, status, period_end: periodEnd, scans_reset: true });
 }
 
 // ── Admin sub-routes ───────────────────────────────────────────────

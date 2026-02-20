@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { adminService, AdminCustomer } from '../../services/adminService';
+import { useToast } from '../../contexts/ToastContext';
 
 type SortKey = 'display_name' | 'email' | 'subscription_plan' | 'created_at' | 'last_sign_in_at';
 type SortDir = 'asc' | 'desc';
@@ -7,6 +8,7 @@ type SortDir = 'asc' | 'desc';
 const PAGE_SIZES = [10, 25, 50];
 
 const CustomersPage: React.FC = () => {
+  const { showToast } = useToast();
   const [customers, setCustomers] = useState<AdminCustomer[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -47,9 +49,10 @@ const CustomersPage: React.FC = () => {
         )
       );
       setEditSub(null);
+      showToast(`Subscription updated to ${editSub.plan} (${editSub.status})`, 'success');
     } catch (err) {
       console.error('Failed to update subscription:', err);
-      alert(err instanceof Error ? err.message : 'Failed to update subscription');
+      showToast(err instanceof Error ? err.message : 'Failed to update subscription', 'error');
     } finally {
       setSaving(false);
     }
