@@ -217,6 +217,14 @@ export async function updatePost(id: string, input: UpdatePostInput): Promise<Bl
 export async function deletePost(id: string): Promise<boolean> {
   const supabase = getSupabaseAdmin();
 
+  // Unlink any blog_ideas that reference this post
+  const { error: unlinkError } = await supabase
+    .from('blog_ideas')
+    .update({ blog_post_id: null })
+    .eq('blog_post_id', id);
+
+  if (unlinkError) throw unlinkError;
+
   const { error } = await supabase
     .from('blog_posts')
     .delete()
