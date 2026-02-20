@@ -103,9 +103,16 @@ const BlogPage: React.FC = () => {
     scrollToEditor();
   };
 
-  const handleEditPost = (post: BlogPostAdmin) => {
+  const handleEditPost = async (post: BlogPostAdmin) => {
     setIsCreating(false);
-    setEditingPost(post);
+    // Fetch fresh data so we don't use stale values (e.g. updated featured_image)
+    try {
+      const fresh = await adminService.getBlogPost(post.slug);
+      setEditingPost(fresh);
+    } catch {
+      // Fall back to the list data if fetch fails
+      setEditingPost(post);
+    }
     scrollToEditor();
   };
 
