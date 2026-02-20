@@ -58,7 +58,7 @@ router.post(
       7. The tracklist.`;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-2.5-flash',
         contents: prompt,
         config: {
           tools: [{ googleSearch: {} }],
@@ -104,7 +104,7 @@ router.post(
       if (!data.year || !data.genre || !data.price_median) {
         const fallbackPrompt = `Find missing info for "${title}" by "${artist}": year, genre, and median Discogs price (USD).`;
         const fallbackResponse = await ai.models.generateContent({
-          model: 'gemini-3-flash-preview',
+          model: 'gemini-2.5-flash',
           contents: fallbackPrompt,
           config: {
             tools: [{ googleSearch: {} }],

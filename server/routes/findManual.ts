@@ -66,7 +66,7 @@ Return JSON with:
 Important: Only return URLs you are confident actually exist. If unsure, set manual_url to null and provide the search_url fallback.`;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-2.5-flash',
         contents: prompt,
         config: {
           tools: [{ googleSearch: {} }],
