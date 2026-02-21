@@ -23,6 +23,7 @@ import { getProfile, createProfile, hasCompletedOnboarding } from './services/pr
 import { ScanLimitError, UpgradeRequiredError } from './services/geminiService';
 import OnboardingWizard from './components/OnboardingWizard';
 import UpgradeModal from './components/UpgradeModal';
+import DuplicateAlbumModal from './components/DuplicateAlbumModal';
 import SubscriptionBanner from './components/SubscriptionBanner';
 import PlanBadge from './components/PlanBadge';
 import ErrorPage from './components/ErrorPage';
@@ -32,6 +33,12 @@ const PAGE_SIZE = 40;
 
 type SortOption = 'recent' | 'year' | 'artist' | 'title' | 'value';
 type ViewMode = 'public-landing' | 'landing' | 'grid' | 'list' | 'stakkd';
+
+interface DuplicatePendingData {
+  identity: { artist: string; title: string };
+  base64: string;
+  existingAlbum: Album;
+}
 
 const DEFAULT_BG = 'https://images.unsplash.com/photo-1603048588665-791ca8aea617?q=80&w=2000&auto=format&fit=crop';
 
@@ -52,6 +59,7 @@ const App: React.FC = () => {
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [heroBg, setHeroBg] = useState(DEFAULT_BG);
+  const [duplicatePending, setDuplicatePending] = useState<DuplicatePendingData | null>(null);
 
   const [yearRange, setYearRange] = useState({ min: '', max: '' });
   const [favoritesOnly, setFavoritesOnly] = useState(false);
@@ -195,52 +203,12 @@ const App: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const processImage = async (base64: string) => {
-    if (!isSupabaseReady) {
-      showToast("Database not configured. Check your Supabase environment variables.", "error");
-      return;
-    }
-
-    // Check album limit for free tier before processing
-    if (albumLimitReached(albums.length)) {
-      setUpgradeFeature('album_limit');
-      return;
-    }
-
-    // Check scan limit for free tier
-    if (!canUse('scan')) {
-      setUpgradeFeature('scan');
-      return;
-    }
-
-    setProcessingStatus("Identifying Record...");
+  const saveIdentifiedAlbum = async (
+    identity: { artist: string; title: string },
+    base64: string
+  ) => {
+    setProcessingStatus(`Appraising ${identity.title}...`);
     try {
-      const identity = await geminiService.identifyAlbum(base64);
-      if (!identity) {
-        showToast("Couldn't identify that album. Try a clearer shot!", "error");
-        setProcessingStatus(null);
-        return;
-      }
-
-      const normalizedNewArtist = identity.artist.toLowerCase().trim();
-      const normalizedNewTitle = identity.title.toLowerCase().trim();
-
-      const existingAlbum = albums.find(a =>
-        a.artist.toLowerCase().trim() === normalizedNewArtist &&
-        a.title.toLowerCase().trim() === normalizedNewTitle
-      );
-
-      if (existingAlbum) {
-        setProcessingStatus("Already Cataloged!");
-        setTimeout(() => {
-          setProcessingStatus(null);
-          setSelectedAlbum(existingAlbum);
-          if (existingAlbum.cover_url) setHeroBg(existingAlbum.cover_url);
-        }, 1500);
-        return;
-      }
-
-      setProcessingStatus(`Appraising ${identity.title}...`);
       const metadata = await geminiService.fetchAlbumMetadata(identity.artist, identity.title);
       const { artist: mArtist, title: mTitle, cover_url: mCover, ...rest } = metadata;
       const saved = await supabaseService.saveAlbum({
@@ -282,7 +250,62 @@ const App: React.FC = () => {
         showToast("Something went wrong during processing.", "error");
       }
     } finally {
-      setProcessingStatus(prev => (prev === "Already Cataloged!" ? prev : null));
+      setProcessingStatus(null);
+    }
+  };
+
+  const processImage = async (base64: string) => {
+    if (!isSupabaseReady) {
+      showToast("Database not configured. Check your Supabase environment variables.", "error");
+      return;
+    }
+
+    // Check album limit for free tier before processing
+    if (albumLimitReached(albums.length)) {
+      setUpgradeFeature('album_limit');
+      return;
+    }
+
+    // Check scan limit for free tier
+    if (!canUse('scan')) {
+      setUpgradeFeature('scan');
+      return;
+    }
+
+    setProcessingStatus("Identifying Record...");
+    try {
+      const identity = await geminiService.identifyAlbum(base64);
+      if (!identity) {
+        showToast("Couldn't identify that album. Try a clearer shot!", "error");
+        setProcessingStatus(null);
+        return;
+      }
+
+      const normalizedNewArtist = identity.artist.toLowerCase().trim();
+      const normalizedNewTitle = identity.title.toLowerCase().trim();
+
+      const existingAlbum = albums.find(a =>
+        a.artist.toLowerCase().trim() === normalizedNewArtist &&
+        a.title.toLowerCase().trim() === normalizedNewTitle
+      );
+
+      if (existingAlbum) {
+        setProcessingStatus(null);
+        setDuplicatePending({ identity, base64, existingAlbum });
+        return;
+      }
+
+      await saveIdentifiedAlbum(identity, base64);
+    } catch (err) {
+      if (err instanceof ScanLimitError) {
+        setUpgradeFeature('scan');
+      } else if (err instanceof UpgradeRequiredError) {
+        setUpgradeFeature(err.requiredPlan === 'curator' ? 'scan' : 'scan');
+      } else {
+        console.error(err);
+        showToast("Something went wrong during processing.", "error");
+      }
+      setProcessingStatus(null);
     }
   };
 
@@ -355,6 +378,21 @@ const App: React.FC = () => {
       }
     });
   }, [showToast]);
+
+  const handleDuplicateAddAnyway = async () => {
+    if (!duplicatePending) return;
+    const { identity, base64 } = duplicatePending;
+    setDuplicatePending(null);
+    await saveIdentifiedAlbum(identity, base64);
+  };
+
+  const handleDuplicateCancel = () => {
+    if (!duplicatePending) return;
+    const { existingAlbum } = duplicatePending;
+    setDuplicatePending(null);
+    setSelectedAlbum(existingAlbum);
+    if (existingAlbum.cover_url) setHeroBg(existingAlbum.cover_url);
+  };
 
   const stats = useMemo(() => {
     const genres: Record<string, number> = {};
@@ -1115,6 +1153,13 @@ const App: React.FC = () => {
           isOpen={!!upgradeFeature}
           onClose={() => setUpgradeFeature(null)}
           feature={upgradeFeature}
+        />
+      )}
+      {duplicatePending && (
+        <DuplicateAlbumModal
+          existingAlbum={duplicatePending.existingAlbum}
+          onAddAnyway={handleDuplicateAddAnyway}
+          onCancel={handleDuplicateCancel}
         />
       )}
     </div>

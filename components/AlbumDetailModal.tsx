@@ -3,6 +3,7 @@ import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { Album } from '../types';
 import { proxyImageUrl } from '../services/imageProxy';
 import { geminiService } from '../services/geminiService';
+import { supabase } from '../services/supabaseService';
 import SpinningRecord from './SpinningRecord';
 import CoverPicker from './CoverPicker';
 import { useToast } from '../contexts/ToastContext';
@@ -122,12 +123,20 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
     setUploadingCover(true);
     const previousCoverUrl = displayCoverUrl;
     try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          headers['Authorization'] = `Bearer ${session.access_token}`;
+        }
+      }
+      if (!headers['Authorization']) {
+        const secret = import.meta.env.VITE_API_SECRET;
+        if (secret) headers['Authorization'] = `Bearer ${secret}`;
+      }
       const resp = await fetch('/api/upload-cover', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(import.meta.env.VITE_API_SECRET ? { Authorization: `Bearer ${import.meta.env.VITE_API_SECRET}` } : {}),
-        },
+        headers,
         body: JSON.stringify({ imageUrl: url, albumId: album.id }),
       });
       if (!resp.ok) {
