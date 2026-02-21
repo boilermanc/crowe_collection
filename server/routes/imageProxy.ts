@@ -35,25 +35,40 @@ router.get('/api/image-proxy', async (req, res) => {
   }
 
   try {
-    const upstream = await fetch(url, {
-      headers: {
-        'User-Agent': USER_AGENT,
-        'Accept': 'image/*',
-      },
-    });
+    // Use manual redirects — Node.js fetch can fail on cross-origin redirect chains
+    // (e.g. coverartarchive.org → archive.org). We follow up to 3 hops ourselves.
+    let upstream: Response;
+    let targetUrl = url;
+    for (let hops = 0; hops < 3; hops++) {
+      upstream = await fetch(targetUrl, {
+        headers: {
+          'User-Agent': USER_AGENT,
+          'Accept': 'image/*',
+        },
+        redirect: 'manual',
+      });
 
-    if (!upstream.ok) {
-      res.status(upstream.status).json({ error: 'Upstream fetch failed' });
+      if (upstream.status >= 300 && upstream.status < 400) {
+        const location = upstream.headers.get('location');
+        if (!location) break;
+        targetUrl = new URL(location, targetUrl).href;
+        continue;
+      }
+      break;
+    }
+
+    if (!upstream!.ok) {
+      res.status(upstream!.status).json({ error: 'Upstream fetch failed' });
       return;
     }
 
-    const contentType = upstream.headers.get('content-type');
+    const contentType = upstream!.headers.get('content-type');
     if (!contentType || !contentType.startsWith('image/')) {
       res.status(502).json({ error: 'Upstream returned non-image content type' });
       return;
     }
 
-    const buffer = Buffer.from(await upstream.arrayBuffer());
+    const buffer = Buffer.from(await upstream!.arrayBuffer());
 
     res.setHeader('Content-Type', contentType);
     res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=604800');
