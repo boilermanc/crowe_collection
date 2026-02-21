@@ -6,24 +6,34 @@ import { validateStringLength } from '../middleware/validate.js';
 import { USER_AGENT } from '../lib/constants.js';
 
 function isPrivateIP(ip: string): boolean {
-  // IPv6 loopback
+  // IPv6 checks
   if (ip === '::1' || ip === '::') return true;
 
+  // IPv4
   const parts = ip.split('.').map(Number);
-  if (parts.length !== 4 || parts.some(p => isNaN(p))) {
-    // Non-IPv4 and not the IPv6 cases above — block to be safe
-    return true;
+  if (parts.length === 4 && parts.every(p => !isNaN(p))) {
+    const [a, b] = parts;
+    return (
+      a === 127 ||                          // 127.0.0.0/8   loopback
+      a === 10 ||                           // 10.0.0.0/8    private
+      (a === 172 && b >= 16 && b <= 31) ||  // 172.16.0.0/12 private
+      (a === 192 && b === 168) ||           // 192.168.0.0/16 private
+      (a === 169 && b === 254) ||           // 169.254.0.0/16 link-local
+      a === 0                               // 0.0.0.0/8
+    );
   }
 
-  const [a, b] = parts;
-  return (
-    a === 127 ||                          // 127.0.0.0/8   loopback
-    a === 10 ||                           // 10.0.0.0/8    private
-    (a === 172 && b >= 16 && b <= 31) ||  // 172.16.0.0/12 private
-    (a === 192 && b === 168) ||           // 192.168.0.0/16 private
-    (a === 169 && b === 254) ||           // 169.254.0.0/16 link-local
-    a === 0                               // 0.0.0.0/8
-  );
+  // IPv6 private/reserved ranges
+  const lower = ip.toLowerCase();
+  if (lower.startsWith('fe80:')) return true;                  // link-local
+  if (lower.startsWith('fc') || lower.startsWith('fd')) return true; // unique local
+
+  // IPv4-mapped IPv6 (::ffff:x.x.x.x)
+  const v4mapped = lower.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
+  if (v4mapped) return isPrivateIP(v4mapped[1]);
+
+  // All other IPv6 addresses are public
+  return false;
 }
 
 const router = Router();
