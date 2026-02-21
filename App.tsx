@@ -276,7 +276,7 @@ const App: React.FC = () => {
     try {
       const identity = await geminiService.identifyAlbum(base64);
       if (!identity) {
-        showToast("Couldn't identify that album. Try a clearer shot!", "error");
+        showToast("Couldn't identify that album. Try a clearer photo or different angle!", "error");
         setProcessingStatus(null);
         return;
       }
@@ -303,7 +303,8 @@ const App: React.FC = () => {
         setUpgradeFeature(err.requiredPlan === 'curator' ? 'scan' : 'scan');
       } else {
         console.error(err);
-        showToast("Something went wrong during processing.", "error");
+        const msg = err instanceof Error ? err.message : "Something went wrong during processing.";
+        showToast(msg, "error");
       }
       setProcessingStatus(null);
     }

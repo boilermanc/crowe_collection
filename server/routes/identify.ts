@@ -30,6 +30,7 @@ router.post(
     const sub = await getSubscription(userId);
     const isActive = ['active', 'trialing'].includes(sub.status);
     if (!isActive) {
+      console.warn(`[identify] Subscription inactive for user ${userId}: status=${sub.status}, plan=${sub.plan}`);
       res.status(403).json({ error: 'Subscription inactive', status: sub.status });
       return;
     }
@@ -82,8 +83,10 @@ router.post(
         }
       }), GEMINI_TIMEOUT_MS);
 
-      const data = JSON.parse(response.text || '{}');
+      const rawText = response.text || '{}';
+      const data = JSON.parse(rawText);
       if (typeof data.artist !== 'string' || typeof data.title !== 'string') {
+        console.warn(`[identify] Gemini returned invalid data:`, rawText.slice(0, 200));
         res.status(200).json(null);
         return;
       }
@@ -93,7 +96,7 @@ router.post(
 
       res.status(200).json({ artist: data.artist, title: data.title });
     } catch (error) {
-      console.error('Gemini Identification Error:', error);
+      console.error('[identify] Gemini Identification Error:', error instanceof Error ? error.message : error);
       const msg = error instanceof Error ? error.message : '';
       if (msg.includes('timed out')) {
         res.status(504).json({ error: 'AI identification timed out. Try a smaller or clearer image.' });

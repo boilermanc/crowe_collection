@@ -93,7 +93,25 @@ export const geminiService = {
 
       if (!response.ok) {
         await handleGatingError(response);
-        return null;
+        // Provide specific error context for debugging
+        let detail = '';
+        try {
+          const errBody = await response.clone().json();
+          detail = errBody.error || '';
+        } catch { /* ignore parse errors */ }
+        if (response.status === 401) {
+          throw new Error('Authentication failed — please sign out and back in.');
+        }
+        if (response.status === 403) {
+          throw new Error(detail || 'Access denied — subscription may be inactive.');
+        }
+        if (response.status === 504) {
+          throw new Error('AI timed out — try a smaller or clearer image.');
+        }
+        if (response.status === 500) {
+          throw new Error(detail || 'Server error — check server logs.');
+        }
+        throw new Error(`Server returned ${response.status}: ${detail || 'unknown error'}`);
       }
       const data = await response.json();
       if (!data || typeof data.artist !== 'string' || typeof data.title !== 'string') {
@@ -103,7 +121,7 @@ export const geminiService = {
     } catch (error) {
       if (error instanceof ScanLimitError || error instanceof UpgradeRequiredError) throw error;
       console.error('Identification Error:', error);
-      return null;
+      throw error;
     }
   },
 
