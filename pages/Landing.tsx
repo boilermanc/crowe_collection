@@ -182,7 +182,7 @@ const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
     const wantSignup = params.get('signup') === 'true';
     const tier = params.get('tier');
 
-    if (tier && ['collector', 'curator', 'archivist'].includes(tier)) {
+    if (tier && ['collector', 'curator', 'enthusiast'].includes(tier)) {
       sessionStorage.setItem('selected_tier', tier);
     }
 

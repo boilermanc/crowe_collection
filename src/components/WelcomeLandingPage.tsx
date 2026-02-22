@@ -188,7 +188,7 @@ const tiers = [
     badge: '',
     perks: ['Everything in Curator', 'Priority AI', 'CSV / JSON export', 'Advanced analytics'],
     cta: 'Go Archivist',
-    tier: 'archivist',
+    tier: 'enthusiast',
     highlighted: false,
   },
 ];

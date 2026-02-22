@@ -3,8 +3,8 @@ import { updateProfile } from '../services/profileService';
 import { supabase } from '../services/supabaseService';
 import '../pages/Landing.css';
 
-type SelectedTier = 'collector' | 'curator' | 'archivist' | null;
-const VALID_TIERS = ['collector', 'curator', 'archivist'];
+type SelectedTier = 'collector' | 'curator' | 'enthusiast' | null;
+const VALID_TIERS = ['collector', 'curator', 'enthusiast'];
 
 interface OnboardingWizardProps {
   userId: string;
@@ -556,7 +556,7 @@ const StepGetStarted: React.FC<StepGetStartedProps> = ({ userId, selectedGenres,
         favorite_genres: [...selectedGenres],
         listening_setup: selectedSetup,
         collecting_goal: selectedGoal,
-        subscription_tier: selectedTier ?? 'collector',
+        onboarding_selected_tier: selectedTier ?? 'collector',
         onboarding_completed: true,
       });
 

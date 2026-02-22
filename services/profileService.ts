@@ -10,7 +10,7 @@ export interface Profile {
   collecting_goal: string | null;
   onboarding_completed: boolean;
   role: UserRole;
-  subscription_tier: string | null;
+  onboarding_selected_tier: string | null;
   utm_source: string | null;
   utm_medium: string | null;
   utm_campaign: string | null;
@@ -30,7 +30,7 @@ function assertClient() {
 // Columns safe to return to the frontend (excludes discogs_oauth_token, discogs_oauth_secret)
 const PROFILE_COLUMNS = [
   'id', 'display_name', 'favorite_genres', 'listening_setup', 'collecting_goal',
-  'onboarding_completed', 'role', 'subscription_tier',
+  'onboarding_completed', 'role', 'onboarding_selected_tier',
   'utm_source', 'utm_medium', 'utm_campaign',
   'discogs_username', 'discogs_user_id', 'discogs_connected_at',
   'created_at', 'updated_at',

@@ -16,7 +16,7 @@ interface ProfileRow {
   utm_source: string | null;
   utm_medium: string | null;
   utm_campaign: string | null;
-  subscription_tier: string | null;
+  onboarding_selected_tier: string | null;
   created_at: string;
 }
 
@@ -47,7 +47,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Fetch all UTM-tracked profiles (utm_source IS NOT NULL)
     const { data: profiles, error } = await supabase
       .from('profiles')
-      .select('utm_source, utm_medium, utm_campaign, subscription_tier, created_at')
+      .select('utm_source, utm_medium, utm_campaign, onboarding_selected_tier, created_at')
       .not('utm_source', 'is', null)
       .order('created_at', { ascending: false });
 
@@ -62,7 +62,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const by_source = groupBy(rows, 'utm_source');
     const by_medium = groupBy(rows, 'utm_medium');
     const by_campaign = groupBy(rows, 'utm_campaign');
-    const by_tier = groupBy(rows, 'subscription_tier');
+    const by_tier = groupBy(rows, 'onboarding_selected_tier');
 
     // Recent signups (last 10, no PII)
     const recent_signups = rows.slice(0, 10).map(r => ({
@@ -70,7 +70,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       utm_source: r.utm_source,
       utm_medium: r.utm_medium,
       utm_campaign: r.utm_campaign,
-      subscription_tier: r.subscription_tier,
+      onboarding_selected_tier: r.onboarding_selected_tier,
     }));
 
     // Daily signup counts for last 30 days

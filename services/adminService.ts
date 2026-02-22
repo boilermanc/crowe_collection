@@ -119,7 +119,7 @@ export interface UtmRecentSignup {
   utm_source: string | null;
   utm_medium: string | null;
   utm_campaign: string | null;
-  subscription_tier: string | null;
+  onboarding_selected_tier: string | null;
 }
 
 export interface UtmDateCount {

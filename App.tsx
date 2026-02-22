@@ -489,14 +489,12 @@ const App: React.FC = () => {
           setShowOnboarding(false);
 
           // Trigger Stripe checkout for paid tiers selected via /welcome CTAs
-          if (tier === 'curator' || tier === 'archivist') {
+          if (tier === 'curator' || tier === 'enthusiast') {
             try {
-              // Welcome page "archivist" maps to Stripe product tier "enthusiast"
-              const stripeTier = tier === 'archivist' ? 'enthusiast' : tier;
               const pricesRes = await fetch('/api/prices');
               if (pricesRes.ok) {
                 const { tiers } = await pricesRes.json();
-                const priceId = tiers?.[stripeTier]?.monthly?.priceId;
+                const priceId = tiers?.[tier]?.monthly?.priceId;
                 if (priceId) {
                   const session = await supabase?.auth.getSession();
                   const token = session?.data?.session?.access_token;

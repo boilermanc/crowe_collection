@@ -120,13 +120,11 @@ router.post('/api/stripe-webhook', async (req, res) => {
           .from('profiles')
           .update({
             stripe_subscription_id: subscriptionId,
-            subscription_status: status,
-            plan,
             ...(periodEnd && { plan_period_end: periodEnd }),
           })
           .eq('stripe_customer_id', customerId);
 
-        // Keep subscriptions table in sync
+        // Update subscriptions table (source of truth for plan/status)
         const userId = profile.id;
         await supabase
           .from('subscriptions')
@@ -181,16 +179,14 @@ router.post('/api/stripe-webhook', async (req, res) => {
           ? new Date(subRaw2.current_period_end * 1000).toISOString()
           : null;
 
-        await supabase
-          .from('profiles')
-          .update({
-            subscription_status: status,
-            plan,
-            ...(periodEnd && { plan_period_end: periodEnd }),
-          })
-          .eq('stripe_customer_id', customerId);
+        if (periodEnd) {
+          await supabase
+            .from('profiles')
+            .update({ plan_period_end: periodEnd })
+            .eq('stripe_customer_id', customerId);
+        }
 
-        // Keep subscriptions table in sync
+        // Update subscriptions table (source of truth for plan/status)
         await supabase
           .from('subscriptions')
           .update({
@@ -224,14 +220,12 @@ router.post('/api/stripe-webhook', async (req, res) => {
         await supabase
           .from('profiles')
           .update({
-            plan: 'collector',
-            subscription_status: 'inactive',
             stripe_subscription_id: null,
             plan_period_end: deletedAt,
           })
           .eq('stripe_customer_id', customerId);
 
-        // Keep subscriptions table in sync
+        // Update subscriptions table (source of truth for plan/status)
         await supabase
           .from('subscriptions')
           .update({
@@ -271,12 +265,7 @@ router.post('/api/stripe-webhook', async (req, res) => {
           break;
         }
 
-        await supabase
-          .from('profiles')
-          .update({ subscription_status: 'past_due' })
-          .eq('stripe_customer_id', customerId);
-
-        // Keep subscriptions table in sync
+        // Update subscriptions table (source of truth for status)
         await supabase
           .from('subscriptions')
           .update({ status: 'past_due' })

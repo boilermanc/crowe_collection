@@ -246,9 +246,9 @@ const CardAnalytics: React.FC = () => {
                       <td className="px-4 py-2 hidden sm:table-cell" style={{ color: 'rgb(107,114,128)' }}>{s.utm_medium || '—'}</td>
                       <td className="px-4 py-2 hidden md:table-cell" style={{ color: 'rgb(107,114,128)' }}>{s.utm_campaign || '—'}</td>
                       <td className="px-4 py-2">
-                        {s.subscription_tier ? (
+                        {s.onboarding_selected_tier ? (
                           <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: 'rgb(238,242,255)', color: 'rgb(99,102,241)' }}>
-                            {s.subscription_tier}
+                            {s.onboarding_selected_tier}
                           </span>
                         ) : (
                           <span style={{ color: 'rgb(209,213,219)' }}>—</span>
