@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Album } from './types';
+import { Album, NewAlbum } from './types';
 import { supabaseService, supabase } from './services/supabaseService';
 import { geminiService } from './services/geminiService';
 import AlbumCard from './components/AlbumCard';
@@ -32,11 +32,14 @@ import DiscogsSearch from './components/DiscogsSearch';
 import DiscogsReleaseDetail from './components/DiscogsReleaseDetail';
 import DiscogsConnect from './components/DiscogsConnect';
 import DiscogsCollectionBrowser from './components/DiscogsCollectionBrowser';
+import WantlistView from './components/WantlistView';
+import { wantlistService } from './services/wantlistService';
+import { WantlistItem } from './types';
 
 const PAGE_SIZE = 40;
 
 type SortOption = 'recent' | 'year' | 'artist' | 'title' | 'value';
-type ViewMode = 'public-landing' | 'landing' | 'grid' | 'list' | 'stakkd' | 'discogs';
+type ViewMode = 'public-landing' | 'landing' | 'grid' | 'list' | 'stakkd' | 'discogs' | 'wantlist';
 
 interface DuplicatePendingData {
   identity: { artist: string; title: string };
@@ -66,6 +69,8 @@ const App: React.FC = () => {
   const [duplicatePending, setDuplicatePending] = useState<DuplicatePendingData | null>(null);
   const [discogsReleaseId, setDiscogsReleaseId] = useState<number | null>(null);
   const [discogsConnected, setDiscogsConnected] = useState(false);
+  const [wantlistCount, setWantlistCount] = useState(0);
+  const [prefilledWantlistItem, setPrefilledWantlistItem] = useState<WantlistItem | null>(null);
 
   const [yearRange, setYearRange] = useState({ min: '', max: '' });
   const [favoritesOnly, setFavoritesOnly] = useState(false);
@@ -108,6 +113,89 @@ const App: React.FC = () => {
       setLoading(false);
     }
   }, [isSupabaseReady]);
+
+  const refreshWantlistCount = useCallback(async () => {
+    try {
+      const items = await wantlistService.getWantlist();
+      setWantlistCount(items.length);
+    } catch {
+      // badge is non-critical
+    }
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      refreshWantlistCount();
+    }
+  }, [user, refreshWantlistCount]);
+
+  const mapWantlistItemToNewAlbum = (item: WantlistItem): Partial<NewAlbum> => ({
+    artist: item.artist,
+    title: item.title,
+    year: item.year || undefined,
+    genre: item.genre || undefined,
+    cover_url: item.cover_url || undefined,
+    discogs_url: item.discogs_url || undefined,
+    discogs_release_id: item.discogs_release_id || undefined,
+    price_low: item.price_low || undefined,
+    price_median: item.price_median || undefined,
+    price_high: item.price_high || undefined,
+  });
+
+  const handleWantlistItemSaved = useCallback(async (albumId: string) => {
+    if (!prefilledWantlistItem) return;
+    try {
+      await wantlistService.removeFromWantlist(prefilledWantlistItem.id);
+    } catch (err) {
+      console.error('Failed to remove wantlist item:', err);
+    }
+    setPrefilledWantlistItem(null);
+    refreshWantlistCount();
+    showToast('Added to your collection and removed from wantlist', 'success');
+  }, [prefilledWantlistItem, refreshWantlistCount, showToast]);
+
+  const handleMarkAsOwned = useCallback(async (item: WantlistItem) => {
+    setPrefilledWantlistItem(item);
+    setCurrentView('grid');
+
+    const mapped = mapWantlistItemToNewAlbum(item);
+    try {
+      const saved = await supabaseService.saveAlbum({
+        artist: item.artist,
+        title: item.title,
+        cover_url: item.cover_url || '',
+        year: mapped.year,
+        genre: mapped.genre,
+        discogs_url: mapped.discogs_url,
+        discogs_release_id: mapped.discogs_release_id,
+        price_low: mapped.price_low,
+        price_median: mapped.price_median,
+        price_high: mapped.price_high,
+        tags: [],
+        isFavorite: false,
+        condition: 'Near Mint',
+        play_count: 0,
+      });
+
+      setAlbums(prev => [saved, ...prev]);
+      setSelectedAlbum(saved);
+      if (saved.cover_url) setHeroBg(saved.cover_url);
+
+      // Clean up wantlist — use item from closure since state hasn't committed yet
+      try {
+        await wantlistService.removeFromWantlist(item.id);
+      } catch (err) {
+        console.error('Failed to remove wantlist item:', err);
+      }
+      setPrefilledWantlistItem(null);
+      refreshWantlistCount();
+      showToast('Added to your collection and removed from wantlist', 'success');
+    } catch (err) {
+      console.error('Failed to add album:', err);
+      showToast('Failed to add album to collection.', 'error');
+      setPrefilledWantlistItem(null);
+    }
+  }, [refreshWantlistCount, showToast]);
 
   // Auto-create profile row on first signup & check onboarding
   const profileCheckedRef = useRef(false);
@@ -425,6 +513,11 @@ const App: React.FC = () => {
     return { genres, decades, topGenre, topDecade, total: albums.length, portfolioValue: totalVal };
   }, [albums]);
 
+  const collectionDiscogsIds = useMemo(
+    () => new Set(albums.filter(a => a.discogs_release_id).map(a => a.discogs_release_id!)),
+    [albums]
+  );
+
   const filteredAlbums = useMemo(() => {
     let result = albums.filter(a => {
       const query = searchQuery.toLowerCase();
@@ -533,7 +626,7 @@ const App: React.FC = () => {
 
 
   return (
-    <div className={`min-h-screen ${currentView !== 'landing' && currentView !== 'discogs' ? 'pb-24' : ''} selection:bg-[#dd6e42]/30 relative overflow-x-hidden`}>
+    <div className={`min-h-screen ${currentView !== 'landing' && currentView !== 'discogs' && currentView !== 'wantlist' ? 'pb-24' : ''} selection:bg-[#dd6e42]/30 relative overflow-x-hidden`}>
       <SEO
         title="My Collection"
         description="Browse and manage your vinyl record collection."
@@ -582,7 +675,7 @@ const App: React.FC = () => {
             )}
           </div>
 
-          {currentView !== 'landing' && currentView !== 'stakkd' && currentView !== 'discogs' && <div className="flex-1 max-w-xl flex items-center gap-2">
+          {currentView !== 'landing' && currentView !== 'stakkd' && currentView !== 'discogs' && currentView !== 'wantlist' && <div className="flex-1 max-w-xl flex items-center gap-2">
             <button
               onClick={() => setShowStats(!showStats)}
               className={`hidden md:flex p-3 rounded-full border transition-all flex-shrink-0 ${showStats ? 'bg-[#dd6e42] border-[#dd6e42] text-th-text shadow-lg' : 'bg-th-surface/[0.04] border-th-surface/[0.10] text-th-text2 hover:text-th-text'}`}
@@ -641,6 +734,20 @@ const App: React.FC = () => {
                 <path d="M12 2a10 10 0 0 1 7.07 2.93" />
                 <path d="M12 6a6 6 0 0 1 4.24 1.76" />
               </svg>
+            </button>
+            <button
+              onClick={() => setCurrentView('wantlist')}
+              className={`hidden md:flex p-3 rounded-full border transition-all flex-shrink-0 relative ${currentView === 'wantlist' ? 'bg-[#dd6e42] border-[#dd6e42] text-th-text shadow-lg' : 'bg-th-surface/[0.04] border-th-surface/[0.10] text-th-text2 hover:text-th-text'}`}
+              title="Wantlist"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+              </svg>
+              {wantlistCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-[#dd6e42] text-th-text text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                  {wantlistCount}
+                </span>
+              )}
             </button>
             <button
               onClick={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
@@ -1097,7 +1204,16 @@ const App: React.FC = () => {
             </section>
           )}
 
-          <DiscogsSearch onSelectResult={(result) => setDiscogsReleaseId(result.id)} />
+          <DiscogsSearch onSelectResult={(result) => setDiscogsReleaseId(result.id)} onWantlistChange={refreshWantlistCount} />
+        </main>
+      ) : currentView === 'wantlist' ? (
+        <main className="max-w-7xl mx-auto px-4 md:px-6 mt-8 pb-8">
+          <WantlistView
+            userId={user.id}
+            onMarkAsOwned={handleMarkAsOwned}
+            onRefreshCount={refreshWantlistCount}
+            collectionDiscogsIds={collectionDiscogsIds}
+          />
         </main>
       ) : (
         <main className="max-w-7xl mx-auto px-4 md:px-6 mt-8">
@@ -1136,7 +1252,7 @@ const App: React.FC = () => {
         </main>
       )}
 
-      {currentView !== 'landing' && currentView !== 'stakkd' && currentView !== 'discogs' && (
+      {currentView !== 'landing' && currentView !== 'stakkd' && currentView !== 'discogs' && currentView !== 'wantlist' && (
         <div className="fixed bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-3 md:gap-4 z-50 w-full px-4 justify-center">
           <button
             onClick={() => {

@@ -12,6 +12,7 @@ export interface NewAlbum {
   tags?: string[];
   isFavorite?: boolean;
   discogs_url?: string;
+  discogs_release_id?: number;
   musicbrainz_url?: string;
   sample_url?: string;
   // Collector fields
@@ -193,3 +194,26 @@ export interface IdentifiedGear {
   specs: Record<string, string | number>;
   manual_search_query: string;
 }
+
+// ── Wantlist ──────────────────────────────────────────────────
+
+/** A saved wantlist item — always has id, user_id, and created_at from the database. */
+export interface WantlistItem {
+  id: string;
+  user_id: string;
+  artist: string;
+  title: string;
+  year: string | null;
+  genre: string | null;
+  cover_url: string | null;
+  discogs_release_id: number | null;
+  discogs_url: string | null;
+  price_low: number | null;
+  price_median: number | null;
+  price_high: number | null;
+  prices_updated_at: string | null;
+  created_at: string;
+}
+
+/** Shape of a wantlist item before it has been persisted (no DB-generated fields). */
+export type NewWantlistItem = Omit<WantlistItem, 'id' | 'user_id' | 'created_at' | 'prices_updated_at'>;

@@ -1,5 +1,8 @@
 import React, { useState, useCallback } from 'react';
+import { Heart } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
+import { wantlistService } from '../services/wantlistService';
+import { NewWantlistItem } from '../types';
 import SpinningRecord from './SpinningRecord';
 import Pagination from './Pagination';
 import DiscogsAttribution from './DiscogsAttribution';
@@ -10,9 +13,10 @@ const PER_PAGE = 20;
 
 interface DiscogsSearchProps {
   onSelectResult?: (result: DiscogsSearchResult) => void;
+  onWantlistChange?: () => void;
 }
 
-const DiscogsSearch: React.FC<DiscogsSearchProps> = ({ onSelectResult }) => {
+const DiscogsSearch: React.FC<DiscogsSearchProps> = ({ onSelectResult, onWantlistChange }) => {
   const { showToast } = useToast();
 
   const [query, setQuery] = useState('');
@@ -24,6 +28,7 @@ const DiscogsSearch: React.FC<DiscogsSearchProps> = ({ onSelectResult }) => {
   const [pagination, setPagination] = useState<DiscogsSearchResponse['pagination'] | null>(null);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [addedIds, setAddedIds] = useState<Set<number>>(new Set());
 
   const fetchResults = useCallback(async (page: number) => {
     const trimmed = query.trim();
@@ -46,6 +51,7 @@ const DiscogsSearch: React.FC<DiscogsSearchProps> = ({ onSelectResult }) => {
       setResults(data.results);
       setPagination(data.pagination);
       setHasSearched(true);
+      setAddedIds(new Set());
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Search failed';
       showToast(message, 'error');
@@ -63,6 +69,35 @@ const DiscogsSearch: React.FC<DiscogsSearchProps> = ({ onSelectResult }) => {
   const handlePageChange = (page: number) => {
     fetchResults(page);
   };
+
+  const handleAddToWantlist = useCallback(async (result: DiscogsSearchResult) => {
+    const parts = result.title.split(' - ');
+    const artist = parts[0]?.trim() || result.title;
+    const title = parts.slice(1).join(' - ')?.trim() || result.title;
+
+    const item: NewWantlistItem = {
+      artist,
+      title,
+      year: result.year || null,
+      genre: result.genre?.[0] || null,
+      cover_url: (result.cover_image && !result.cover_image.includes('spacer.gif')) ? result.cover_image : null,
+      discogs_release_id: result.id,
+      discogs_url: `https://www.discogs.com/release/${result.id}`,
+      price_low: null,
+      price_median: null,
+      price_high: null,
+    };
+
+    try {
+      await wantlistService.addToWantlist(item);
+      setAddedIds((prev) => new Set(prev).add(result.id));
+      showToast('Added to wantlist', 'success');
+      onWantlistChange?.();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to add to wantlist';
+      showToast(message, 'error');
+    }
+  }, [showToast, onWantlistChange]);
 
   return (
     <div className="w-full max-w-6xl mx-auto px-4">
@@ -147,7 +182,7 @@ const DiscogsSearch: React.FC<DiscogsSearchProps> = ({ onSelectResult }) => {
         <>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {results.map((result) => (
-              <ResultCard key={`${result.type}-${result.id}`} result={result} onSelect={onSelectResult} />
+              <ResultCard key={`${result.type}-${result.id}`} result={result} onSelect={onSelectResult} onAddToWantlist={handleAddToWantlist} isAdded={addedIds.has(result.id)} />
             ))}
           </div>
 
@@ -174,7 +209,12 @@ const PLACEHOLDER_SVG = (
   </svg>
 );
 
-const ResultCard: React.FC<{ result: DiscogsSearchResult; onSelect?: (result: DiscogsSearchResult) => void }> = ({ result, onSelect }) => {
+const ResultCard: React.FC<{
+  result: DiscogsSearchResult;
+  onSelect?: (result: DiscogsSearchResult) => void;
+  onAddToWantlist: (result: DiscogsSearchResult) => void;
+  isAdded: boolean;
+}> = ({ result, onSelect, onAddToWantlist, isAdded }) => {
   const [imgFailed, setImgFailed] = useState(false);
   const hasImage = result.cover_image && !result.cover_image.includes('spacer.gif') && !imgFailed;
 
@@ -249,6 +289,29 @@ const ResultCard: React.FC<{ result: DiscogsSearchResult; onSelect?: (result: Di
             </span>
           </div>
         )}
+
+        {/* Add to Wantlist */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            if (!isAdded) onAddToWantlist(result);
+          }}
+          disabled={isAdded}
+          aria-label={(() => {
+            const parts = result.title.split(' - ');
+            const artist = parts[0]?.trim() || result.title;
+            const title = parts.slice(1).join(' - ')?.trim() || result.title;
+            return isAdded ? `${artist} - ${title} added to wantlist` : `Add ${artist} - ${title} to wantlist`;
+          })()}
+          className={`w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[10px] font-medium tracking-wider uppercase transition-all ${
+            isAdded
+              ? 'text-[#dd6e42] bg-[#dd6e42]/10 cursor-default'
+              : 'text-th-text3 hover:text-[#dd6e42] hover:bg-[#dd6e42]/10'
+          }`}
+        >
+          <Heart className="w-3.5 h-3.5" fill={isAdded ? 'currentColor' : 'none'} />
+          {isAdded ? 'Added' : 'Wantlist'}
+        </button>
 
         {/* Attribution */}
         <div className="pt-1 border-t border-th-surface/[0.06] mt-auto">
