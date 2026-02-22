@@ -1,4 +1,5 @@
-import * as OAuth from 'oauth-1.0a';
+import OAuthModule from 'oauth-1.0a';
+const OAuth = (OAuthModule as any).default || OAuthModule;
 import * as crypto from 'crypto';
 import { discogsConfig } from '../lib/discogs.js';
 

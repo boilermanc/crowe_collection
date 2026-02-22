@@ -4,6 +4,7 @@ import { Album } from '../types';
 import { proxyImageUrl } from '../services/imageProxy';
 import { getSpotifySearchUrl } from '../utils/spotify';
 import SpotifyIcon from './SpotifyIcon';
+import DiscogsIcon from './DiscogsIcon';
 
 interface AlbumCardProps {
   album: Album;
@@ -72,12 +73,37 @@ const AlbumCard: React.FC<AlbumCardProps> = ({ album, onDelete, onSelect }) => {
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="inline-flex items-center text-th-text3 hover:text-[#1DB954] transition-all p-1 rounded-md"
-              aria-label="Play on Spotify"
-              title="Play on Spotify"
+              className="inline-flex items-center text-[#1DB954] hover:text-[#1ed760] transition-all p-1 rounded-md"
+              aria-label="Search on Spotify"
+              title="Search on Spotify"
             >
               <SpotifyIcon size={16} />
             </a>
+            {album.discogs_url ? (
+              <a
+                href={album.discogs_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex items-center text-th-text2 hover:text-[#ff8a00] transition-all p-1 rounded-md"
+                aria-label="View on Discogs"
+                title="View on Discogs"
+              >
+                <DiscogsIcon size={16} />
+              </a>
+            ) : (
+              <a
+                href={`https://www.discogs.com/search/?q=${encodeURIComponent(`${album.artist} ${album.title}`)}&type=release`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex items-center text-th-text2 hover:text-[#ff8a00] transition-all p-1 rounded-md"
+                aria-label="Search on Discogs"
+                title="Search on Discogs"
+              >
+                <DiscogsIcon size={16} />
+              </a>
+            )}
             <button
               onClick={(e) => {
                 e.stopPropagation();
