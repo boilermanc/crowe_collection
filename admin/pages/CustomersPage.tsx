@@ -15,6 +15,10 @@ const CustomersPage: React.FC = () => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [editSub, setEditSub] = useState<{ plan: string; status: string } | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deactivating, setDeactivating] = useState(false);
+  const [wipingId, setWipingId] = useState<string | null>(null);
+  const [wiping, setWiping] = useState(false);
+  const [wipeConfirmText, setWipeConfirmText] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('created_at');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [page, setPage] = useState(1);
@@ -55,6 +59,66 @@ const CustomersPage: React.FC = () => {
       showToast(err instanceof Error ? err.message : 'Failed to update subscription', 'error');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const isBanned = (c: AdminCustomer): boolean => {
+    if (!c.banned_until) return false;
+    return new Date(c.banned_until) > new Date();
+  };
+
+  const handleDeactivate = async (userId: string) => {
+    setDeactivating(true);
+    try {
+      await adminService.deactivateUser(userId);
+      setCustomers(prev =>
+        prev.map(c =>
+          c.id === userId
+            ? { ...c, banned_until: new Date(Date.now() + 876000 * 3600000).toISOString() }
+            : c
+        )
+      );
+      showToast('User deactivated', 'success');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Failed to deactivate', 'error');
+    } finally {
+      setDeactivating(false);
+    }
+  };
+
+  const handleReactivate = async (userId: string) => {
+    setDeactivating(true);
+    try {
+      await adminService.reactivateUser(userId);
+      setCustomers(prev =>
+        prev.map(c =>
+          c.id === userId ? { ...c, banned_until: null } : c
+        )
+      );
+      showToast('User reactivated', 'success');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Failed to reactivate', 'error');
+    } finally {
+      setDeactivating(false);
+    }
+  };
+
+  const handleWipe = async (userId: string) => {
+    setWiping(true);
+    try {
+      const summary = await adminService.wipeUser(userId);
+      setCustomers(prev => prev.filter(c => c.id !== userId));
+      setWipingId(null);
+      setWipeConfirmText('');
+      setExpandedId(null);
+      showToast(
+        `Wiped: ${summary.albums_deleted} albums, ${summary.gear_deleted} gear, ${summary.storage_files_deleted} files`,
+        'success'
+      );
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Failed to wipe user', 'error');
+    } finally {
+      setWiping(false);
     }
   };
 
@@ -193,7 +257,15 @@ const CustomersPage: React.FC = () => {
                 >
                   <td className="px-5 py-3">
                     <div>
-                      <p className="font-medium" style={{ color: 'rgb(17,24,39)' }}>{c.display_name || '—'}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium" style={{ color: 'rgb(17,24,39)' }}>{c.display_name || '—'}</p>
+                        {isBanned(c) && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium"
+                            style={{ backgroundColor: 'rgb(254,242,242)', color: 'rgb(239,68,68)' }}>
+                            Deactivated
+                          </span>
+                        )}
+                      </div>
                       <p className="text-xs" style={{ color: 'rgb(156,163,175)' }}>{c.email}</p>
                     </div>
                   </td>
@@ -278,6 +350,48 @@ const CustomersPage: React.FC = () => {
                           </button>
                         </div>
                       </div>
+                      {/* Account Actions */}
+                      <div className="mt-4 pt-4 border-t" style={{ borderColor: 'rgb(229,231,235)' }}>
+                        <p className="font-medium uppercase tracking-wider mb-1 text-xs" style={{ color: 'rgb(107,114,128)' }}>
+                          Account Actions
+                        </p>
+                        <div className="flex items-center gap-3 mt-3">
+                          {isBanned(c) ? (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleReactivate(c.id); }}
+                              disabled={deactivating}
+                              className="text-xs px-3 py-1.5 rounded font-medium border transition-colors disabled:opacity-50"
+                              style={{ borderColor: 'rgb(34,197,94)', color: 'rgb(34,197,94)' }}
+                            >
+                              {deactivating ? 'Reactivating...' : 'Reactivate'}
+                            </button>
+                          ) : (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleDeactivate(c.id); }}
+                              disabled={deactivating || c.role === 'admin'}
+                              className="text-xs px-3 py-1.5 rounded font-medium border transition-colors disabled:opacity-50"
+                              style={{ borderColor: 'rgb(234,179,8)', color: 'rgb(234,179,8)' }}
+                              title={c.role === 'admin' ? 'Cannot deactivate admin users' : undefined}
+                            >
+                              {deactivating ? 'Deactivating...' : 'Deactivate'}
+                            </button>
+                          )}
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setWipingId(c.id); }}
+                            disabled={c.role === 'admin'}
+                            className="text-xs px-3 py-1.5 rounded font-medium text-white transition-colors disabled:opacity-50"
+                            style={{ backgroundColor: 'rgb(239,68,68)' }}
+                            title={c.role === 'admin' ? 'Cannot wipe admin users' : undefined}
+                          >
+                            Wipe All Data
+                          </button>
+                        </div>
+                        {c.role === 'admin' && (
+                          <p className="text-[10px] mt-2" style={{ color: 'rgb(156,163,175)' }}>
+                            Admin accounts cannot be deactivated or wiped from this panel.
+                          </p>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 )}
@@ -347,6 +461,65 @@ const CustomersPage: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Wipe confirmation modal */}
+      {wipingId && (() => {
+        const target = customers.find(c => c.id === wipingId);
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}>
+            <div className="rounded-xl border p-6 max-w-md w-full mx-4 shadow-lg" style={{ backgroundColor: 'rgb(255,255,255)', borderColor: 'rgb(229,231,235)' }}>
+              <div className="flex items-start gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: 'rgb(254,242,242)' }}>
+                  <svg className="w-5 h-5" style={{ color: 'rgb(239,68,68)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.072 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold" style={{ color: 'rgb(17,24,39)' }}>Permanently wipe user?</h3>
+                  <p className="text-xs mt-1" style={{ color: 'rgb(107,114,128)' }}>
+                    This will permanently delete all data for <strong>{target?.email}</strong>: albums, gear, wantlist, storage files, and their account. This cannot be undone.
+                  </p>
+                </div>
+              </div>
+              <div className="mb-4">
+                <label className="block text-xs mb-1" style={{ color: 'rgb(107,114,128)' }}>
+                  Type <strong>DELETE</strong> to confirm
+                </label>
+                <input
+                  type="text"
+                  value={wipeConfirmText}
+                  onChange={e => setWipeConfirmText(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-20 focus:border-red-500"
+                  style={{ borderColor: 'rgb(229,231,235)' }}
+                  placeholder="DELETE"
+                  autoFocus
+                />
+              </div>
+              <div className="flex items-center justify-end gap-2">
+                <button
+                  onClick={() => { setWipingId(null); setWipeConfirmText(''); }}
+                  disabled={wiping}
+                  className="text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+                  style={{ backgroundColor: 'rgb(243,244,246)', color: 'rgb(107,114,128)' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleWipe(wipingId)}
+                  disabled={wiping || wipeConfirmText !== 'DELETE'}
+                  className="text-sm font-medium px-4 py-2 rounded-lg text-white transition-colors disabled:opacity-50 flex items-center gap-2"
+                  style={{ backgroundColor: 'rgb(239,68,68)' }}
+                >
+                  {wiping && (
+                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  )}
+                  Wipe All Data
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 };

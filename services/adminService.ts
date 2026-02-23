@@ -30,6 +30,7 @@ export interface AdminCustomer {
   created_at: string;
   updated_at: string;
   last_sign_in_at: string | null;
+  banned_until: string | null;
   album_count: number;
   subscription_plan: string | null;
   subscription_status: string | null;
@@ -158,6 +159,22 @@ export interface EmailPreset {
     feature_2_label?: string;
     feature_2_text?: string;
   };
+}
+
+export interface DeactivateResult {
+  user_id: string;
+  status: 'deactivated' | 'active';
+}
+
+export interface WipeSummary {
+  user_id: string;
+  email: string;
+  storage_files_deleted: number;
+  storage_errors: string[];
+  albums_deleted: number;
+  gear_deleted: number;
+  wantlist_deleted: number;
+  auth_user_deleted: boolean;
 }
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
@@ -359,6 +376,45 @@ export const adminService = {
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({ error: 'Send test failed' }));
       throw new Error(err.error || `Failed to send test: ${resp.status}`);
+    }
+    return resp.json();
+  },
+
+  async deactivateUser(userId: string): Promise<DeactivateResult> {
+    const headers = await getAuthHeaders();
+    const resp = await fetch(`/api/admin/customers/${encodeURIComponent(userId)}/deactivate`, {
+      method: 'POST',
+      headers,
+    });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({ error: 'Deactivation failed' }));
+      throw new Error(err.error || `Failed to deactivate user: ${resp.status}`);
+    }
+    return resp.json();
+  },
+
+  async reactivateUser(userId: string): Promise<DeactivateResult> {
+    const headers = await getAuthHeaders();
+    const resp = await fetch(`/api/admin/customers/${encodeURIComponent(userId)}/reactivate`, {
+      method: 'POST',
+      headers,
+    });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({ error: 'Reactivation failed' }));
+      throw new Error(err.error || `Failed to reactivate user: ${resp.status}`);
+    }
+    return resp.json();
+  },
+
+  async wipeUser(userId: string): Promise<WipeSummary> {
+    const headers = await getAuthHeaders();
+    const resp = await fetch(`/api/admin/customers/${encodeURIComponent(userId)}`, {
+      method: 'DELETE',
+      headers,
+    });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({ error: 'Wipe failed' }));
+      throw new Error(err.error || `Failed to wipe user: ${resp.status}`);
     }
     return resp.json();
   },
