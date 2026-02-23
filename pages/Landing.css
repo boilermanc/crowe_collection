@@ -1855,6 +1855,11 @@
 
 /* Sellr sub-nav banner */
 .sellr-subnav {
+  position:fixed;
+  top:var(--nav-h);
+  left:0;
+  right:0;
+  z-index:99;
   display:flex;
   align-items:center;
   justify-content:space-between;
@@ -1863,6 +1868,11 @@
   padding:8px 24px;
   font-size:13px;
   gap:12px;
+}
+
+/* Push hero down when sellr banner is visible */
+.landing-page.has-sellr-banner .hero {
+  padding-top:calc(var(--nav-h) + 36px + 80px);
 }
 .sellr-subnav a { color:#fff; text-decoration:none; }
 .sellr-subnav a:hover { text-decoration:underline; }

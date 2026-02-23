@@ -316,7 +316,7 @@ const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
   );
 
   return (
-    <div className="landing-page">
+    <div className={`landing-page${!sellrBannerDismissed ? ' has-sellr-banner' : ''}`}>
       <SEO
         title="Rekkrd — Your Vinyl Collection, Elevated"
         description="Scan, catalog, and explore your vinyl record collection with AI-powered tools."
