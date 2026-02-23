@@ -1854,13 +1854,13 @@
 }
 
 /* Sellr tab */
-.landing-page .sellr-tab {
+.landing-page a.sellr-tab {
   position:fixed;
   top:var(--nav-h);
   right:200px;
   z-index:99;
   background:#2C4A6E;
-  color:#fff;
+  color:#fff !important;
   font-size:12px;
   padding:4px 16px;
   border-radius:0 0 8px 8px;
@@ -1869,7 +1869,7 @@
   box-shadow:0 2px 8px rgba(0,0,0,.12);
   transition:background .2s;
 }
-.landing-page .sellr-tab:hover { background:#1e3a5a; color:#fff; }
+.landing-page a.sellr-tab:hover { background:#1e3a5a; color:#fff !important; }
 .landing-page .sellr-tab span {
   color:#E8A838;
   font-weight:600;
