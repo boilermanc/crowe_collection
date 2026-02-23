@@ -360,9 +360,9 @@ interface TourStepLayoutProps {
 }
 
 const TourStepLayout: React.FC<TourStepLayoutProps> = ({ heading, description, bullets, children }) => (
-  <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-start">
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
     {/* Left: copy */}
-    <div className="flex flex-col">
+    <div className="flex flex-col min-w-0">
       <span className="font-label text-[10px] tracking-widest text-[#dd6e42] uppercase mb-3">
         Feature Tour
       </span>
@@ -474,7 +474,7 @@ const DUMMY_WANTLIST: WantlistItem[] = [
     title: 'Ziggy Stardust',
     year: '1972',
     genre: 'Rock',
-    cover_url: null,
+    cover_url: 'https://picsum.photos/seed/bowie/300/300',
     discogs_release_id: null,
     discogs_url: null,
     price_low: 18,
@@ -490,7 +490,7 @@ const DUMMY_WANTLIST: WantlistItem[] = [
     title: 'I Never Loved a Man',
     year: '1967',
     genre: 'Soul',
-    cover_url: null,
+    cover_url: 'https://picsum.photos/seed/aretha/300/300',
     discogs_release_id: null,
     discogs_url: null,
     price_low: null,
@@ -851,7 +851,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete, preview
               'Two-step confirm before marking as owned',
             ]}
           >
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 max-w-sm mx-auto">
               {DUMMY_WANTLIST.map(item => (
                 <WantlistCard key={item.id} item={item} onRemove={noop} onMarkAsOwned={noop} isInCollection={false} />
               ))}
