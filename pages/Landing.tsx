@@ -73,9 +73,6 @@ const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
   const { user, signOut } = useAuthContext();
   const [isAnnual, setIsAnnual] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [sellrBannerDismissed, setSellrBannerDismissed] = useState(() =>
-    localStorage.getItem('sellr_subnav_dismissed') === 'true'
-  );
 
   // Latest blog post
   interface LatestPost { id: string; title: string; slug: string; excerpt: string | null; featured_image: string | null; author: string; published_at: string; }
@@ -316,7 +313,7 @@ const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
   );
 
   return (
-    <div className={`landing-page${!sellrBannerDismissed ? ' has-sellr-banner' : ''}`}>
+    <div className="landing-page">
       <SEO
         title="Rekkrd — Your Vinyl Collection, Elevated"
         description="Scan, catalog, and explore your vinyl record collection with AI-powered tools."
@@ -361,32 +358,9 @@ const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
         </div>
       </nav>
 
-      {!sellrBannerDismissed && (
-        <div className="sellr-subnav">
-          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" style={{ width: 16, height: 16, flexShrink: 0 }}>
-              <circle cx="12" cy="12" r="10" />
-              <circle cx="12" cy="12" r="3" />
-            </svg>
-            Looking to sell your crate?
-          </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <a href="/sellr/start">
-              Try Sellr →
-            </a>
-            <button
-              aria-label="Dismiss Sellr banner"
-              onClick={() => { localStorage.setItem('sellr_subnav_dismissed', 'true'); setSellrBannerDismissed(true); }}
-              className="sellr-subnav-dismiss"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: 16, height: 16 }}>
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
-          </span>
-        </div>
-      )}
+      <a href="/sellr/start" className="sellr-tab">
+        Looking to sell your crate? <span>Try Sellr →</span>
+      </a>
 
       <section className="hero">
         <div className="hero-vinyl" aria-hidden="true">
