@@ -85,6 +85,7 @@ const App: React.FC = () => {
 
   const [yearRange, setYearRange] = useState({ min: '', max: '' });
   const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const [formatFilter, setFormatFilter] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>('recent');
   const [currentView, setCurrentView] = useState<ViewMode>(
     () => (sessionStorage.getItem('rekkrd-view') as ViewMode) || 'public-landing'
@@ -364,6 +365,7 @@ const App: React.FC = () => {
     setSearchQuery('');
     setYearRange({ min: '', max: '' });
     setFavoritesOnly(false);
+    setFormatFilter(null);
     setSortBy('recent');
     setIsFilterPanelOpen(false);
     setShowStats(false);
@@ -676,8 +678,9 @@ const App: React.FC = () => {
       const maxYear = parseInt(yearRange.max || '9999');
       const matchesYear = (minYear === 0 || albumYear >= minYear) && (maxYear === 9999 || albumYear <= maxYear);
       const matchesFavoriteOnly = !favoritesOnly || a.isFavorite;
+      const matchesFormat = !formatFilter || (a.format || 'Vinyl') === formatFilter;
 
-      return matchesSearch && matchesYear && matchesFavoriteOnly;
+      return matchesSearch && matchesYear && matchesFavoriteOnly && matchesFormat;
     });
 
     result.sort((a, b) => {
@@ -685,16 +688,17 @@ const App: React.FC = () => {
       if (sortBy === 'artist') return a.artist.localeCompare(b.artist);
       if (sortBy === 'title') return a.title.localeCompare(b.title);
       if (sortBy === 'value') return (b.price_median || 0) - (a.price_median || 0);
+      if (sortBy === 'format') return (a.format || 'Vinyl').localeCompare(b.format || 'Vinyl');
       return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
     });
 
     return result;
-  }, [albums, searchQuery, yearRange, favoritesOnly, sortBy, showImportedOnly, importedIdSet]);
+  }, [albums, searchQuery, yearRange, favoritesOnly, formatFilter, sortBy, showImportedOnly, importedIdSet]);
 
   // Reset grid page when filters change
   useEffect(() => {
     setGridPage(1);
-  }, [searchQuery, yearRange, favoritesOnly, sortBy, showImportedOnly]);
+  }, [searchQuery, yearRange, favoritesOnly, formatFilter, sortBy, showImportedOnly]);
 
   const gridTotalPages = Math.ceil(filteredAlbums.length / PAGE_SIZE);
   const paginatedAlbums = filteredAlbums.slice((gridPage - 1) * PAGE_SIZE, gridPage * PAGE_SIZE);
@@ -990,13 +994,34 @@ const App: React.FC = () => {
       {isFilterPanelOpen && (
         <div className="max-w-7xl mx-auto px-4 md:px-6 mt-4">
           <div className="glass-morphism rounded-3xl p-6 border border-th-surface/[0.10] animate-in slide-in-from-top duration-300">
-             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
               <div>
                 <h4 className="text-th-text3 font-label text-[9px] tracking-widest uppercase mb-3">Sort Collection</h4>
                 <div className="flex flex-wrap gap-2">
-                  {(['recent', 'year', 'artist', 'value'] as const).map(opt => (
+                  {(['recent', 'year', 'artist', 'value', 'format'] as const).map(opt => (
                     <button key={opt} onClick={() => setSortBy(opt)} className={`px-4 py-1.5 rounded-full text-[10px] uppercase tracking-widest transition-all ${sortBy === opt ? 'bg-[#dd6e42] text-th-text' : 'bg-th-surface/[0.04] text-th-text3'}`}>
                       {opt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <h4 className="text-th-text3 font-label text-[9px] tracking-widest uppercase mb-3">Format</h4>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => setFormatFilter(null)}
+                    className={`px-3 py-1.5 rounded-full text-[10px] uppercase tracking-widest transition-all ${formatFilter === null ? 'bg-[#dd6e42] text-th-text' : 'bg-th-surface/[0.04] text-th-text3'}`}
+                  >
+                    All
+                  </button>
+                  {MEDIA_FORMATS.map(f => (
+                    <button
+                      key={f}
+                      onClick={() => setFormatFilter(f)}
+                      className={`px-3 py-1.5 rounded-full text-[10px] uppercase tracking-widest transition-all`}
+                      style={formatFilter === f ? { backgroundColor: FORMAT_COLORS[f], color: '#fff' } : undefined}
+                    >
+                      {f}
                     </button>
                   ))}
                 </div>

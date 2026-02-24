@@ -84,6 +84,8 @@ const CatalogResults: React.FC<{
   query: string;
   onSelect: (r: CatalogResult) => void;
 }> = ({ results, query, onSelect }) => {
+  const [brokenImages, setBrokenImages] = useState<Set<string>>(() => new Set());
+
   // Group results by category
   const grouped = useMemo(() => {
     const map = new Map<string, CatalogResult[]>();
@@ -127,11 +129,12 @@ const CatalogResults: React.FC<{
                   >
                     {/* Image / fallback */}
                     <div className="w-10 h-10 rounded-lg overflow-hidden bg-th-surface/[0.06] flex-shrink-0 flex items-center justify-center">
-                      {result.image_url ? (
+                      {result.image_url && !brokenImages.has(result.id) ? (
                         <img
                           src={result.image_url}
                           alt={`${result.brand} ${result.model}`}
                           className="w-full h-full object-cover"
+                          onError={() => setBrokenImages(prev => new Set(prev).add(result.id))}
                         />
                       ) : (
                         <GearFallbackIcon />
