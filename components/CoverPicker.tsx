@@ -3,11 +3,13 @@ import { geminiService } from '../services/geminiService';
 import { proxyImageUrl } from '../services/imageProxy';
 import SpinningRecord from './SpinningRecord';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { FORMAT_COLORS, FORMAT_DEFAULT, type MediaFormat } from '../constants/formatTypes';
 
 interface CoverResult {
   url: string;
   source: string;
   label?: string;
+  format?: string;
 }
 
 interface CoverPickerProps {
@@ -148,6 +150,18 @@ const CoverPicker: React.FC<CoverPickerProps> = ({ artist, title, currentCoverUr
                     }`}>
                       {cover.source}
                     </span>
+                    {/* Format Badge (MusicBrainz only) */}
+                    {cover.format && (
+                      <span
+                        className="absolute top-8 left-2 text-[7px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded"
+                        style={{
+                          backgroundColor: FORMAT_COLORS[cover.format as MediaFormat] ? `${FORMAT_COLORS[cover.format as MediaFormat]}cc` : 'rgba(100,100,100,0.8)',
+                          color: '#e8e2d6',
+                        }}
+                      >
+                        {cover.format}
+                      </span>
+                    )}
                     {/* Active Checkmark */}
                     {isActive && (
                       <div className="absolute top-2 right-2 w-6 h-6 bg-[#dd6e42] rounded-full flex items-center justify-center">

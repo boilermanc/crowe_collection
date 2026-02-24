@@ -170,7 +170,7 @@ export const supabaseService = {
       'title', 'artist', 'year', 'genre', 'cover_url', 'original_photo_url',
       'description', 'tracklist', 'tags', 'condition', 'personal_notes',
       'price_low', 'price_median', 'price_high', 'play_count',
-      'discogs_url', 'discogs_release_id', 'musicbrainz_url', 'sample_url', 'barcode',
+      'discogs_url', 'discogs_release_id', 'musicbrainz_url', 'sample_url', 'barcode', 'format',
     ];
 
     const dbUpdates: Record<string, unknown> = {};

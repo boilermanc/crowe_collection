@@ -9,6 +9,7 @@ interface CoverResult {
   url: string;
   source: string;
   label?: string;
+  format?: string;
 }
 
 interface MusicBrainzRelease {
@@ -27,20 +28,18 @@ async function searchMusicBrainz(artist: string, title: string): Promise<CoverRe
     if (!resp.ok) return [];
     const json = await resp.json();
     const releases = json.releases || [];
-    const EXCLUDED_FORMATS = ['8-track cartridge'];
     const candidates = releases
-      .filter((r: MusicBrainzRelease) => {
-        if (!r.id) return false;
-        if (r.media?.some((m: { format?: string }) =>
-          m.format && EXCLUDED_FORMATS.includes(m.format.toLowerCase())
-        )) return false;
-        return true;
-      })
-      .map((r: MusicBrainzRelease) => ({
-        url: `https://coverartarchive.org/release/${r.id}/front-500`,
-        source: 'MusicBrainz' as const,
-        label: r.title || undefined,
-      }));
+      .filter((r: MusicBrainzRelease) => r.id)
+      .map((r: MusicBrainzRelease) => {
+        // Extract primary format from media array (e.g. "Vinyl", "Cassette")
+        const primaryFormat = r.media?.[0]?.format || undefined;
+        return {
+          url: `https://coverartarchive.org/release/${r.id}/front-500`,
+          source: 'MusicBrainz' as const,
+          label: r.title || undefined,
+          format: primaryFormat,
+        };
+      });
 
     // Validate URLs exist (Cover Art Archive returns 404 for releases without art)
     const checks = await Promise.allSettled(

@@ -42,10 +42,11 @@ import MobileBottomNav from './src/components/MobileBottomNav';
 import { Bell, TrendingUp, User } from 'lucide-react';
 import { wantlistService } from './services/wantlistService';
 import { WantlistItem, PriceAlert } from './types';
+import { MEDIA_FORMATS, FORMAT_COLORS, type MediaFormat } from './constants/formatTypes';
 
 const PAGE_SIZE = 40;
 
-type SortOption = 'recent' | 'year' | 'artist' | 'title' | 'value';
+type SortOption = 'recent' | 'year' | 'artist' | 'title' | 'value' | 'format';
 type ViewMode = 'public-landing' | 'landing' | 'grid' | 'list' | 'stakkd' | 'discogs' | 'wantlist' | 'value-dashboard' | 'profile' | 'price-alerts';
 
 interface DuplicatePendingData {
@@ -384,6 +385,7 @@ const App: React.FC = () => {
     base64: string,
     discogsReleaseIdParam?: number,
     barcodeParam?: string,
+    formatParam?: string,
   ) => {
     setProcessingStatus(`Appraising ${identity.title}...`);
     try {
@@ -407,6 +409,7 @@ const App: React.FC = () => {
           discogs_url: `https://www.discogs.com/release/${discogsReleaseIdParam}`,
         }),
         ...(barcodeParam ? { barcode: barcodeParam } : {}),
+        format: formatParam || 'Vinyl',
       });
 
       setAlbums(prev => [saved, ...prev]);
@@ -492,6 +495,7 @@ const App: React.FC = () => {
           barcode: identity.barcode,
           discogsMatches: identity.discogsMatches,
           scanMode,
+          format: identity.format,
         },
         base64,
       });
@@ -608,11 +612,12 @@ const App: React.FC = () => {
     title: string,
     confirmedDiscogsReleaseId?: number,
     barcode?: string,
+    format?: string,
   ) => {
     if (!pendingScan) return;
     const { base64 } = pendingScan;
     setPendingScan(null);
-    await saveIdentifiedAlbum({ artist, title }, base64, confirmedDiscogsReleaseId, barcode);
+    await saveIdentifiedAlbum({ artist, title }, base64, confirmedDiscogsReleaseId, barcode, format);
   };
 
   const handleScanCancel = () => {

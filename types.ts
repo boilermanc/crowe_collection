@@ -16,6 +16,7 @@ export interface NewAlbum {
   musicbrainz_url?: string;
   sample_url?: string;
   barcode?: string;
+  format?: string;
   // Collector fields
   condition?: string;
   personal_notes?: string;
@@ -192,6 +193,7 @@ export interface ScanConfirmation {
   barcode?: string;
   discogsMatches?: DiscogsMatch[];
   scanMode?: 'cover' | 'barcode';
+  format?: string;
 }
 
 /** Shape returned by the /api/identify-gear endpoint. */

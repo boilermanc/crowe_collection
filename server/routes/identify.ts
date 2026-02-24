@@ -105,9 +105,11 @@ router.post(
             { inlineData: { mimeType, data: base64Data } },
             {
               text: barcodeHint
-                + 'Identify this vinyl record album. Return the Artist and Album Title. '
+                + 'Identify this music album. It could be a vinyl record, cassette tape, or 8-track cartridge. '
+                + 'Return the Artist, Album Title, and the physical format of the media shown in the image. '
                 + 'Also look for any barcode numbers visible on the sleeve, label, or sticker. '
-                + 'Return JSON with keys "artist", "title", and "barcodes" (an array of barcode number strings found, or empty array if none visible). '
+                + 'Return JSON with keys "artist", "title", "format" (one of: "Vinyl", "Cassette", "8-Track"), '
+                + 'and "barcodes" (an array of barcode number strings found, or empty array if none visible). '
                 + 'If you cannot identify the album, return null.',
             }
           ]
@@ -119,12 +121,13 @@ router.post(
             properties: {
               artist: { type: Type.STRING },
               title: { type: Type.STRING },
+              format: { type: Type.STRING },
               barcodes: {
                 type: Type.ARRAY,
                 items: { type: Type.STRING },
               },
             },
-            required: ['artist', 'title', 'barcodes']
+            required: ['artist', 'title', 'format', 'barcodes']
           }
         }
       }), GEMINI_TIMEOUT_MS);
@@ -185,9 +188,14 @@ router.post(
         }
       }
 
+      // Normalize format to known values, default to Vinyl
+      const KNOWN_FORMATS = ['Vinyl', 'Cassette', '8-Track'];
+      const format = KNOWN_FORMATS.includes(data.format) ? data.format : 'Vinyl';
+
       res.status(200).json({
         artist: data.artist,
         title: data.title,
+        format,
         ...(barcode ? { barcode } : {}),
         discogsMatches,
       });

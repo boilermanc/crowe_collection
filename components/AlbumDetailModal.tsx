@@ -6,8 +6,10 @@ import { geminiService } from '../services/geminiService';
 import { supabase } from '../services/supabaseService';
 import SpinningRecord from './SpinningRecord';
 import CoverPicker from './CoverPicker';
+import FormatBadge from './FormatBadge';
 import { useToast } from '../contexts/ToastContext';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { MEDIA_FORMATS, FORMAT_COLORS, type MediaFormat } from '../constants/formatTypes';
 
 interface AlbumDetailModalProps {
   album: Album;
@@ -204,7 +206,13 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
         <div className="w-full md:w-7/12 p-6 md:p-12 overflow-y-auto bg-th-surface/[0.02] custom-scrollbar">
           <header className="mb-8">
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-[#dd6e42] font-label text-[9px] tracking-[0.2em] font-bold uppercase">{album.genre || 'Vinyl'}</span>
+              <FormatBadge format={album.format} size="sm" />
+              {album.genre && (
+                <>
+                  <span className="text-th-text3/50">•</span>
+                  <span className="text-[#dd6e42] font-label text-[9px] tracking-[0.2em] font-bold uppercase">{album.genre}</span>
+                </>
+              )}
               <span className="text-th-text3/50">•</span>
               <span className="text-th-text3 font-label text-[9px] tracking-[0.2em] uppercase">{album.year}</span>
             </div>
@@ -367,6 +375,36 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
                         </button>
                       )}
                     </span>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Format */}
+            {onUpdateAlbum && (
+              <section>
+                <h4 className="text-th-text3/70 text-[9px] font-label tracking-[0.3em] uppercase mb-4">Format</h4>
+                <div className="flex gap-2">
+                  {MEDIA_FORMATS.map(f => (
+                    <button
+                      key={f}
+                      onClick={() => onUpdateAlbum(album.id, { format: f })}
+                      className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border ${
+                        (album.format || 'Vinyl') === f
+                          ? 'border-current'
+                          : 'border-th-surface/[0.10] opacity-50 hover:opacity-80'
+                      }`}
+                      style={{
+                        color: (album.format || 'Vinyl') === f
+                          ? FORMAT_COLORS[f]
+                          : undefined,
+                        backgroundColor: (album.format || 'Vinyl') === f
+                          ? `${FORMAT_COLORS[f]}15`
+                          : undefined,
+                      }}
+                    >
+                      {f}
+                    </button>
                   ))}
                 </div>
               </section>

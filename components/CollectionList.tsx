@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Album } from '../types';
 import { proxyImageUrl } from '../services/imageProxy';
 import { CONDITION_ORDER } from '../constants/conditionGrades';
+import { FORMAT_COLORS, FORMAT_DEFAULT, type MediaFormat } from '../constants/formatTypes';
 import Pagination from './Pagination';
 
 const PAGE_SIZE = 40;
@@ -18,7 +19,7 @@ interface CollectionListProps {
   importedAlbumIds?: Set<string>;
 }
 
-type SortField = 'favorite' | 'title' | 'artist' | 'year' | 'genre' | 'value' | 'added' | 'condition' | 'plays';
+type SortField = 'favorite' | 'title' | 'artist' | 'year' | 'genre' | 'format' | 'value' | 'added' | 'condition' | 'plays';
 type SortDir = 'asc' | 'desc';
 
 interface SortArrowProps {
@@ -83,6 +84,9 @@ const CollectionList: React.FC<CollectionListProps> = ({ albums, onSelect, onDel
           break;
         case 'genre':
           cmp = (a.genre || 'zzz').localeCompare(b.genre || 'zzz');
+          break;
+        case 'format':
+          cmp = (a.format || 'Vinyl').localeCompare(b.format || 'Vinyl');
           break;
         case 'value':
           cmp = (a.price_median || 0) - (b.price_median || 0);
@@ -150,7 +154,7 @@ const CollectionList: React.FC<CollectionListProps> = ({ albums, onSelect, onDel
       {/* Table */}
       <div className="glass-morphism rounded-2xl border border-th-surface/[0.10] overflow-hidden" role="table" aria-label="Album collection">
         {/* Header row */}
-        <div className="grid grid-cols-[48px_28px_1fr_1fr] md:grid-cols-[56px_32px_1.5fr_1fr_80px_120px_90px_100px_72px] gap-x-3 px-4 py-3 border-b border-th-surface/[0.10] text-[9px] font-label tracking-widest uppercase" role="row">
+        <div className="grid grid-cols-[48px_28px_1fr_1fr] md:grid-cols-[56px_32px_1.5fr_1fr_80px_120px_72px_90px_100px_72px] gap-x-3 px-4 py-3 border-b border-th-surface/[0.10] text-[9px] font-label tracking-widest uppercase" role="row">
           <div role="columnheader"></div>
           <div className={colHeaderClass('favorite')} onClick={() => handleSort('favorite')} onKeyDown={(e) => handleHeaderKeyDown(e, 'favorite')} tabIndex={0} role="columnheader" aria-sort={getAriaSort('favorite')} title="Sort by favorites">
             <svg className={`w-3.5 h-3.5 ${sortField === 'favorite' ? 'text-[#dd6e42]' : ''}`} viewBox="0 0 24 24" fill={sortField === 'favorite' ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2}>
@@ -169,6 +173,9 @@ const CollectionList: React.FC<CollectionListProps> = ({ albums, onSelect, onDel
           </div>
           <div className={`${colHeaderClass('genre')} hidden md:block`} onClick={() => handleSort('genre')} onKeyDown={(e) => handleHeaderKeyDown(e, 'genre')} tabIndex={0} role="columnheader" aria-sort={getAriaSort('genre')}>
             Genre <SortArrow field="genre" currentSortField={sortField} sortDir={sortDir} />
+          </div>
+          <div className={`${colHeaderClass('format')} hidden md:block`} onClick={() => handleSort('format')} onKeyDown={(e) => handleHeaderKeyDown(e, 'format')} tabIndex={0} role="columnheader" aria-sort={getAriaSort('format')}>
+            Format <SortArrow field="format" currentSortField={sortField} sortDir={sortDir} />
           </div>
           <div className={`${colHeaderClass('condition')} hidden md:block`} onClick={() => handleSort('condition')} onKeyDown={(e) => handleHeaderKeyDown(e, 'condition')} tabIndex={0} role="columnheader" aria-sort={getAriaSort('condition')}>
             Cond. <SortArrow field="condition" currentSortField={sortField} sortDir={sortDir} />
@@ -195,7 +202,7 @@ const CollectionList: React.FC<CollectionListProps> = ({ albums, onSelect, onDel
               <div
                 key={album.id}
                 onClick={() => onSelect(album)}
-                className={`group grid grid-cols-[48px_28px_1fr_1fr] md:grid-cols-[56px_32px_1.5fr_1fr_80px_120px_90px_100px_72px] gap-x-3 px-4 py-2 items-center cursor-pointer list-row-hover transition-colors${importedAlbumIds?.has(album.id) ? ' animate-import-highlight bg-[#6B8F71]/10' : ''}`}
+                className={`group grid grid-cols-[48px_28px_1fr_1fr] md:grid-cols-[56px_32px_1.5fr_1fr_80px_120px_72px_90px_100px_72px] gap-x-3 px-4 py-2 items-center cursor-pointer list-row-hover transition-colors${importedAlbumIds?.has(album.id) ? ' animate-import-highlight bg-[#6B8F71]/10' : ''}`}
                 role="row"
                 tabIndex={0}
                 onKeyDown={(e) => {
@@ -252,6 +259,19 @@ const CollectionList: React.FC<CollectionListProps> = ({ albums, onSelect, onDel
 
                 {/* Genre (hidden on mobile) */}
                 <p className="text-th-text3 text-xs truncate hidden md:block" role="cell">{album.genre || '—'}</p>
+
+                {/* Format (hidden on mobile) */}
+                <div className="hidden md:flex items-center" role="cell">
+                  <span
+                    className="inline-flex items-center text-[8px] font-bold uppercase tracking-wider rounded px-1.5 py-0.5"
+                    style={{
+                      backgroundColor: `${FORMAT_COLORS[(album.format || FORMAT_DEFAULT) as MediaFormat] || FORMAT_COLORS[FORMAT_DEFAULT]}20`,
+                      color: FORMAT_COLORS[(album.format || FORMAT_DEFAULT) as MediaFormat] || FORMAT_COLORS[FORMAT_DEFAULT],
+                    }}
+                  >
+                    {album.format || FORMAT_DEFAULT}
+                  </span>
+                </div>
 
                 {/* Condition (hidden on mobile) */}
                 <p className="text-th-text3 text-xs truncate hidden md:block" role="cell">{album.condition || '—'}</p>

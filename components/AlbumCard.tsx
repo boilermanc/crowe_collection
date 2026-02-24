@@ -5,6 +5,7 @@ import { proxyImageUrl } from '../services/imageProxy';
 import { getSpotifySearchUrl } from '../utils/spotify';
 import SpotifyIcon from './SpotifyIcon';
 import DiscogsIcon from './DiscogsIcon';
+import FormatBadge from './FormatBadge';
 
 interface AlbumCardProps {
   album: Album;
@@ -69,6 +70,12 @@ const AlbumCard: React.FC<AlbumCardProps> = ({ album, onDelete, onSelect, isImpo
             New
           </div>
         )}
+
+        {album.format && album.format !== 'Vinyl' && (
+          <div className={`absolute ${isImported ? 'top-9' : 'top-2'} left-2 z-10 shadow-lg`}>
+            <FormatBadge format={album.format} />
+          </div>
+        )}
       </div>
 
       <div className="p-4 relative">
@@ -127,7 +134,7 @@ const AlbumCard: React.FC<AlbumCardProps> = ({ album, onDelete, onSelect, isImpo
         <p className="text-[#dd6e42] text-sm font-medium truncate">{album.artist}</p>
         <div className="mt-2 flex items-center justify-between text-[10px] text-th-text3 uppercase tracking-widest">
           <span>{album.year || 'No Date'}</span>
-          <span>{album.genre || 'Vinyl'}</span>
+          <span>{album.genre || '—'}</span>
         </div>
       </div>
     </div>

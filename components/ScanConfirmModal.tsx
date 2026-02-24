@@ -3,10 +3,11 @@ import { ScanConfirmation, DiscogsMatch } from '../types';
 import { proxyImageUrl } from '../services/imageProxy';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { ScanBarcode, Disc3, Sparkles } from 'lucide-react';
+import FormatBadge from './FormatBadge';
 
 interface ScanConfirmModalProps {
   scan: ScanConfirmation;
-  onConfirm: (artist: string, title: string, discogsReleaseId?: number, barcode?: string) => void;
+  onConfirm: (artist: string, title: string, discogsReleaseId?: number, barcode?: string, format?: string) => void;
   onCancel: () => void;
 }
 
@@ -32,21 +33,33 @@ const ScanConfirmModal: React.FC<ScanConfirmModalProps> = ({ scan, onConfirm, on
 
   const selectedMatch = selectedId !== null ? matches.find(m => m.id === selectedId) : undefined;
 
+  /** Derive our format from a Discogs format string (e.g. "Vinyl, LP, Album" → "Vinyl"). */
+  const deriveFormat = (discogsFormat?: string): string | undefined => {
+    if (!discogsFormat) return undefined;
+    const lower = discogsFormat.toLowerCase();
+    if (lower.includes('cassette')) return 'Cassette';
+    if (lower.includes('8-track')) return '8-Track';
+    if (lower.includes('vinyl')) return 'Vinyl';
+    return undefined;
+  };
+
   const handleConfirm = () => {
     if (selectedId !== null) {
       const match = matches.find(m => m.id === selectedId);
       if (match) {
         const parsed = parseDiscogsTitle(match.title);
+        const format = deriveFormat(match.format) || scan.format || 'Vinyl';
         onConfirm(
           parsed.artist || scan.artist,
           parsed.title || scan.title,
           match.id,
           scan.barcode,
+          format,
         );
         return;
       }
     }
-    onConfirm(scan.artist, scan.title, undefined, scan.barcode);
+    onConfirm(scan.artist, scan.title, undefined, scan.barcode, scan.format || 'Vinyl');
   };
 
   return (
@@ -101,6 +114,11 @@ const ScanConfirmModal: React.FC<ScanConfirmModalProps> = ({ scan, onConfirm, on
           <div className="text-center">
             <p className="text-th-text text-base font-bold">{scan.artist}</p>
             <p className="text-[#dd6e42] text-sm font-medium">{scan.title}</p>
+            {scan.format && (
+              <div className="mt-2">
+                <FormatBadge format={scan.format} size="md" />
+              </div>
+            )}
           </div>
 
           {/* Discogs matches */}
