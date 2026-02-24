@@ -1632,11 +1632,12 @@
 
   /* Discogs */
   .landing-page .discogs-section .container{gap:32px}
+  .landing-page .discogs-visual{max-width:100%;min-width:0;overflow:hidden}
   .landing-page .discogs-text .section-title{font-size:clamp(1.3rem,5vw,1.75rem)}
   .landing-page .discogs-text .section-sub{font-size:.9rem}
   .landing-page .discogs-text .showcase-list{margin-top:20px !important}
   .landing-page .discogs-text .showcase-list li{font-size:.85rem}
-  .landing-page .discogs-mock{padding:16px;border-radius:12px}
+  .landing-page .discogs-mock{padding:16px;border-radius:12px;max-width:100%;box-sizing:border-box}
   .landing-page .discogs-mock-header{margin-bottom:12px}
   .landing-page .discogs-mock-label{font-size:.8rem}
   .landing-page .discogs-mock-count{font-size:.7rem}
@@ -1884,14 +1885,16 @@
     padding-bottom:80px;
   }
 
-  /* Fix Sellr tab on mobile */
+  /* Sellr tab — full-width bar on mobile */
   .landing-page a.sellr-tab {
-    right:auto;
-    left:50%;
-    transform:translateX(-50%);
-    font-size:12px;
-    padding:6px 20px;
-    border-radius:0 0 10px 10px;
+    right:0;
+    left:0;
+    transform:none;
+    font-size:13px;
+    padding:8px 16px;
+    border-radius:0;
+    text-align:center;
+    width:100%;
   }
 }
 

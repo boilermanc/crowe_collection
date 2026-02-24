@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import Stripe from 'stripe';
+import type Stripe from 'stripe';
+import { getStripe, getPublishableKey, getStripeMode } from '../lib/stripe.js';
 
 // Simple in-memory cache
 let cachedPrices: unknown = null;
@@ -10,11 +11,6 @@ const router = Router();
 
 // No auth required — pricing is public info
 router.get('/api/prices', async (_req, res) => {
-  if (!process.env.STRIPE_SECRET_KEY) {
-    res.status(200).json({ tiers: {} });
-    return;
-  }
-
   const now = Date.now();
   if (cachedPrices && now < cacheExpiry) {
     res.status(200).json(cachedPrices);
@@ -22,7 +18,7 @@ router.get('/api/prices', async (_req, res) => {
   }
 
   try {
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+    const stripe = await getStripe();
     const prices = await stripe.prices.list({
       active: true,
       expand: ['data.product'],
@@ -65,6 +61,21 @@ router.get('/api/prices', async (_req, res) => {
   } catch (error) {
     console.error('Stripe prices error:', error);
     res.status(500).json({ error: 'Failed to fetch prices' });
+  }
+});
+
+// ── GET /api/stripe-config ────────────────────────────────────────────
+// Public endpoint — returns the publishable key + mode for frontend Stripe init.
+router.get('/api/stripe-config', async (_req, res) => {
+  try {
+    const [publishableKey, mode] = await Promise.all([
+      getPublishableKey(),
+      getStripeMode(),
+    ]);
+    res.json({ publishableKey, mode });
+  } catch (error) {
+    console.error('Stripe config error:', error);
+    res.status(500).json({ error: 'Failed to fetch Stripe config' });
   }
 });
 

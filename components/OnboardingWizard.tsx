@@ -921,7 +921,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete, preview
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-th-bg flex flex-col">
+    <div className={previewMode ? "h-full min-h-screen bg-th-bg flex flex-col" : "fixed inset-0 z-50 bg-th-bg flex flex-col"}>
       {/* Top bar */}
       <header className="flex items-center justify-between px-4 md:px-8 py-4 shrink-0">
         {/* Left: Logo */}

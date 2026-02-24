@@ -1,7 +1,8 @@
 import { Router, type Request, type Response } from 'express';
 import { createClient } from '@supabase/supabase-js';
+import Stripe from 'stripe';
 import { requireAdmin } from '../middleware/adminAuth.js';
-import { testSlackWebhook } from '../services/slackService.js';
+import { invalidateStripeCache } from '../lib/stripe.js';
 
 const router = Router();
 
@@ -13,23 +14,23 @@ function getSupabaseAdmin() {
 }
 
 // ── GET /api/admin/integrations ─────────────────────────────────────
-// Fetch all settings in the 'integrations' category.
-router.get('/api/admin/integrations', requireAdmin, async (_req: Request, res: Response) => {
+// Fetch settings by category. Defaults to 'integrations', supports ?category=stripe.
+router.get('/api/admin/integrations', requireAdmin, async (req: Request, res: Response) => {
   try {
+    const category = (req.query.category as string) || 'integrations';
     const supabase = getSupabaseAdmin();
     const { data, error } = await supabase
       .from('config_settings')
       .select('key, value, data_type')
-      .eq('category', 'integrations')
+      .eq('category', category)
       .order('key');
 
     if (error) {
       console.error('[integrations] Fetch error:', error.message);
-      res.status(500).json({ error: 'Failed to fetch integration settings' });
+      res.status(500).json({ error: 'Failed to fetch settings' });
       return;
     }
 
-    // Parse into a flat key→value map
     const settings: Record<string, unknown> = {};
     for (const row of (data || []) as Array<{ key: string; value: unknown; data_type: string }>) {
       settings[row.key] = parseValue(row.value, row.data_type);
@@ -44,12 +45,15 @@ router.get('/api/admin/integrations', requireAdmin, async (_req: Request, res: R
 });
 
 // ── PUT /api/admin/integrations ─────────────────────────────────────
-// Bulk upsert settings. Body: { settings: { key: { value, dataType } } }
+// Bulk upsert settings. Body: { category?, settings: { key: { value, dataType } } }
 router.put('/api/admin/integrations', requireAdmin, async (req: Request, res: Response) => {
   try {
-    const { settings } = req.body as {
+    const { category: bodyCategory, settings } = req.body as {
+      category?: string;
       settings: Record<string, { value: unknown; dataType: string }>;
     };
+
+    const category = bodyCategory || 'integrations';
 
     if (!settings || typeof settings !== 'object') {
       res.status(400).json({ error: 'Missing settings object' });
@@ -57,7 +61,7 @@ router.put('/api/admin/integrations', requireAdmin, async (req: Request, res: Re
     }
 
     const records = Object.entries(settings).map(([key, config]) => ({
-      category: 'integrations',
+      category,
       key,
       value: stringifyValue(config.value, config.dataType),
       data_type: config.dataType,
@@ -71,8 +75,13 @@ router.put('/api/admin/integrations', requireAdmin, async (req: Request, res: Re
 
     if (error) {
       console.error('[integrations] Upsert error:', error.message);
-      res.status(500).json({ error: 'Failed to save integration settings' });
+      res.status(500).json({ error: 'Failed to save settings' });
       return;
+    }
+
+    // Invalidate Stripe cache when saving stripe settings
+    if (category === 'stripe') {
+      invalidateStripeCache();
     }
 
     res.json({ success: true });
@@ -100,9 +109,22 @@ router.post('/api/admin/integrations/test', requireAdmin, async (req: Request, r
     let result: { success: boolean; message: string };
 
     switch (integration) {
-      case 'slack':
-        result = await testSlackWebhook(config?.webhook_url || '');
+      case 'stripe': {
+        const secretKey = config?.secret_key;
+        if (!secretKey) {
+          result = { success: false, message: 'No secret key provided' };
+          break;
+        }
+        try {
+          const testStripe = new Stripe(secretKey);
+          await testStripe.balance.retrieve();
+          result = { success: true, message: 'Stripe connection successful' };
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : 'Unknown error';
+          result = { success: false, message: `Stripe test failed: ${msg}` };
+        }
         break;
+      }
       default:
         result = { success: false, message: `Unknown integration: ${integration}` };
     }

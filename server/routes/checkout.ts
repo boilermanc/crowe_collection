@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { createClient } from '@supabase/supabase-js';
 import { requireAuthWithUser, type AuthResult } from '../middleware/auth.js';
-import { stripe } from '../lib/stripe.js';
+import { getStripe } from '../lib/stripe.js';
 import { isKnownPriceId, TRIAL_DAYS } from '../lib/stripeConfig.js';
 
 const router = Router();
@@ -38,6 +38,7 @@ router.post(
 
         const appUrl = process.env.APP_URL || 'https://rekkrd.com';
 
+        const stripe = await getStripe();
         const session = await stripe.billingPortal.sessions.create({
           customer: sub.stripe_customer_id,
           return_url: appUrl,
@@ -59,12 +60,13 @@ router.post(
       return;
     }
 
-    if (!isKnownPriceId(priceId)) {
+    if (!(await isKnownPriceId(priceId))) {
       res.status(400).json({ error: 'Unknown price ID' });
       return;
     }
 
     try {
+      const stripe = await getStripe();
       const supabase = getSupabaseAdmin();
 
       const { data: sub } = await supabase

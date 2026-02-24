@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import type Stripe from 'stripe';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { stripe, webhookSecret } from '../lib/stripe.js';
+import { getStripe, getWebhookSecret } from '../lib/stripe.js';
 import { getPlanFromPriceId } from '../lib/stripeConfig.js';
 import { sendTemplatedEmail } from '../services/emailService.js';
 
@@ -70,6 +70,8 @@ router.post('/api/stripe-webhook', async (req, res) => {
 
   let event: Stripe.Event;
   try {
+    const stripe = await getStripe();
+    const webhookSecret = await getWebhookSecret();
     event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
   } catch (err) {
     console.error('Webhook signature verification failed:', err);
@@ -80,6 +82,7 @@ router.post('/api/stripe-webhook', async (req, res) => {
   console.log(`Stripe webhook received: ${event.type} (${event.id})`);
 
   const supabase = getSupabaseAdmin();
+  const stripe = await getStripe();
 
   try {
     switch (event.type) {
@@ -110,7 +113,7 @@ router.post('/api/stripe-webhook', async (req, res) => {
         const subscription = await stripe.subscriptions.retrieve(subscriptionId);
         const subRaw = subscription as unknown as Record<string, unknown>;
         const priceId = subscription.items.data[0]?.price?.id;
-        const plan = priceId ? getPlanFromPriceId(priceId) : 'collector';
+        const plan = priceId ? await getPlanFromPriceId(priceId) : 'collector';
         const status = mapStatus(subscription.status);
         const periodEnd = typeof subRaw.current_period_end === 'number'
           ? new Date(subRaw.current_period_end * 1000).toISOString()
@@ -173,7 +176,7 @@ router.post('/api/stripe-webhook', async (req, res) => {
 
         const subRaw2 = subscription as unknown as Record<string, unknown>;
         const priceId = subscription.items.data[0]?.price?.id;
-        const plan = priceId ? getPlanFromPriceId(priceId) : 'collector';
+        const plan = priceId ? await getPlanFromPriceId(priceId) : 'collector';
         const status = mapStatus(subscription.status);
         const periodEnd = typeof subRaw2.current_period_end === 'number'
           ? new Date(subRaw2.current_period_end * 1000).toISOString()

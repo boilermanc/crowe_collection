@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { createClient } from '@supabase/supabase-js';
 import { requireAuthWithUser, type AuthResult } from '../middleware/auth.js';
-import { stripe } from '../lib/stripe.js';
+import { getStripe } from '../lib/stripe.js';
 
 const router = Router();
 
@@ -34,6 +34,7 @@ router.post(
 
       const appUrl = process.env.APP_URL || 'https://rekkrd.com';
 
+      const stripe = await getStripe();
       const session = await stripe.billingPortal.sessions.create({
         customer: profile.stripe_customer_id,
         return_url: `${appUrl}/?portal=returned`,

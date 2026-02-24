@@ -421,23 +421,24 @@ export const adminService = {
 
   // ── Integrations ────────────────────────────────────────────────
 
-  async getIntegrationSettings(): Promise<Record<string, any>> {
+  async getIntegrationSettings(category?: string): Promise<Record<string, any>> {
     const headers = await getAuthHeaders();
-    const resp = await fetch('/api/admin/integrations', { headers });
-    if (!resp.ok) throw new Error(`Failed to fetch integration settings: ${resp.status}`);
+    const params = category ? `?category=${category}` : '';
+    const resp = await fetch(`/api/admin/integrations${params}`, { headers });
+    if (!resp.ok) throw new Error(`Failed to fetch settings: ${resp.status}`);
     return resp.json();
   },
 
-  async saveIntegrationSettings(settings: Record<string, { value: any; dataType: string }>): Promise<void> {
+  async saveIntegrationSettings(settings: Record<string, { value: any; dataType: string }>, category?: string): Promise<void> {
     const headers = await getAuthHeaders();
     const resp = await fetch('/api/admin/integrations', {
       method: 'PUT',
       headers,
-      body: JSON.stringify({ settings }),
+      body: JSON.stringify({ category, settings }),
     });
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({ error: 'Save failed' }));
-      throw new Error(err.error || `Failed to save integration settings: ${resp.status}`);
+      throw new Error(err.error || `Failed to save settings: ${resp.status}`);
     }
   },
 

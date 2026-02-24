@@ -1,6 +1,6 @@
 import { Router, type Request, type Response } from 'express';
 import { createClient } from '@supabase/supabase-js';
-import { stripe } from '../lib/stripe.js';
+import { getStripe, getSellrWebhookSecret } from '../lib/stripe.js';
 import type Stripe from 'stripe';
 import { sendPaymentConfirmedEmail, sendAdminOrderAlert } from '../sellrEmails.js';
 import { purchaseSlots, TIER_SLOTS } from '../sellrSlots.js';
@@ -78,6 +78,7 @@ router.post('/api/sellr/checkout/create-intent', async (req: Request, res: Respo
     const amount_cents = TIER_AMOUNT_CENTS[tier];
 
     // Create Stripe PaymentIntent
+    const stripe = await getStripe();
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amount_cents,
       currency: 'usd',
@@ -131,12 +132,14 @@ router.post('/api/sellr/checkout/webhook', async (req: Request, res: Response) =
     return;
   }
 
-  const sellrWebhookSecret = process.env.STRIPE_SELLR_WEBHOOK_SECRET;
+  const sellrWebhookSecret = await getSellrWebhookSecret();
   if (!sellrWebhookSecret) {
-    console.error('[sellr-checkout] STRIPE_SELLR_WEBHOOK_SECRET not configured');
+    console.error('[sellr-checkout] Sellr webhook secret not configured');
     res.status(500).json({ error: 'Webhook secret not configured' });
     return;
   }
+
+  const stripe = await getStripe();
 
   let event: Stripe.Event;
   try {

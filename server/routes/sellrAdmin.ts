@@ -1,6 +1,6 @@
 import { Router, type Request, type Response } from 'express';
 import { createClient } from '@supabase/supabase-js';
-import { stripe } from '../lib/stripe.js';
+import { getStripe } from '../lib/stripe.js';
 import {
   sendSessionCreatedEmail,
   sendPaymentConfirmedEmail,
@@ -604,6 +604,7 @@ router.post('/api/sellr/admin/tools/refund-order', async (req: Request, res: Res
     }
 
     // Issue Stripe refund
+    const stripe = await getStripe();
     const refund = await stripe.refunds.create({
       payment_intent: order.stripe_payment_intent,
     });
@@ -741,7 +742,7 @@ router.get('/api/sellr/admin/stats', async (req: Request, res: Response) => {
       supabase
         .from('sellr_orders')
         .select('amount_cents', { count: 'exact' })
-        .eq('status', 'paid'),
+        .eq('status', 'complete'),
       // Active sessions (status = 'active')
       supabase
         .from('sellr_sessions')
@@ -760,7 +761,7 @@ router.get('/api/sellr/admin/stats', async (req: Request, res: Response) => {
       supabase
         .from('sellr_orders')
         .select('session_id', { count: 'exact', head: true })
-        .eq('status', 'paid'),
+        .eq('status', 'complete'),
     ]);
 
     const totalOrders = ordersRes.count ?? 0;

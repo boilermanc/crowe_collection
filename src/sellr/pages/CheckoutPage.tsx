@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { loadStripe } from '@stripe/stripe-js';
+import { loadStripe, type Stripe as StripeType } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Check, Loader2, ShieldCheck } from 'lucide-react';
 import SellrLayout from '../components/SellrLayout';
@@ -10,7 +10,16 @@ import { SELLR_TIERS } from '../types';
 
 // ── Stripe setup ────────────────────────────────────────────────────
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+// Fetch publishable key dynamically from server (falls back to Vite env var)
+let _stripePromise: Promise<StripeType | null> | null = null;
+function getStripePromise(): Promise<StripeType | null> {
+  if (_stripePromise) return _stripePromise;
+  _stripePromise = fetch('/api/stripe-config')
+    .then(r => r.ok ? r.json() : null)
+    .then(data => loadStripe(data?.publishableKey || import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY))
+    .catch(() => loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY));
+  return _stripePromise;
+}
 
 const STRIPE_APPEARANCE = {
   theme: 'stripe' as const,
@@ -300,7 +309,7 @@ const CheckoutPage: React.FC = () => {
               Payment details
             </h2>
 
-            <Elements stripe={stripePromise} options={elementsOptions}>
+            <Elements stripe={getStripePromise()} options={elementsOptions}>
               <PaymentForm sessionId={sessionId} amountCents={amountCents} />
             </Elements>
           </section>
