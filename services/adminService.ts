@@ -455,4 +455,16 @@ export const adminService = {
     }
     return resp.json();
   },
+
+  async getIntegrationStatus(): Promise<Array<{
+    name: string;
+    key: string;
+    status: 'connected' | 'disabled' | 'error';
+    details: Record<string, string>;
+  }>> {
+    const headers = await getAuthHeaders();
+    const resp = await fetch('/api/admin/integrations/status', { headers });
+    if (!resp.ok) throw new Error(`Failed to fetch integration status: ${resp.status}`);
+    return resp.json();
+  },
 };

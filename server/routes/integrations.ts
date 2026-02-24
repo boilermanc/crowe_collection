@@ -137,7 +137,111 @@ router.post('/api/admin/integrations/test', requireAdmin, async (req: Request, r
   }
 });
 
+// ── GET /api/admin/integrations/status ───────────────────────────────
+// Returns connection status for all integrations (no secrets exposed).
+router.get('/api/admin/integrations/status', requireAdmin, async (_req: Request, res: Response) => {
+  try {
+    const integrations: Array<{
+      name: string;
+      key: string;
+      status: 'connected' | 'disabled' | 'error';
+      details: Record<string, string>;
+    }> = [];
+
+    // ── Stripe ──
+    integrations.push(await getStripeStatus());
+
+    // ── Gemini ──
+    const geminiKey = process.env.GEMINI_API_KEY;
+    integrations.push({
+      name: 'Gemini AI',
+      key: 'gemini',
+      status: geminiKey ? 'connected' : 'disabled',
+      details: {
+        model: 'gemini-2.5-flash',
+        configured: geminiKey ? 'yes' : 'no',
+      },
+    });
+
+    // ── Discogs ──
+    const discogsToken = process.env.DISCOGS_PERSONAL_TOKEN;
+    const discogsUA = process.env.DISCOGS_USER_AGENT;
+    integrations.push({
+      name: 'Discogs',
+      key: 'discogs',
+      status: discogsToken && discogsUA ? 'connected' : 'disabled',
+      details: {
+        user_agent: discogsUA || 'Not configured',
+        personal_token: discogsToken ? 'Set' : 'Not set',
+        oauth: process.env.DISCOGS_CONSUMER_KEY ? 'Configured' : 'Not configured',
+      },
+    });
+
+    // ── Resend ──
+    const resendKey = process.env.RESEND_API_KEY;
+    integrations.push({
+      name: 'Resend',
+      key: 'resend',
+      status: resendKey ? 'connected' : 'disabled',
+      details: {
+        configured: resendKey ? 'yes' : 'no',
+        from_address: 'noreply@rekkrd.com',
+        sellr_from: 'appraisals@rekkrd.com',
+      },
+    });
+
+    res.json(integrations);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    console.error('[integrations] Status error:', message);
+    res.status(500).json({ error: 'Failed to fetch integration status' });
+  }
+});
+
 // ── Helpers ─────────────────────────────────────────────────────────
+
+async function getStripeStatus(): Promise<{
+  name: string;
+  key: string;
+  status: 'connected' | 'disabled' | 'error';
+  details: Record<string, string>;
+}> {
+  try {
+    const supabase = getSupabaseAdmin();
+    const { data } = await supabase
+      .from('config_settings')
+      .select('key, value')
+      .eq('category', 'stripe');
+
+    const kv: Record<string, string> = {};
+    for (const row of (data || []) as Array<{ key: string; value: unknown }>) {
+      kv[row.key] = typeof row.value === 'string' ? row.value : String(row.value ?? '');
+    }
+
+    const mode = (kv.stripe_mode === 'test' ? 'test' : 'live') as 'test' | 'live';
+    const prefix = `stripe_${mode}_`;
+    const secretKey = kv[`${prefix}secret_key`] || process.env.STRIPE_SECRET_KEY || '';
+    const webhookSecret = kv[`${prefix}webhook_secret`] || process.env.STRIPE_WEBHOOK_SECRET || '';
+
+    return {
+      name: 'Stripe',
+      key: 'stripe',
+      status: secretKey ? 'connected' : 'disabled',
+      details: {
+        mode: mode.charAt(0).toUpperCase() + mode.slice(1),
+        secret_key: secretKey ? 'Set' : 'Not set',
+        webhook: webhookSecret ? 'Configured' : 'Not configured',
+      },
+    };
+  } catch {
+    return {
+      name: 'Stripe',
+      key: 'stripe',
+      status: 'error',
+      details: { error: 'Failed to check config' },
+    };
+  }
+}
 
 function parseValue(value: unknown, dataType: string): unknown {
   if (value === null || value === undefined) return value;
