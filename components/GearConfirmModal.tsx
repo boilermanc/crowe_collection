@@ -25,6 +25,9 @@ interface IdentifiedGear {
   description?: string;
   specs?: Record<string, string | number>;
   manual_search_query?: string;
+  catalog_match?: boolean;
+  catalog_id?: string | null;
+  image_url?: string;
 }
 
 interface GearConfirmModalProps {
@@ -74,6 +77,8 @@ const GearConfirmModal: React.FC<GearConfirmModalProps> = ({
       description: description.trim() || undefined,
       specs: Object.keys(specs).length > 0 ? specs : undefined,
       original_photo_url: originalPhoto,
+      image_url: identifiedGear.image_url || undefined,
+      catalog_id: identifiedGear.catalog_id ?? undefined,
       purchase_price: purchasePrice ? parseFloat(purchasePrice) : undefined,
       purchase_date: purchaseDate || undefined,
       notes: notes.trim() || undefined,
@@ -121,6 +126,18 @@ const GearConfirmModal: React.FC<GearConfirmModalProps> = ({
               className="w-full max-w-xs h-auto max-h-48 object-contain rounded-xl border border-th-surface/[0.10]"
             />
           </div>
+
+          {/* Catalog match badge */}
+          {identifiedGear.catalog_match && (
+            <div className="flex items-center">
+              <span className="inline-flex items-center gap-1.5 text-xs text-green-400/90 bg-green-400/[0.08] border border-green-400/[0.15] rounded-full px-3 py-1">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Found in Stakkd catalog
+              </span>
+            </div>
+          )}
 
           {/* AI-identified fields */}
           <div className="space-y-4">

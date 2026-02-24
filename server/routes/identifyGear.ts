@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { Type } from '@google/genai';
+import { createClient } from '@supabase/supabase-js';
 import { requireAuthWithUser, type AuthResult } from '../middleware/auth.js';
 import { createRateLimit } from '../middleware/rateLimit.js';
 import { validateBase64Size } from '../middleware/validate.js';
@@ -8,6 +9,13 @@ import { getSubscription, incrementScanCount, PLAN_LIMITS } from '../lib/subscri
 import { GEAR_CATEGORIES } from '../../types.js';
 
 const router = Router();
+
+let _admin: ReturnType<typeof createClient> | null = null;
+function getSupabaseAdmin() {
+  if (_admin) return _admin;
+  _admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+  return _admin;
+}
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const GEMINI_TIMEOUT_MS = 90_000; // 90s — under typical proxy timeouts (120s)
@@ -139,14 +147,44 @@ If you cannot identify the gear, return null for all fields.`,
       // Increment shared scan counter on success
       await incrementScanCount(userId);
 
+      // Catalog lookup: enrich with curated data if available
+      let catalog_match = false;
+      let catalog_id: string | null = null;
+      let catalogDescription: string | undefined;
+      let catalogSpecs: Record<string, unknown> | undefined;
+      let catalogImageUrl: string | undefined;
+
+      try {
+        const supabase = getSupabaseAdmin();
+        const { data: catalogResults } = await supabase
+          .rpc('search_gear_catalog', {
+            search_query: `${data.brand} ${data.model}`,
+            max_results: 1,
+          });
+
+        if (catalogResults && catalogResults.length > 0) {
+          const match = catalogResults[0];
+          catalog_match = true;
+          catalog_id = match.id;
+          catalogDescription = match.description ?? undefined;
+          catalogSpecs = match.specs ?? undefined;
+          catalogImageUrl = match.image_url ?? undefined;
+        }
+      } catch (err) {
+        console.error('[identify-gear] Catalog lookup failed:', err);
+      }
+
       res.status(200).json({
         category: data.category,
         brand: data.brand,
         model: data.model,
         year: data.year || '',
-        description: data.description || '',
-        specs: data.specs && typeof data.specs === 'object' ? data.specs : {},
+        description: catalogDescription ?? (data.description || ''),
+        specs: catalogSpecs ?? (data.specs && typeof data.specs === 'object' ? data.specs : {}),
+        image_url: catalogImageUrl ?? undefined,
         manual_search_query: data.manual_search_query || '',
+        catalog_match,
+        catalog_id,
       });
     } catch (error) {
       console.error('Gemini Gear Identification Error:', error);
