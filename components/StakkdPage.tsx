@@ -466,18 +466,21 @@ const StakkdPage: React.FC<StakkdPageProps> = ({ onUpgradeRequired }) => {
           )}
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          {gear.length >= 2 && (
-            <button
-              onClick={handleGenerateGuide}
-              disabled={isGuideLoading}
-              className="border border-th-surface/[0.3] text-th-text2 font-bold py-2.5 px-5 rounded-xl hover:bg-th-surface/[0.1] hover:text-th-text transition-all uppercase tracking-[0.2em] text-[10px] flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-2.06a4.5 4.5 0 00-1.242-7.244l-4.5-4.5a4.5 4.5 0 00-6.364 6.364L4.343 8.82" />
-              </svg>
-              How to Connect
-            </button>
-          )}
+          <button
+            onClick={gear.length >= 2 ? handleGenerateGuide : undefined}
+            disabled={gear.length < 2 || isGuideLoading}
+            title={gear.length === 0
+              ? 'Add gear to your Stakkd to generate a setup guide'
+              : gear.length === 1
+                ? 'Add at least 2 pieces of gear to generate a setup guide'
+                : undefined}
+            className="border border-th-surface/[0.3] text-th-text2 font-bold py-2.5 px-5 rounded-xl hover:bg-th-surface/[0.1] hover:text-th-text transition-all uppercase tracking-[0.2em] text-[10px] flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-th-text2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-2.06a4.5 4.5 0 00-1.242-7.244l-4.5-4.5a4.5 4.5 0 00-6.364 6.364L4.343 8.82" />
+            </svg>
+            How to Connect
+          </button>
           <button
             onClick={handleAddGear}
             className="bg-[#dd6e42] text-th-text font-bold py-2.5 px-5 rounded-xl hover:bg-[#c45e38] transition-all uppercase tracking-[0.2em] text-[10px] flex items-center gap-2"

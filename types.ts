@@ -89,6 +89,7 @@ export interface NewGear {
   purchase_price?: number;
   purchase_date?: string;
   notes?: string;
+  catalog_id?: string;
   position?: number;
 }
 

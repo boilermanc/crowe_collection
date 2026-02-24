@@ -209,7 +209,14 @@ const AddGearManualModal: React.FC<AddGearManualModalProps> = ({
   const [showForm, setShowForm] = useState(false);
   const [catalogMatch, setCatalogMatch] = useState(false);
   const [catalogId, setCatalogId] = useState<string | null>(null);
+  const [selectedCatalogResult, setSelectedCatalogResult] = useState<CatalogResult | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Image management state
+  const [userPhotoUrl, setUserPhotoUrl] = useState<string | null>(null);
+  const [useOwnPhoto, setUseOwnPhoto] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   // Reset everything when modal opens
   useEffect(() => {
@@ -227,6 +234,10 @@ const AddGearManualModal: React.FC<AddGearManualModalProps> = ({
       setShowForm(false);
       setCatalogMatch(false);
       setCatalogId(null);
+      setSelectedCatalogResult(null);
+      setUserPhotoUrl(null);
+      setUseOwnPhoto(false);
+      setUploadingPhoto(false);
     }
   }, [isOpen]);
 
@@ -268,6 +279,7 @@ const AddGearManualModal: React.FC<AddGearManualModalProps> = ({
   const canSave = brand.trim() !== '' && model.trim() !== '' && !saving;
 
   const handleSelectCatalogResult = (result: CatalogResult) => {
+    setSelectedCatalogResult(result);
     setBrand(result.brand);
     setModel(result.model);
     // Map catalog category to GearCategory if it's valid
@@ -285,6 +297,9 @@ const AddGearManualModal: React.FC<AddGearManualModalProps> = ({
     setShowForm(false);
     setCatalogMatch(false);
     setCatalogId(null);
+    setSelectedCatalogResult(null);
+    setUserPhotoUrl(null);
+    setUseOwnPhoto(false);
     setBrand('');
     setModel('');
     setYear('');
@@ -308,6 +323,13 @@ const AddGearManualModal: React.FC<AddGearManualModalProps> = ({
         model: model.trim(),
         year: year.trim() || undefined,
         notes: notes.trim() || undefined,
+        ...(catalogMatch && selectedCatalogResult ? {
+          description: selectedCatalogResult.description ?? undefined,
+          specs: selectedCatalogResult.specs ?? undefined,
+          catalog_id: catalogId ?? undefined,
+        } : {}),
+        image_url: userPhotoUrl ?? selectedCatalogResult?.image_url ?? undefined,
+        original_photo_url: userPhotoUrl ?? undefined,
       };
       const saved = await gearService.saveGear(gear);
       showToast(`${gear.brand} ${gear.model} added to Stakkd!`, 'success');
@@ -322,6 +344,47 @@ const AddGearManualModal: React.FC<AddGearManualModalProps> = ({
         showToast('Failed to save gear. Please try again.', 'error');
       }
       setSaving(false);
+    }
+  };
+
+  const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+
+    if (!file.type.startsWith('image/')) {
+      showToast('Please select an image file.', 'error');
+      return;
+    }
+
+    setUploadingPhoto(true);
+    try {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const publicUrl = await gearService.uploadPhoto(base64);
+      if (publicUrl) {
+        setUserPhotoUrl(publicUrl);
+        setUseOwnPhoto(true);
+      } else {
+        showToast('Failed to upload photo.', 'error');
+      }
+    } catch (err) {
+      console.error('Photo upload error:', err);
+      showToast('Failed to upload photo.', 'error');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    setUserPhotoUrl(null);
+    if (selectedCatalogResult?.image_url) {
+      setUseOwnPhoto(false);
     }
   };
 
@@ -521,6 +584,93 @@ const AddGearManualModal: React.FC<AddGearManualModalProps> = ({
                   placeholder="e.g. 1972 or early 1980s"
                   className={INPUT_CLS}
                 />
+              </div>
+
+              {/* Image */}
+              <div>
+                <label className={LABEL_CLS}>Photo</label>
+                <input
+                  ref={photoInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoSelect}
+                  className="hidden"
+                />
+
+                {selectedCatalogResult?.image_url && !useOwnPhoto && !userPhotoUrl ? (
+                  <div className="flex items-start gap-4">
+                    <div className="w-[120px] h-[120px] rounded-xl overflow-hidden bg-th-surface/[0.06] flex-shrink-0">
+                      <img
+                        src={selectedCatalogResult.image_url}
+                        alt={`${brand} ${model}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2 pt-1">
+                      <span className="text-th-text3/50 text-[10px]">From Stakkd catalog</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUseOwnPhoto(true);
+                          setTimeout(() => photoInputRef.current?.click(), 0);
+                        }}
+                        disabled={uploadingPhoto}
+                        className="inline-flex items-center gap-1.5 text-[#dd6e42]/80 text-[10px] uppercase tracking-widest hover:text-[#dd6e42] transition-colors"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
+                        </svg>
+                        Use My Own Photo
+                      </button>
+                    </div>
+                  </div>
+                ) : userPhotoUrl ? (
+                  <div className="flex items-start gap-4">
+                    <div className="w-[120px] h-[120px] rounded-xl overflow-hidden bg-th-surface/[0.06] flex-shrink-0">
+                      <img
+                        src={userPhotoUrl}
+                        alt={`${brand} ${model}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2 pt-1">
+                      <span className="text-th-text3/50 text-[10px]">Your photo</span>
+                      <button
+                        type="button"
+                        onClick={handleRemovePhoto}
+                        className="text-th-text3/60 text-[10px] uppercase tracking-widest hover:text-red-400 transition-colors"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => photoInputRef.current?.click()}
+                    disabled={uploadingPhoto}
+                    className="flex items-center gap-3 w-full border border-dashed border-th-surface/[0.15] rounded-xl px-4 py-4 text-th-text3/60 hover:border-[#dd6e42]/40 hover:text-th-text3 transition-all disabled:opacity-40"
+                  >
+                    {uploadingPhoto ? (
+                      <>
+                        <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                        <span className="text-sm">Uploading...</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
+                        </svg>
+                        <span className="text-sm">Upload Photo</span>
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
 
               {/* Notes */}

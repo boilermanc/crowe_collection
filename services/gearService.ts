@@ -79,7 +79,7 @@ async function deleteStorageFile(url: string, bucket: string): Promise<void> {
 const UPDATABLE_FIELDS: (keyof NewGear)[] = [
   'category', 'brand', 'model', 'year', 'description', 'specs',
   'manual_url', 'manual_pdf_url', 'image_url', 'original_photo_url',
-  'purchase_price', 'purchase_date', 'notes', 'position',
+  'purchase_price', 'purchase_date', 'notes', 'catalog_id', 'position',
 ];
 
 export const gearService = {
@@ -142,6 +142,7 @@ export const gearService = {
         purchase_price: gear.purchase_price,
         purchase_date: gear.purchase_date,
         notes: gear.notes,
+        catalog_id: gear.catalog_id,
         position: gear.position ?? 0,
       }])
       .select()
@@ -240,6 +241,11 @@ export const gearService = {
   async deleteManualPdf(url: string): Promise<void> {
     assertClient();
     await deleteStorageFile(url, GEAR_MANUALS_BUCKET);
+  },
+
+  /** Upload a base64 image to Supabase Storage and return the public URL. */
+  async uploadPhoto(base64Data: string): Promise<string | null> {
+    return uploadGearPhoto(base64Data);
   },
 
   async reorderGear(orderedIds: string[]): Promise<void> {
