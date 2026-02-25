@@ -1043,14 +1043,13 @@ const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
               <h4>Resources</h4>
               <ul>
                 <li><a href="#faq">FAQ</a></li>
-                <li><a href="#">Status</a></li>
                 <li><a href="/support">Support</a></li>
               </ul>
             </div>
             <div className="footer-col">
               <h4>Company</h4>
               <ul>
-                <li><a href="#">About</a></li>
+                <li><a href="/about">About</a></li>
                 <li><a href="/blog">Blog</a></li>
                 <li><a href="/privacy">Privacy</a></li>
                 <li><a href="/terms">Terms</a></li>

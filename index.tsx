@@ -19,6 +19,7 @@ import BlogList from './pages/BlogList';
 import BlogPost from './pages/BlogPost';
 import ErrorPage from './components/ErrorPage';
 import SupportPage from './components/SupportPage';
+import About from './pages/About';
 import WelcomeLandingPage from './src/components/WelcomeLandingPage';
 import SellrLandingPage from './src/sellr/pages/LandingPage';
 import SellrScanPage from './src/sellr/pages/ScanPage';
@@ -70,6 +71,7 @@ root.render(
                   <Route path="/blog" element={<BlogList />} />
                   <Route path="/blog/:slug" element={<BlogPost />} />
                   <Route path="/support" element={<SupportPage />} />
+                  <Route path="/about" element={<About />} />
                   <Route path="/welcome" element={<WelcomeLandingPage />} />
                   <Route element={<SellrAuthProvider><Outlet /></SellrAuthProvider>}>
                     {/* Public Sellr routes */}

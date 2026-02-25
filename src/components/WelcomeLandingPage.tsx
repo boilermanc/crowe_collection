@@ -490,10 +490,63 @@ export default function WelcomeLandingPage() {
 
       {/* ─── Footer ─── */}
       <footer
-        className="text-center text-xs px-6 py-6"
-        style={{ color: C.bodyLight, borderTop: `1px solid ${C.divider}` }}
+        role="contentinfo"
+        className="px-6 sm:px-12 pt-12 pb-8 mt-4"
+        style={{ borderTop: `1px solid ${C.divider}`, color: C.bodyLight }}
       >
-        &copy; {new Date().getFullYear()} <a href="https://www.sweetwater.technology" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>Sweetwater Technology</a>
+        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
+          {/* Brand column */}
+          <div className="col-span-2 md:col-span-1">
+            <button
+              onClick={() => scrollTo('hero')}
+              className="font-display text-lg font-bold tracking-tight mb-3"
+              style={{ color: C.headDark, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+              aria-label="Scroll to top"
+            >
+              <BrandedRekkrd />
+            </button>
+            <p className="text-sm leading-relaxed" style={{ color: C.bodyLight }}>
+              The AI-powered vinyl collection manager for serious crate diggers and casual collectors alike.
+            </p>
+          </div>
+
+          {/* Product */}
+          <div>
+            <h4 className="font-medium text-sm mb-3" style={{ color: C.headDark }}>Product</h4>
+            <ul className="space-y-2 text-sm" style={{ color: C.bodyLight }}>
+              <li><button onClick={() => scrollTo('features')} className="hover:underline" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'inherit', font: 'inherit' }}>Features</button></li>
+              <li><button onClick={() => scrollTo('pricing')} className="hover:underline" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'inherit', font: 'inherit' }}>Pricing</button></li>
+              <li><a href="/sellr" style={{ color: 'inherit', textDecoration: 'none' }} className="hover:underline">Sellr</a></li>
+            </ul>
+          </div>
+
+          {/* Resources */}
+          <div>
+            <h4 className="font-medium text-sm mb-3" style={{ color: C.headDark }}>Resources</h4>
+            <ul className="space-y-2 text-sm" style={{ color: C.bodyLight }}>
+              <li><a href="/blog" style={{ color: 'inherit', textDecoration: 'none' }} className="hover:underline">Blog</a></li>
+              <li><a href="/support" style={{ color: 'inherit', textDecoration: 'none' }} className="hover:underline">Support</a></li>
+            </ul>
+          </div>
+
+          {/* Legal */}
+          <div>
+            <h4 className="font-medium text-sm mb-3" style={{ color: C.headDark }}>Legal</h4>
+            <ul className="space-y-2 text-sm" style={{ color: C.bodyLight }}>
+              <li><a href="/privacy" style={{ color: 'inherit', textDecoration: 'none' }} className="hover:underline">Privacy Policy</a></li>
+              <li><a href="/terms" style={{ color: 'inherit', textDecoration: 'none' }} className="hover:underline">Terms of Service</a></li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Bottom bar */}
+        <div
+          className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 pt-6 text-xs"
+          style={{ borderTop: `1px solid ${C.divider}`, color: C.bodyLight }}
+        >
+          <span>&copy; {new Date().getFullYear()} <a href="https://www.sweetwater.technology" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }} className="hover:underline">Sweetwater Technology</a></span>
+          <span>Made with &#9829; for vinyl lovers</span>
+        </div>
       </footer>
 
       {/* ─── Fade-in animation styles ─── */}
