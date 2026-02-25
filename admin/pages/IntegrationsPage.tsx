@@ -70,11 +70,16 @@ const IntegrationsPage: React.FC = () => {
   const [statuses, setStatuses] = useState<IntegrationStatus[]>([]);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
-  // Email settings
+  // Resend / Email settings
   const [fromName, setFromName] = useState('');
   const [fromAddress, setFromAddress] = useState('');
+  const [replyTo, setReplyTo] = useState('');
+  const [sellrFromName, setSellrFromName] = useState('');
+  const [sellrFromAddress, setSellrFromAddress] = useState('');
   const [emailSaving, setEmailSaving] = useState(false);
   const [emailSaveMessage, setEmailSaveMessage] = useState<string | null>(null);
+  const [testingResend, setTestingResend] = useState(false);
+  const [resendTestResult, setResendTestResult] = useState<{ success: boolean; message: string; details?: Record<string, unknown> } | null>(null);
 
   // ── Load Stripe settings ───────────────────────────────────────────
 
@@ -110,13 +115,16 @@ const IntegrationsPage: React.FC = () => {
       .finally(() => setStatusLoading(false));
   }, []);
 
-  // ── Load email settings ───────────────────────────────────────────
+  // ── Load email / Resend settings ─────────────────────────────────
 
   useEffect(() => {
     adminService.getIntegrationSettings('email')
       .then((settings) => {
         setFromName((settings.from_name as string) || '');
         setFromAddress((settings.from_address as string) || '');
+        setReplyTo((settings.reply_to as string) || '');
+        setSellrFromName((settings.sellr_from_name as string) || '');
+        setSellrFromAddress((settings.sellr_from_address as string) || '');
       })
       .catch((err) => console.error('Failed to load email settings:', err));
   }, []);
@@ -160,6 +168,9 @@ const IntegrationsPage: React.FC = () => {
       await adminService.saveIntegrationSettings({
         from_name: { value: fromName, dataType: 'string' },
         from_address: { value: fromAddress, dataType: 'string' },
+        reply_to: { value: replyTo, dataType: 'string' },
+        sellr_from_name: { value: sellrFromName, dataType: 'string' },
+        sellr_from_address: { value: sellrFromAddress, dataType: 'string' },
       }, 'email');
       setEmailSaveMessage('Email settings saved');
       setTimeout(() => setEmailSaveMessage(null), 3000);
@@ -169,7 +180,25 @@ const IntegrationsPage: React.FC = () => {
     } finally {
       setEmailSaving(false);
     }
-  }, [fromName, fromAddress]);
+  }, [fromName, fromAddress, replyTo, sellrFromName, sellrFromAddress]);
+
+  // ── Test Resend ────────────────────────────────────────────────
+
+  const handleResendTest = useCallback(async () => {
+    setTestingResend(true);
+    setResendTestResult(null);
+    try {
+      const result = await adminService.testIntegration('resend', {});
+      setResendTestResult(result);
+    } catch (err) {
+      setResendTestResult({
+        success: false,
+        message: err instanceof Error ? err.message : 'Test failed',
+      });
+    } finally {
+      setTestingResend(false);
+    }
+  }, []);
 
   // ── Test ──────────────────────────────────────────────────────────
 
@@ -239,7 +268,7 @@ const IntegrationsPage: React.FC = () => {
       case 'stripe': return `Mode: ${s.details.mode || 'Live'}`;
       case 'gemini': return `Model: ${s.details.model || 'gemini-2.5-flash'}`;
       case 'discogs': return s.details.user_agent || 'Connected';
-      case 'resend': return `From: ${s.details.from_address || 'noreply@rekkrd.com'}`;
+      case 'resend': return `${s.details.from_name || 'Rekkrd'} <${s.details.from_address || 'noreply@rekkrd.com'}>`;
       default: return 'Connected';
     }
   };
@@ -420,52 +449,154 @@ const IntegrationsPage: React.FC = () => {
           iconPath={INTEGRATION_ICONS.resend}
           iconViewBox="0 0 24 24"
         >
-          <div className="space-y-3">
-            <ReadOnlyField label="Status" value={getStatus('resend')?.status === 'connected' ? 'Connected' : 'Not configured'} connected={getStatus('resend')?.status === 'connected'} />
-            <ReadOnlyField label="Rekkrd From Address" value={getStatus('resend')?.details.from_address || 'noreply@rekkrd.com'} />
-            <ReadOnlyField label="Sellr From Address" value={getStatus('resend')?.details.sellr_from || 'appraisals@rekkrd.com'} />
-            <ReadOnlyField label="Usage" value="Welcome emails, price alerts, subscription confirmations, Sellr order emails" />
-            <p className="text-xs pt-1" style={{ color: 'rgb(107,114,128)' }}>
-              API key managed via server environment variable (RESEND_API_KEY).
-            </p>
-          </div>
-        </AccordionSection>
+          <div className="space-y-6">
+            {/* Connection status */}
+            <div className="space-y-3">
+              <ReadOnlyField label="API Key" value={getStatus('resend')?.status === 'connected' ? 'Configured (env var)' : 'Not configured'} connected={getStatus('resend')?.status === 'connected'} />
+              <p className="text-xs" style={{ color: 'rgb(107,114,128)' }}>
+                API key managed via server environment variable (RESEND_API_KEY).
+              </p>
+            </div>
 
-        {/* Email Settings */}
-        <AccordionSection
-          id="accordion-email-settings"
-          title="Email Settings"
-          subtitle="Default sender name and address for outgoing emails"
-          isExpanded={expandedSection === 'email-settings'}
-          onToggle={() => toggleSection('email-settings')}
-          iconPath={INTEGRATION_ICONS.resend}
-          iconViewBox="0 0 24 24"
-        >
-          <div className="space-y-4">
+            {/* Test Connection */}
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: 'rgb(55,65,81)' }}>From Name</label>
-              <input
-                type="text"
-                value={fromName}
-                onChange={(e) => setFromName(e.target.value)}
-                placeholder="Rekkrd"
-                aria-label="Email from name"
-                className="w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2"
-                style={{ borderColor: 'rgb(209,213,219)', color: 'rgb(17,24,39)' }}
-              />
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleResendTest}
+                  disabled={testingResend}
+                  aria-label="Test Resend connection"
+                  className="px-4 py-2 rounded-lg text-sm font-medium border transition-colors disabled:opacity-50 flex items-center gap-2"
+                  style={{ borderColor: 'rgb(209,213,219)', color: 'rgb(55,65,81)' }}
+                >
+                  {testingResend ? (
+                    <>
+                      <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      Testing...
+                    </>
+                  ) : (
+                    'Test Connection'
+                  )}
+                </button>
+              </div>
+
+              {resendTestResult && (
+                <div
+                  className="rounded-lg text-sm overflow-hidden mt-3"
+                  style={{
+                    backgroundColor: resendTestResult.success ? 'rgb(240,253,244)' : 'rgb(254,242,242)',
+                    color: resendTestResult.success ? 'rgb(22,101,52)' : 'rgb(153,27,27)',
+                  }}
+                >
+                  <div className="px-4 py-3 font-medium flex items-center gap-2">
+                    <div
+                      className="w-2 h-2 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: resendTestResult.success ? 'rgb(34,197,94)' : 'rgb(239,68,68)' }}
+                    />
+                    {resendTestResult.message}
+                  </div>
+                  {resendTestResult.details && (
+                    <div
+                      className="px-4 pb-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs"
+                      style={{ color: resendTestResult.success ? 'rgb(22,101,52)' : 'rgb(153,27,27)', opacity: 0.85 }}
+                    >
+                      {Object.entries(resendTestResult.details).map(([key, value]) => (
+                        <React.Fragment key={key}>
+                          <span className="font-medium" style={{ opacity: 0.7 }}>{key.replace(/_/g, ' ')}</span>
+                          <span className="font-mono">{String(value ?? 'N/A')}</span>
+                        </React.Fragment>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
+
+            {/* Rekkrd sender */}
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: 'rgb(55,65,81)' }}>From Address</label>
-              <input
-                type="email"
-                value={fromAddress}
-                onChange={(e) => setFromAddress(e.target.value)}
-                placeholder="team@sproutify.app"
-                aria-label="Email from address"
-                className="w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2"
-                style={{ borderColor: 'rgb(209,213,219)', color: 'rgb(17,24,39)' }}
-              />
+              <h4 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'rgb(107,114,128)' }}>
+                Rekkrd Sender
+              </h4>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'rgb(55,65,81)' }}>From Name</label>
+                  <input
+                    type="text"
+                    value={fromName}
+                    onChange={(e) => setFromName(e.target.value)}
+                    placeholder="Rekkrd"
+                    aria-label="Rekkrd email from name"
+                    className="w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2"
+                    style={{ borderColor: 'rgb(209,213,219)', color: 'rgb(17,24,39)' }}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'rgb(55,65,81)' }}>From Address</label>
+                  <input
+                    type="email"
+                    value={fromAddress}
+                    onChange={(e) => setFromAddress(e.target.value)}
+                    placeholder="noreply@rekkrd.com"
+                    aria-label="Rekkrd email from address"
+                    className="w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2"
+                    style={{ borderColor: 'rgb(209,213,219)', color: 'rgb(17,24,39)' }}
+                  />
+                </div>
+              </div>
             </div>
+
+            {/* Sellr sender */}
+            <div>
+              <h4 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'rgb(107,114,128)' }}>
+                Sellr Sender
+              </h4>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'rgb(55,65,81)' }}>From Name</label>
+                  <input
+                    type="text"
+                    value={sellrFromName}
+                    onChange={(e) => setSellrFromName(e.target.value)}
+                    placeholder="Sellr"
+                    aria-label="Sellr email from name"
+                    className="w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2"
+                    style={{ borderColor: 'rgb(209,213,219)', color: 'rgb(17,24,39)' }}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'rgb(55,65,81)' }}>From Address</label>
+                  <input
+                    type="email"
+                    value={sellrFromAddress}
+                    onChange={(e) => setSellrFromAddress(e.target.value)}
+                    placeholder="appraisals@rekkrd.com"
+                    aria-label="Sellr email from address"
+                    className="w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2"
+                    style={{ borderColor: 'rgb(209,213,219)', color: 'rgb(17,24,39)' }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Reply-To */}
+            <div>
+              <h4 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'rgb(107,114,128)' }}>
+                General
+              </h4>
+              <div className="max-w-sm">
+                <label className="block text-sm font-medium mb-1" style={{ color: 'rgb(55,65,81)' }}>Reply-To Address</label>
+                <input
+                  type="email"
+                  value={replyTo}
+                  onChange={(e) => setReplyTo(e.target.value)}
+                  placeholder="support@rekkrd.com"
+                  aria-label="Reply-to email address"
+                  className="w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2"
+                  style={{ borderColor: 'rgb(209,213,219)', color: 'rgb(17,24,39)' }}
+                />
+              </div>
+            </div>
+
+            {/* Save */}
             <div className="flex items-center gap-3 pt-2">
               <button
                 onClick={handleEmailSave}
@@ -474,7 +605,7 @@ const IntegrationsPage: React.FC = () => {
                 className="px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
                 style={{ backgroundColor: 'rgb(99,102,241)', color: 'white' }}
               >
-                {emailSaving ? 'Saving...' : 'Save'}
+                {emailSaving ? 'Saving...' : 'Save Settings'}
               </button>
               {emailSaveMessage && (
                 <span

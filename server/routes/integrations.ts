@@ -1,6 +1,7 @@
 import { Router, type Request, type Response } from 'express';
 import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
+import { Resend } from 'resend';
 import { requireAdmin } from '../middleware/adminAuth.js';
 import { invalidateStripeCache } from '../lib/stripe.js';
 
@@ -168,6 +169,126 @@ router.post('/api/admin/integrations/test', requireAdmin, async (req: Request, r
         }
         break;
       }
+      case 'resend': {
+        const apiKey = process.env.RESEND_API_KEY;
+        if (!apiKey) {
+          result = {
+            success: false,
+            message: 'RESEND_API_KEY not configured',
+            details: {
+              api_key: 'Missing',
+              action: 'Set RESEND_API_KEY environment variable and restart the server',
+            },
+          };
+          break;
+        }
+        try {
+          const resend = new Resend(apiKey);
+
+          // Fetch domains, API keys, and email config in parallel
+          const [domainRes, keyRes, emailConfigRes] = await Promise.all([
+            resend.domains.list(),
+            resend.apiKeys.list(),
+            getSupabaseAdmin()
+              .from('config_settings')
+              .select('key, value')
+              .eq('category', 'email'),
+          ]);
+
+          // Check for API-level errors
+          if (domainRes.error) {
+            const errName = (domainRes.error as { name?: string }).name || 'unknown';
+            result = {
+              success: false,
+              message: `Resend API error: ${domainRes.error.message}`,
+              details: {
+                error_code: errName,
+                error_message: domainRes.error.message,
+                api_key_prefix: `${apiKey.slice(0, 8)}...`,
+                action: errName === 'invalid_api_key' || errName === 'missing_api_key'
+                  ? 'Check RESEND_API_KEY — it may be invalid or expired'
+                  : errName === 'restricted_api_key'
+                    ? 'This API key lacks permission to list domains — use a full-access key'
+                    : 'Check the Resend dashboard for details',
+              },
+            };
+            break;
+          }
+
+          // Parse domains
+          type DomainEntry = { name: string; status: string; region: string; created_at: string; capabilities?: { sending?: string; receiving?: string } };
+          const domains = (domainRes.data?.data || []) as DomainEntry[];
+          const verified = domains.filter((d) => d.status === 'verified');
+          const pending = domains.filter((d) => d.status === 'pending' || d.status === 'not_started');
+          const failed = domains.filter((d) => d.status === 'failed' || d.status === 'temporary_failure');
+
+          // Parse API keys
+          type KeyEntry = { id: string; name: string; created_at: string };
+          const apiKeys = (keyRes.data?.data || []) as KeyEntry[];
+
+          // Parse email config from DB
+          const emailKv: Record<string, string> = {};
+          for (const row of (emailConfigRes.data || []) as Array<{ key: string; value: unknown }>) {
+            emailKv[row.key] = typeof row.value === 'string' ? row.value : String(row.value ?? '');
+          }
+
+          // Build domain details
+          const domainLines = domains.map((d) => {
+            const sending = d.capabilities?.sending || 'unknown';
+            return `${d.name} (${d.status}, sending: ${sending}, ${d.region})`;
+          });
+
+          // Determine if sending is possible
+          const canSend = verified.some((d) => d.capabilities?.sending === 'enabled');
+          const allVerifiedNames = verified.map((d) => d.name);
+
+          result = {
+            success: true,
+            message: canSend
+              ? 'Resend connection successful — sending enabled'
+              : verified.length > 0
+                ? 'Connected but sending may be restricted — check domain capabilities'
+                : 'Connected but no verified domains — emails cannot be sent',
+            details: {
+              api_key: `${apiKey.slice(0, 8)}...${apiKey.slice(-4)}`,
+              api_keys_count: apiKeys.length,
+              sending_enabled: canSend ? 'Yes' : 'No',
+              total_domains: domains.length,
+              verified_domains: `${verified.length} (${allVerifiedNames.join(', ') || 'none'})`,
+              ...(pending.length > 0 && { pending_domains: pending.map((d) => d.name).join(', ') }),
+              ...(failed.length > 0 && { failed_domains: failed.map((d) => d.name).join(', ') }),
+              region: verified[0]?.region || domains[0]?.region || 'N/A',
+              all_domains: domainLines.join(' | ') || 'None configured',
+              rekkrd_from: emailKv.from_name
+                ? `${emailKv.from_name} <${emailKv.from_address || 'noreply@rekkrd.com'}>`
+                : emailKv.from_address || 'Not configured (using defaults)',
+              sellr_from: emailKv.sellr_from_name
+                ? `${emailKv.sellr_from_name} <${emailKv.sellr_from_address || 'appraisals@rekkrd.com'}>`
+                : emailKv.sellr_from_address || 'Not configured (using defaults)',
+              ...(emailKv.reply_to && { reply_to: emailKv.reply_to }),
+            },
+          };
+        } catch (err) {
+          const resendErr = err as { message?: string; statusCode?: number; name?: string };
+          const errName = resendErr.name || 'unknown';
+          result = {
+            success: false,
+            message: `Resend test failed: ${resendErr.message || 'Unknown error'}`,
+            details: {
+              error_code: errName,
+              http_status: resendErr.statusCode || 'N/A',
+              error_message: resendErr.message || 'No details',
+              api_key_prefix: `${apiKey.slice(0, 8)}...`,
+              action: errName === 'invalid_api_key' || errName === 'missing_api_key'
+                ? 'The API key is invalid or expired — generate a new one at resend.com/api-keys'
+                : resendErr.statusCode === 429
+                  ? 'Rate limit exceeded — wait a moment and try again'
+                  : 'Check the Resend dashboard or server logs for more details',
+            },
+          };
+        }
+        break;
+      }
       default:
         result = { success: false, message: `Unknown integration: ${integration}` };
     }
@@ -222,14 +343,28 @@ router.get('/api/admin/integrations/status', requireAdmin, async (_req: Request,
 
     // ── Resend ──
     const resendKey = process.env.RESEND_API_KEY;
+    // Read email config from DB for accurate status display
+    const { data: emailCfg } = await getSupabaseAdmin()
+      .from('config_settings')
+      .select('key, value')
+      .eq('category', 'email');
+
+    const emailKvMap: Record<string, string> = {};
+    for (const row of (emailCfg || []) as Array<{ key: string; value: unknown }>) {
+      emailKvMap[row.key] = typeof row.value === 'string' ? row.value : String(row.value ?? '');
+    }
+
     integrations.push({
       name: 'Resend',
       key: 'resend',
       status: resendKey ? 'connected' : 'disabled',
       details: {
         configured: resendKey ? 'yes' : 'no',
-        from_address: 'noreply@rekkrd.com',
-        sellr_from: 'appraisals@rekkrd.com',
+        from_name: emailKvMap.from_name || 'Rekkrd',
+        from_address: emailKvMap.from_address || 'noreply@rekkrd.com',
+        reply_to: emailKvMap.reply_to || '',
+        sellr_from_name: emailKvMap.sellr_from_name || 'Sellr',
+        sellr_from_address: emailKvMap.sellr_from_address || 'appraisals@rekkrd.com',
       },
     });
 
