@@ -99,8 +99,8 @@ DEEP CUTS: Don't always pick Track 1 from each album. Mix obvious picks with dee
       const prompt = `You are a strict playlist curator for a vinyl record collection. The user wants a "${mood}" listening session.
 
 CRITICAL RULES — FOLLOW EXACTLY:
-1. Look at each album's genre and tags below. ONLY select albums whose genre or tags genuinely relate to the mood "${mood}".
-2. If NONE of the albums match the mood, you MUST return an empty items array [] and set playlistName to "No Matches Found". Do NOT force unrelated albums into the playlist just to return something.
+1. Interpret the mood "${mood}" as a VIBE and FEELING, not a literal genre. For example, 'Dinner Party' means smooth, sophisticated, conversational music — jazz, soul, bossa nova, soft rock, etc. 'Late Night' means mellow, atmospheric, reflective. Think about what music fits the OCCASION, not just the genre name. Use genre, tags, and album descriptions to judge which albums fit the vibe.
+2. If truly NONE of the albums could work for this mood even loosely, return an empty items array [] and set playlistName to "No Matches Found". But be generous — most collections have SOMETHING that works for most moods. An empty result should be rare.
 3. You MUST ONLY use albums from the list below. Do NOT invent albums, artists, or songs.
 4. Each albumId MUST exactly match an "id" value from the collection.
 5. playlistName: short creative name, 2-5 words max. No explanations.
@@ -110,14 +110,14 @@ CRITICAL RULES — FOLLOW EXACTLY:
 9. Albums marked as favorite:true or with high play_count are records the listener loves — weight them slightly higher when they match the mood.${durationMinutes > 0 ? `
 10. TARGET DURATION: The listener wants approximately ${durationMinutes} minutes of music. Use the tracklist data to estimate track lengths (average 4-5 minutes per track if no duration data). Select enough items to fill roughly ${durationMinutes} minutes — do not overshoot by more than 10 minutes or undershoot by more than 5.` : ''}
 
-Example: If the user asks for "jazz" but the collection only has Country and Pop albums, return {"playlistName": "No Matches Found", "items": []}.
+Example: If the user asks for "jazz" but the collection is entirely Country and Pop with nothing remotely mellow or smooth, return {"playlistName": "No Matches Found", "items": []}. But if there's soft rock, soul, or anything that could vibe with the mood, include it.
 
 Collection:
 ${JSON.stringify(simplifiedCollection)}`;
       let verifiedItems: RawPlaylistItem[] = [];
       let name = 'Crate Mix';
       let attempts = 0;
-      const maxAttempts = 2;
+      const maxAttempts = 3;
       const startTime = Date.now();
 
       while (attempts < maxAttempts) {
