@@ -66,7 +66,7 @@ export const engagementService = {
         .from('now_spinning')
         .select('album_id')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       return data?.album_id || null;
     } catch (error) {
