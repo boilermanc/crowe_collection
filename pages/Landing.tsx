@@ -137,6 +137,8 @@ const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
@@ -1107,28 +1109,70 @@ const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
               </div>
               <div className="auth-field">
                 <label htmlFor="landing-password">Password</label>
-                <input
-                  id="landing-password"
-                  type="password"
-                  autoComplete={authMode === 'signin' ? 'current-password' : 'new-password'}
-                  required
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder={'\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'}
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    id="landing-password"
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete={authMode === 'signin' ? 'current-password' : 'new-password'}
+                    required
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder={'\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'}
+                    style={{ paddingRight: 40 }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(v => !v)}
+                    className="auth-password-toggle"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    tabIndex={-1}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10" stroke="var(--peach)" strokeWidth="1.5" />
+                      <circle cx="12" cy="12" r="7.5" stroke="var(--peach)" strokeWidth="0.75" opacity="0.5" />
+                      <circle cx="12" cy="12" r="5.5" stroke="var(--peach)" strokeWidth="0.75" opacity="0.4" />
+                      <circle cx="12" cy="12" r="3.5" fill="var(--peach-dark)" opacity="0.4" />
+                      <circle cx="12" cy="12" r="1.2" fill="var(--peach)" />
+                      {showPassword && (
+                        <line x1="4" y1="4" x2="20" y2="20" stroke="var(--peach-dark)" strokeWidth="2" strokeLinecap="round" />
+                      )}
+                    </svg>
+                  </button>
+                </div>
               </div>
               {authMode === 'signup' && (
                 <div className="auth-field">
                   <label htmlFor="landing-confirm-password">Confirm Password</label>
-                  <input
-                    id="landing-confirm-password"
-                    type="password"
-                    autoComplete="new-password"
-                    required
-                    value={confirmPassword}
-                    onChange={e => setConfirmPassword(e.target.value)}
-                    placeholder={'\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'}
-                  />
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      id="landing-confirm-password"
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      autoComplete="new-password"
+                      required
+                      value={confirmPassword}
+                      onChange={e => setConfirmPassword(e.target.value)}
+                      placeholder={'\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'}
+                      style={{ paddingRight: 40 }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(v => !v)}
+                      className="auth-password-toggle"
+                      aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                      tabIndex={-1}
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="10" stroke="var(--peach)" strokeWidth="1.5" />
+                        <circle cx="12" cy="12" r="7.5" stroke="var(--peach)" strokeWidth="0.75" opacity="0.5" />
+                        <circle cx="12" cy="12" r="5.5" stroke="var(--peach)" strokeWidth="0.75" opacity="0.4" />
+                        <circle cx="12" cy="12" r="3.5" fill="var(--peach-dark)" opacity="0.4" />
+                        <circle cx="12" cy="12" r="1.2" fill="var(--peach)" />
+                        {showConfirmPassword && (
+                          <line x1="4" y1="4" x2="20" y2="20" stroke="var(--peach-dark)" strokeWidth="2" strokeLinecap="round" />
+                        )}
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               )}
               <Turnstile

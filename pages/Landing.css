@@ -2305,6 +2305,26 @@
   box-shadow:0 0 0 3px rgba(221,110,66,.1);
 }
 
+/* Password toggle */
+.landing-page .auth-password-toggle {
+  position:absolute;
+  right:10px;
+  top:50%;
+  transform:translateY(-50%);
+  background:none;
+  border:none;
+  padding:4px;
+  cursor:pointer;
+  opacity:.7;
+  transition:opacity .2s;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.landing-page .auth-password-toggle:hover {
+  opacity:1;
+}
+
 /* Submit */
 .landing-page .auth-submit {
   width:100%;
