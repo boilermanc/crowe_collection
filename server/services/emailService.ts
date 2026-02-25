@@ -2,11 +2,43 @@ import { Resend } from 'resend';
 import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { createClient } from '@supabase/supabase-js';
 import { getPresetById } from '../data/emailPresets.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const DEFAULT_FROM = 'Rekkrd <noreply@rekkrd.com>';
+// ── Supabase client (lazy-init, service role) ───────────────────────
+
+let _supabase: ReturnType<typeof createClient> | null = null;
+
+function getSupabaseAdmin() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    );
+  }
+  return _supabase;
+}
+
+// ── Email sender lookup ─────────────────────────────────────────────
+
+async function getEmailSender(): Promise<string> {
+  try {
+    const supabase = getSupabaseAdmin();
+    const { data } = await supabase
+      .from('config_settings')
+      .select('key, value')
+      .eq('category', 'email')
+      .in('key', ['from_name', 'from_address']);
+
+    const name = data?.find(r => r.key === 'from_name')?.value ?? 'Rekkrd';
+    const address = data?.find(r => r.key === 'from_address')?.value ?? process.env.EMAIL_FROM ?? 'team@sproutify.app';
+    return `${name} <${address}>`;
+  } catch {
+    return `Rekkrd <${process.env.EMAIL_FROM ?? 'team@sproutify.app'}>`;
+  }
+}
 
 // ── Template constants ──────────────────────────────────────────────
 
@@ -131,7 +163,7 @@ export async function sendTemplatedEmail(options: SendEmailOptions) {
     html = processUnsubscribeBlock(html, preset.category, preset.automated);
 
     const subject = merged.subject ?? preset.variables.subject;
-    const from = options.from ?? DEFAULT_FROM;
+    const from = options.from ?? await getEmailSender();
 
     const result = await resend.emails.send({
       from,
@@ -164,7 +196,7 @@ export async function sendRawEmail(options: SendRawEmailOptions) {
   if (!resend) return null;
 
   try {
-    const from = options.from ?? DEFAULT_FROM;
+    const from = options.from ?? await getEmailSender();
 
     const result = await resend.emails.send({
       from,

@@ -70,6 +70,12 @@ const IntegrationsPage: React.FC = () => {
   const [statuses, setStatuses] = useState<IntegrationStatus[]>([]);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
+  // Email settings
+  const [fromName, setFromName] = useState('');
+  const [fromAddress, setFromAddress] = useState('');
+  const [emailSaving, setEmailSaving] = useState(false);
+  const [emailSaveMessage, setEmailSaveMessage] = useState<string | null>(null);
+
   // ── Load Stripe settings ───────────────────────────────────────────
 
   useEffect(() => {
@@ -104,6 +110,17 @@ const IntegrationsPage: React.FC = () => {
       .finally(() => setStatusLoading(false));
   }, []);
 
+  // ── Load email settings ───────────────────────────────────────────
+
+  useEffect(() => {
+    adminService.getIntegrationSettings('email')
+      .then((settings) => {
+        setFromName((settings.from_name as string) || '');
+        setFromAddress((settings.from_address as string) || '');
+      })
+      .catch((err) => console.error('Failed to load email settings:', err));
+  }, []);
+
   // ── Save ──────────────────────────────────────────────────────────
 
   const handleSave = useCallback(async () => {
@@ -133,6 +150,26 @@ const IntegrationsPage: React.FC = () => {
       setSaving(false);
     }
   }, [mode, testKeys, liveKeys]);
+
+  // ── Save email settings ──────────────────────────────────────────
+
+  const handleEmailSave = useCallback(async () => {
+    setEmailSaving(true);
+    setEmailSaveMessage(null);
+    try {
+      await adminService.saveIntegrationSettings({
+        from_name: { value: fromName, dataType: 'string' },
+        from_address: { value: fromAddress, dataType: 'string' },
+      }, 'email');
+      setEmailSaveMessage('Email settings saved');
+      setTimeout(() => setEmailSaveMessage(null), 3000);
+    } catch (err) {
+      setEmailSaveMessage('Failed to save email settings');
+      console.error('Email settings save error:', err);
+    } finally {
+      setEmailSaving(false);
+    }
+  }, [fromName, fromAddress]);
 
   // ── Test ──────────────────────────────────────────────────────────
 
@@ -391,6 +428,63 @@ const IntegrationsPage: React.FC = () => {
             <p className="text-xs pt-1" style={{ color: 'rgb(107,114,128)' }}>
               API key managed via server environment variable (RESEND_API_KEY).
             </p>
+          </div>
+        </AccordionSection>
+
+        {/* Email Settings */}
+        <AccordionSection
+          id="accordion-email-settings"
+          title="Email Settings"
+          subtitle="Default sender name and address for outgoing emails"
+          isExpanded={expandedSection === 'email-settings'}
+          onToggle={() => toggleSection('email-settings')}
+          iconPath={INTEGRATION_ICONS.resend}
+          iconViewBox="0 0 24 24"
+        >
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1" style={{ color: 'rgb(55,65,81)' }}>From Name</label>
+              <input
+                type="text"
+                value={fromName}
+                onChange={(e) => setFromName(e.target.value)}
+                placeholder="Rekkrd"
+                aria-label="Email from name"
+                className="w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2"
+                style={{ borderColor: 'rgb(209,213,219)', color: 'rgb(17,24,39)' }}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1" style={{ color: 'rgb(55,65,81)' }}>From Address</label>
+              <input
+                type="email"
+                value={fromAddress}
+                onChange={(e) => setFromAddress(e.target.value)}
+                placeholder="team@sproutify.app"
+                aria-label="Email from address"
+                className="w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2"
+                style={{ borderColor: 'rgb(209,213,219)', color: 'rgb(17,24,39)' }}
+              />
+            </div>
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                onClick={handleEmailSave}
+                disabled={emailSaving}
+                aria-label="Save email settings"
+                className="px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                style={{ backgroundColor: 'rgb(99,102,241)', color: 'white' }}
+              >
+                {emailSaving ? 'Saving...' : 'Save'}
+              </button>
+              {emailSaveMessage && (
+                <span
+                  className="text-sm font-medium"
+                  style={{ color: emailSaveMessage.includes('Failed') ? 'rgb(239,68,68)' : 'rgb(34,197,94)' }}
+                >
+                  {emailSaveMessage}
+                </span>
+              )}
+            </div>
           </div>
         </AccordionSection>
       </div>
