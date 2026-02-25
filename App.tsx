@@ -379,7 +379,7 @@ const App: React.FC = () => {
 
     if (checkoutStatus === 'success') {
       refreshSubscription().then(() => {
-        showToast(`Welcome to your new plan! Your 14-day trial has started.`, 'success');
+        showToast(`Welcome to your new plan! You're all set.`, 'success');
       });
     } else if (checkoutStatus === 'canceled') {
       showToast('Checkout canceled. You can upgrade anytime.', 'info');

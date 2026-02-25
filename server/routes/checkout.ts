@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import type Stripe from 'stripe';
 import { requireAuthWithUser, type AuthResult } from '../middleware/auth.js';
 import { getStripe } from '../lib/stripe.js';
-import { isKnownPriceId, TRIAL_DAYS } from '../lib/stripeConfig.js';
+import { isKnownPriceId } from '../lib/stripeConfig.js';
 
 const router = Router();
 
@@ -55,7 +55,7 @@ router.post(
     }
 
     // Checkout flow
-    const { priceId, skipTrial } = req.body;
+    const { priceId } = req.body;
     if (!priceId || typeof priceId !== 'string') {
       res.status(400).json({ error: 'Missing priceId' });
       return;
@@ -100,41 +100,15 @@ router.post(
         .eq('id', userId);
 
       const appUrl = process.env.APP_URL || 'https://rekkrd.com';
-      let hasExistingSubscription = !!sub?.stripe_subscription_id;
-      let canceledTrial = false;
 
-      // If user has a trialing subscription, cancel it so checkout creates
-      // a clean new subscription instead of a duplicate
-      if (hasExistingSubscription && sub?.stripe_subscription_id) {
-        try {
-          const existingSub = await stripe.subscriptions.retrieve(sub.stripe_subscription_id);
-          if (existingSub.status === 'trialing') {
-            await stripe.subscriptions.cancel(sub.stripe_subscription_id);
-            await supabase
-              .from('subscriptions')
-              .update({ stripe_subscription_id: null, status: 'canceled' })
-              .eq('user_id', userId);
-            hasExistingSubscription = false;
-            canceledTrial = true;
-          }
-        } catch (e) {
-          // Subscription may not exist in Stripe anymore — clear it locally
-          console.warn('Could not retrieve existing subscription, clearing:', e);
-          await supabase
-            .from('subscriptions')
-            .update({ stripe_subscription_id: null })
-            .eq('user_id', userId);
-          hasExistingSubscription = false;
-        }
-      }
-
+      // No Stripe trial — trial is app-managed (DB trigger on signup).
+      // User pays immediately when they subscribe.
       const session = await stripe.checkout.sessions.create({
         customer: customerId,
         mode: 'subscription',
         line_items: [{ price: priceId, quantity: 1 }],
         subscription_data: {
           metadata: { supabase_user_id: userId },
-          ...(!hasExistingSubscription && !skipTrial && !canceledTrial && { trial_period_days: TRIAL_DAYS }),
         },
         success_url: `${appUrl}/?checkout=success`,
         cancel_url: `${appUrl}/?checkout=canceled`,

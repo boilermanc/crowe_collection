@@ -2,8 +2,8 @@ import { getStripePrices, type PlanTier } from './stripe.js';
 
 export type { PlanTier };
 
-/** Number of free trial days for new paid subscriptions. */
-export const TRIAL_DAYS = 14;
+/** Number of free trial days (app-managed, not Stripe). */
+export const TRIAL_DAYS = 7;
 
 /**
  * Returns true if the given priceId matches a known Stripe price.

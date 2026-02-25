@@ -262,7 +262,7 @@ const StepPlanSelection: React.FC<StepPlanSelectionProps> = ({
       Choose your plan
     </h2>
     <p className="text-th-text3 text-lg mb-10 text-center">
-      Start free, upgrade anytime. All paid plans include a 14-day free trial.
+      Start free, upgrade anytime. All paid plans include a 7-day free trial.
     </p>
 
     {/* Email digest toggle */}
@@ -342,7 +342,7 @@ const StepPlanSelection: React.FC<StepPlanSelectionProps> = ({
     </div>
 
     <p className="text-th-text3 text-xs text-center mt-6 max-w-md">
-      Paid plans start with a 14-day free trial. Cancel anytime. You won't be charged during onboarding.
+      Paid plans start with a 7-day free trial. Cancel anytime. You won't be charged during onboarding.
     </p>
   </div>
 );
