@@ -124,7 +124,19 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, feature })
       aria-label={heading}
       className="fixed inset-0 z-[80] flex items-center justify-center bg-th-bg/95 p-4 backdrop-blur-xl animate-in fade-in duration-300 outline-none"
     >
-      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl glass-morphism border border-th-surface/[0.10] p-6 md:p-8 shadow-2xl">
+      <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl glass-morphism border border-th-surface/[0.10] p-6 md:p-8 shadow-2xl">
+        {/* Loading overlay */}
+        {isLoading && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-2xl bg-th-bg/90 backdrop-blur-sm">
+            <svg className="w-8 h-8 text-[#dd6e42] animate-spin mb-4" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+            <p className="text-sm font-medium text-th-text">Redirecting to checkout...</p>
+            <p className="text-xs text-th-text3 mt-1">This may take a moment</p>
+          </div>
+        )}
+
         {/* Header */}
         <div className="text-center mb-6">
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#dd6e42]/10">
