@@ -326,6 +326,7 @@ const App: React.FC = () => {
     (async () => {
       try {
         const existing = await getProfile(user.id);
+        console.log('[onboarding] profile check:', existing ? 'exists' : 'new user', { onboarding_completed: existing?.onboarding_completed });
         if (!existing) {
           // Capture UTM params from sessionStorage (set by /welcome page)
           const utmFields: Record<string, string> = {};
@@ -333,20 +334,31 @@ const App: React.FC = () => {
             const val = sessionStorage.getItem(key);
             if (val) utmFields[key] = val;
           }
-          await createProfile({ id: user.id, ...utmFields });
+          try {
+            await createProfile({ id: user.id, ...utmFields });
+          } catch (profileErr) {
+            // Profile may already exist from DB trigger — that's fine
+            console.warn('[onboarding] profile create failed (may already exist):', profileErr);
+          }
           // Clear UTM params after saving
           for (const key of ['utm_source', 'utm_medium', 'utm_campaign'] as const) {
             sessionStorage.removeItem(key);
           }
+          console.log('[onboarding] new user → showing wizard');
           setShowOnboarding(true);
           return;
         }
-        const completed = await hasCompletedOnboarding(user.id);
-        if (!completed) {
+        if (!existing.onboarding_completed) {
+          console.log('[onboarding] incomplete → showing wizard');
           setShowOnboarding(true);
+        } else {
+          console.log('[onboarding] already completed → skipping wizard');
         }
       } catch (err) {
-        console.error('Failed to ensure profile exists:', err);
+        console.error('[onboarding] error:', err);
+        // If we can't verify onboarding status, show wizard for safety —
+        // better to show it than dump user into empty app
+        setShowOnboarding(true);
       } finally {
         setOnboardingChecked(true);
       }
@@ -358,13 +370,14 @@ const App: React.FC = () => {
   useEffect(() => {
     if (user && currentView === 'public-landing') {
       const importSession = localStorage.getItem('sellr_import_session_id');
-      if (importSession) {
+      // Only redirect to Sellr import if onboarding is done — otherwise wizard runs first
+      if (importSession && onboardingChecked && !showOnboarding) {
         navigate(`/sellr/import?session=${encodeURIComponent(importSession)}`);
         return;
       }
       setCurrentView('landing');
     }
-  }, [user, currentView, navigate]);
+  }, [user, currentView, navigate, onboardingChecked, showOnboarding]);
 
   // Handle Stripe checkout / portal return / downgrade
   useEffect(() => {
