@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { createClient } from '@supabase/supabase-js';
+import type Stripe from 'stripe';
 import { requireAuthWithUser, type AuthResult } from '../middleware/auth.js';
 import { getStripe } from '../lib/stripe.js';
 import { isKnownPriceId, TRIAL_DAYS } from '../lib/stripeConfig.js';
@@ -144,6 +145,105 @@ router.post(
     } catch (error) {
       console.error('Checkout error:', error);
       res.status(500).json({ error: 'Failed to create checkout session' });
+    }
+  }
+);
+
+// ── Embedded subscribe flow (PaymentElement, no redirect) ───────────
+router.post(
+  '/api/subscribe',
+  requireAuthWithUser,
+  async (req, res) => {
+    const { userId } = (req as typeof req & { auth: AuthResult }).auth;
+    const { priceId } = req.body;
+
+    if (!priceId || typeof priceId !== 'string') {
+      res.status(400).json({ error: 'Missing priceId' });
+      return;
+    }
+
+    if (!(await isKnownPriceId(priceId))) {
+      res.status(400).json({ error: 'Unknown price ID' });
+      return;
+    }
+
+    try {
+      const stripe = await getStripe();
+      const supabase = getSupabaseAdmin();
+
+      const { data: sub } = await supabase
+        .from('subscriptions')
+        .select('stripe_customer_id, stripe_subscription_id')
+        .eq('user_id', userId)
+        .single();
+
+      let customerId = sub?.stripe_customer_id;
+
+      if (!customerId) {
+        const { data: { user } } = await supabase.auth.admin.getUserById(userId);
+        const customer = await stripe.customers.create({
+          email: user?.email ?? undefined,
+          metadata: { supabase_user_id: userId },
+        });
+        customerId = customer.id;
+
+        await supabase
+          .from('subscriptions')
+          .update({ stripe_customer_id: customerId })
+          .eq('user_id', userId);
+      }
+
+      await supabase
+        .from('profiles')
+        .update({ stripe_customer_id: customerId })
+        .eq('id', userId);
+
+      // Cancel existing trialing subscription
+      if (sub?.stripe_subscription_id) {
+        try {
+          const existingSub = await stripe.subscriptions.retrieve(sub.stripe_subscription_id);
+          if (existingSub.status === 'trialing') {
+            await stripe.subscriptions.cancel(sub.stripe_subscription_id);
+            await supabase
+              .from('subscriptions')
+              .update({ stripe_subscription_id: null, status: 'canceled' })
+              .eq('user_id', userId);
+          }
+        } catch (e) {
+          console.warn('Could not retrieve existing subscription, clearing:', e);
+          await supabase
+            .from('subscriptions')
+            .update({ stripe_subscription_id: null })
+            .eq('user_id', userId);
+        }
+      }
+
+      // Create subscription with incomplete payment — returns client_secret
+      // for frontend PaymentElement to collect payment inline
+      const subscription = await stripe.subscriptions.create({
+        customer: customerId,
+        items: [{ price: priceId }],
+        payment_behavior: 'default_incomplete',
+        payment_settings: { save_default_payment_method: 'on_subscription' },
+        expand: ['latest_invoice.payment_intent'],
+        metadata: { supabase_user_id: userId },
+      });
+
+      const invoice = subscription.latest_invoice as Stripe.Invoice & { payment_intent: Stripe.PaymentIntent };
+      const paymentIntent = invoice?.payment_intent;
+
+      if (!paymentIntent?.client_secret) {
+        res.status(500).json({ error: 'Failed to create payment intent' });
+        return;
+      }
+
+      res.status(200).json({
+        clientSecret: paymentIntent.client_secret,
+        subscriptionId: subscription.id,
+      });
+    } catch (error) {
+      console.error('Subscribe error:', error);
+      res.status(500).json({ error: 'Failed to create subscription' });
     }
   }
 );

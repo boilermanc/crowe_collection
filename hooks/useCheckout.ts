@@ -40,5 +40,40 @@ export function useCheckout() {
     }
   }, [showToast]);
 
-  return { checkout, isLoading };
+  /** Create an incomplete subscription and return the client secret for PaymentElement. */
+  const createSubscription = useCallback(async (priceId: string): Promise<{ clientSecret: string; subscriptionId: string } | null> => {
+    setIsLoading(true);
+    try {
+      const session = await supabase?.auth.getSession();
+      const token = session?.data?.session?.access_token;
+      if (!token) {
+        showToast('Please sign in to subscribe.', 'error');
+        return null;
+      }
+
+      const response = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ priceId }),
+      });
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body.error || 'Failed to set up subscription');
+      }
+
+      return await response.json();
+    } catch (err) {
+      console.error('Subscribe error:', err);
+      showToast('Something went wrong. Please try again.', 'error');
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [showToast]);
+
+  return { checkout, createSubscription, isLoading };
 }
