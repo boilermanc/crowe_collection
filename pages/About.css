@@ -527,6 +527,9 @@
   letter-spacing: 0.3em;
   color: var(--amber);
   text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .about-page .footer-copy {
