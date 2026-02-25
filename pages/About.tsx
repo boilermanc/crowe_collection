@@ -13,7 +13,7 @@ const About: React.FC = () => {
 
       {/* NAV */}
       <nav className="about-nav">
-        <Link to="/" className="about-nav-logo">Rekkrd</Link>
+        <Link to="/" className="about-nav-logo">Rekk<span style={{ color: '#D47A62' }}>r</span>d</Link>
         <ul className="about-nav-links">
           <li><Link to="/">Collection</Link></li>
           <li><Link to="/#stakkd">Stakkd</Link></li>
@@ -171,7 +171,7 @@ const About: React.FC = () => {
 
       {/* FOOTER */}
       <footer className="about-footer">
-        <p className="footer-logo">Rekkrd</p>
+        <p className="footer-logo">Rekk<span style={{ color: '#D47A62' }}>r</span>d</p>
         <p className="footer-copy">&copy; {new Date().getFullYear()} <a href="https://sweetwater.technology" target="_blank" rel="noopener noreferrer">Sweetwater Technology</a>. All rights reserved.</p>
       </footer>
     </div>
