@@ -117,7 +117,7 @@ const PLAN_STYLES: Record<Plan, { bg: string; text: string; border: string }> = 
 
 const PlanBadge: React.FC<PlanBadgeProps> = ({ albumCount, onUpgrade }) => {
   const {
-    plan, isTrialing, isPastDue,
+    plan, isTrialing, isPastDue, trialDaysLeft,
     scansUsed, scansLimit, albumLimit,
     gearCount, gearLimit,
     periodEnd, hasStripeCustomer,
@@ -152,7 +152,7 @@ const PlanBadge: React.FC<PlanBadgeProps> = ({ albumCount, onUpgrade }) => {
   const label = `${plan}${isTrialing ? ' Trial' : ''}`;
 
   return (
-    <div ref={panelRef}>
+    <div ref={panelRef} className="relative flex items-center">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`relative px-2.5 py-1 rounded-full text-[8px] font-label tracking-widest uppercase border transition-all hover:brightness-110 cursor-pointer ${styles.bg} ${styles.text} ${styles.border}`}
@@ -164,6 +164,23 @@ const PlanBadge: React.FC<PlanBadgeProps> = ({ albumCount, onUpgrade }) => {
           <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
         )}
       </button>
+
+      {isTrialing && trialDaysLeft !== null && (() => {
+        const isUrgent = trialDaysLeft <= 3;
+        return (
+          <button
+            onClick={() => { setIsOpen(false); onUpgrade(); }}
+            aria-label={`Free trial: ${trialDaysLeft} days remaining`}
+            className={`ml-1.5 text-xs px-2 py-0.5 rounded-full border cursor-pointer transition-all hover:brightness-110 ${
+              isUrgent
+                ? 'bg-red-500/20 text-red-400 border-red-500/30'
+                : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+            }`}
+          >
+            {trialDaysLeft}d left
+          </button>
+        );
+      })()}
 
       {isOpen && (
         <div className="absolute right-0 top-full mt-2 w-72 glass-morphism rounded-2xl border border-th-surface/[0.10] p-4 z-50 animate-in fade-in slide-in-from-top duration-200 shadow-2xl">

@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { updateProfile } from '../services/profileService';
 import { useAuthContext } from '../contexts/AuthContext';
 import { Headphones, Music, Disc3, Tv, Sparkles, Heart, Trophy, TrendingUp, Mail, Archive, Crown, Gem, Camera, Compass } from 'lucide-react';
-import { useCheckout } from '../hooks/useCheckout';
+
 
 const TOTAL_STEPS = 4;
 
@@ -441,18 +441,6 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete, preview
   const [fadeState, setFadeState] = useState<'in' | 'out'>('in');
   const [saving, setSaving] = useState(false);
   const pendingStepRef = useRef<number | null>(null);
-  const [pricing, setPricing] = useState<Record<string, { monthly?: { priceId: string } }> | null>(null);
-  const { checkout } = useCheckout();
-
-  // Fetch Stripe prices on mount (for paid tier checkout on final step)
-  useEffect(() => {
-    if (previewMode) return;
-    fetch('/api/prices')
-      .then(r => r.ok ? r.json() : null)
-      .then(data => { if (data?.tiers) setPricing(data.tiers); })
-      .catch(() => {});
-  }, [previewMode]);
-
   const isFirst = currentStep === 0;
   const isLast = currentStep === TOTAL_STEPS - 1;
   const progress = (currentStep + 1) / TOTAL_STEPS;
@@ -514,16 +502,6 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete, preview
       }
       fetch('/api/onboarding/complete', { method: 'POST', headers }).catch(() => {});
 
-      // Paid tier → Stripe checkout redirect (page will navigate away)
-      const tier = profileData.selectedTier;
-      if (fullSave && tier !== 'collector') {
-        const priceId = pricing?.[tier]?.monthly?.priceId;
-        if (priceId) {
-          checkout(priceId);
-          return; // Stripe redirects the page; don't call onComplete
-        }
-      }
-
       onComplete(profileData.startAction);
     } catch (err) {
       console.error('Failed to save onboarding profile:', err);
@@ -532,11 +510,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete, preview
     } finally {
       setSaving(false);
     }
-  }, [previewMode, user, session, profileData, onComplete, checkout, pricing]);
-
-  const handleSkipAll = useCallback(() => {
-    saveAndComplete(false);
-  }, [saveAndComplete]);
+  }, [previewMode, user, session, profileData, onComplete]);
 
   const handleNext = useCallback(() => {
     if (!canAdvance) return;
@@ -655,15 +629,6 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete, preview
           </div>
         </div>
 
-        {/* Right: Skip */}
-        <button
-          type="button"
-          onClick={handleSkipAll}
-          disabled={saving}
-          className="font-label text-[10px] tracking-widest text-th-text3 uppercase hover:text-th-text2 transition-colors bg-transparent border-none cursor-pointer px-2 py-1 disabled:opacity-50"
-        >
-          Skip Setup
-        </button>
       </header>
 
       {/* Main content area */}
