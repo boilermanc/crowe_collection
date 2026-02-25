@@ -6,7 +6,7 @@ export function useCheckout() {
   const { showToast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
-  const checkout = useCallback(async (priceId: string) => {
+  const checkout = useCallback(async (priceId: string, skipTrial = false) => {
     setIsLoading(true);
     try {
       const session = await supabase?.auth.getSession();
@@ -22,7 +22,7 @@ export function useCheckout() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ priceId }),
+        body: JSON.stringify({ priceId, ...(skipTrial && { skipTrial: true }) }),
       });
 
       if (!response.ok) {

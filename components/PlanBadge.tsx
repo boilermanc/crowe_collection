@@ -190,7 +190,21 @@ const PlanBadge: React.FC<PlanBadgeProps> = ({ albumCount, onUpgrade }) => {
           </div>
 
           {/* Action button */}
-          {hasStripeCustomer ? (
+          {isTrialing ? (
+            <>
+              <button
+                onClick={() => { setIsOpen(false); onUpgrade(); }}
+                className="w-full rounded-xl bg-[#dd6e42] px-4 py-2.5 text-[10px] font-label tracking-widest uppercase text-white font-bold hover:bg-[#c45a30] transition-all"
+              >
+                Subscribe Now
+              </button>
+              {hasStripeCustomer && (
+                <div className="mt-2">
+                  <ManageSubscriptionButton />
+                </div>
+              )}
+            </>
+          ) : hasStripeCustomer ? (
             <ManageSubscriptionButton />
           ) : (
             <button

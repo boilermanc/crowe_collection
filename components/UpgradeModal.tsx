@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useCheckout } from '../hooks/useCheckout';
+import { useSubscription } from '../contexts/SubscriptionContext';
 
 interface TierPrice {
   priceId: string;
@@ -62,8 +63,22 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, feature })
   useFocusTrap(modalRef, onClose);
 
   const { checkout, isLoading } = useCheckout();
+  const { plan, isTrialing } = useSubscription();
   const [pricing, setPricing] = useState<PricingData | null>(null);
   const [isAnnual, setIsAnnual] = useState(false);
+
+  // Context-aware button labels
+  const alreadyHasPlan = isTrialing || plan !== 'collector';
+  const curatorButtonLabel = alreadyHasPlan && plan === 'curator'
+    ? 'Subscribe Now'
+    : alreadyHasPlan
+      ? 'Switch to Curator'
+      : 'Start Free Trial';
+  const enthusiastButtonLabel = alreadyHasPlan && plan === 'enthusiast'
+    ? 'Subscribe Now'
+    : alreadyHasPlan
+      ? 'Upgrade to Enthusiast'
+      : 'Start Free Trial';
 
   useEffect(() => {
     if (!isOpen) return;
@@ -75,9 +90,11 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, feature })
 
   if (!isOpen) return null;
 
-  const heading = feature && FEATURE_LABELS[feature]
-    ? `Upgrade to Unlock ${FEATURE_LABELS[feature]}`
-    : 'Upgrade to Unlock';
+  const heading = alreadyHasPlan
+    ? 'Choose Your Plan'
+    : feature && FEATURE_LABELS[feature]
+      ? `Upgrade to Unlock ${FEATURE_LABELS[feature]}`
+      : 'Upgrade to Unlock';
 
   const curatorTier = pricing?.tiers?.curator;
   const enthusiastTier = pricing?.tiers?.enthusiast;
@@ -118,7 +135,9 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, feature })
           </div>
           <h2 className="text-xl font-bold text-th-text mb-1">{heading}</h2>
           <p className="text-sm text-th-text3">
-            Get unlimited albums, AI scans, playlists, gear identification, and more
+            {isTrialing
+              ? 'Subscribe to keep your features when your trial ends'
+              : 'Get unlimited albums, AI scans, playlists, gear identification, and more'}
           </p>
         </div>
 
@@ -177,11 +196,11 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, feature })
               ))}
             </ul>
             <button
-              onClick={() => curatorPriceId && checkout(curatorPriceId)}
+              onClick={() => curatorPriceId && checkout(curatorPriceId, alreadyHasPlan)}
               disabled={isLoading || !curatorPriceId}
               className="w-full rounded-xl bg-[#4f6d7a] px-4 py-2.5 text-[10px] font-label tracking-widest uppercase text-white font-bold hover:bg-[#3a525d] transition-all disabled:opacity-50"
             >
-              {isLoading ? 'Loading\u2026' : 'Start Free Trial'}
+              {isLoading ? 'Loading\u2026' : curatorButtonLabel}
             </button>
           </div>
 
@@ -204,11 +223,11 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, feature })
               ))}
             </ul>
             <button
-              onClick={() => enthusiastPriceId && checkout(enthusiastPriceId)}
+              onClick={() => enthusiastPriceId && checkout(enthusiastPriceId, alreadyHasPlan)}
               disabled={isLoading || !enthusiastPriceId}
               className="w-full rounded-xl border border-[#dd6e42] px-4 py-2.5 text-[10px] font-label tracking-widest uppercase text-[#dd6e42] font-bold hover:bg-[#dd6e42] hover:text-white transition-all disabled:opacity-50"
             >
-              {isLoading ? 'Loading\u2026' : 'Start Free Trial'}
+              {isLoading ? 'Loading\u2026' : enthusiastButtonLabel}
             </button>
           </div>
         </div>
