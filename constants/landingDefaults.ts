@@ -46,8 +46,7 @@ export const DEFAULT_FEATURES: CmsFeature[] = [
   { icon: '\uD83C\uDFB6', cls: 'fi-6', title: 'Lyrics & Liner Notes', desc: 'Look up lyrics for any track in your collection. Add personal notes, tags, and condition grades to every album.' },
   { icon: '\uD83D\uDD27', cls: 'fi-stakkd', title: 'Stakkd Gear Catalog', desc: 'Document your audio equipment with AI. Get instant identification, specs, history, manuals, and custom setup guides for your entire signal chain.' },
   { icon: '\uD83D\uDCC8', cls: 'fi-analytics', title: 'Collection Analytics', desc: 'Track your collection\u2019s value over time, see genre breakdowns, and discover insights about your listening habits.' },
-  { icon: '\u25A6', cls: 'fi-barcode', title: 'Instant Barcode Recognition', desc: 'Point your camera at the barcode and you\u2019re done. No typing, no searching, no guessing the pressing.' },
-  { icon: '\u266B', cls: 'fi-spotify', title: 'Spotify Integration', desc: 'Pull up any album on Spotify directly from your collection. Your records, your listening \u2014 connected.' },
+  { icon: '\uD83D\uDCBF', cls: 'fi-format', title: 'Vinyl, Cassette & 8-Track', desc: 'Your whole collection, not just vinyl. AI detects the physical format automatically and color-codes everything \u2014 orange for vinyl, mint for cassette, plum for 8-track.' },
 ];
 
 export const DEFAULT_HOW_IT_WORKS_HEADER: CmsSectionHeader = {
