@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import type Stripe from 'stripe';
-import { getStripe, getPublishableKey, getStripeMode } from '../lib/stripe.js';
+import { getStripe, getPublishableKey, getStripeMode, getStripePrices } from '../lib/stripe.js';
 
 // Simple in-memory cache
 let cachedPrices: unknown = null;
@@ -50,6 +50,26 @@ router.get('/api/prices', async (_req, res) => {
         tiers[tier].monthly = priceData;
       } else if (interval === 'year') {
         tiers[tier].annual = priceData;
+      }
+    }
+
+    // Fall back to configured price IDs (env vars / DB) for any missing tiers
+    const configPrices = await getStripePrices();
+    for (const [tier, ids] of Object.entries(configPrices)) {
+      if (!tiers[tier]) {
+        tiers[tier] = { name: tier.charAt(0).toUpperCase() + tier.slice(1) };
+      }
+      if (!tiers[tier].monthly && ids.monthly) {
+        try {
+          const p = await stripe.prices.retrieve(ids.monthly);
+          tiers[tier].monthly = { priceId: p.id, amount: p.unit_amount, currency: p.currency, interval: 'month' };
+        } catch { /* price ID may be invalid */ }
+      }
+      if (!tiers[tier].annual && ids.annual) {
+        try {
+          const p = await stripe.prices.retrieve(ids.annual);
+          tiers[tier].annual = { priceId: p.id, amount: p.unit_amount, currency: p.currency, interval: 'year' };
+        } catch { /* price ID may be invalid */ }
       }
     }
 
