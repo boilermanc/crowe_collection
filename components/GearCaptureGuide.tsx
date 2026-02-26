@@ -7,6 +7,7 @@ interface GearCaptureGuideProps {
   isOpen: boolean;
   onClose: () => void;
   onComplete: (images: { front: string; label?: string }) => void;
+  onUploadFallback?: () => void;
 }
 
 type CaptureStep = 1 | 2 | 3;
@@ -127,7 +128,7 @@ const StepDots: React.FC<{ current: CaptureStep; frontCaptured: boolean; labelCa
   </div>
 );
 
-const GearCaptureGuide: React.FC<GearCaptureGuideProps> = ({ isOpen, onClose, onComplete }) => {
+const GearCaptureGuide: React.FC<GearCaptureGuideProps> = ({ isOpen, onClose, onComplete, onUploadFallback }) => {
   const { showToast } = useToast();
   const modalRef = useRef<HTMLDivElement>(null);
   const stableOnClose = useCallback(onClose, [onClose]);
@@ -139,7 +140,7 @@ const GearCaptureGuide: React.FC<GearCaptureGuideProps> = ({ isOpen, onClose, on
 
   const [step, setStep] = useState<CaptureStep>(1);
   const [isStreaming, setIsStreaming] = useState(false);
-  const [cameraError, setCameraError] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
   const [facingMode] = useState<'user' | 'environment'>('environment');
   const [frontImage, setFrontImage] = useState<string | null>(null);
   const [labelImage, setLabelImage] = useState<string | null>(null);
@@ -164,11 +165,18 @@ const GearCaptureGuide: React.FC<GearCaptureGuideProps> = ({ isOpen, onClose, on
         streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
+          videoRef.current.play().catch(() => {});
           setIsStreaming(true);
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('Camera access error:', err);
-        setCameraError(true);
+        if (err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError') {
+          setCameraError('Camera access denied. Please allow camera access in your browser settings.');
+        } else if (err?.name === 'NotFoundError' || err?.name === 'DevicesNotFoundError') {
+          setCameraError('No camera found on this device.');
+        } else {
+          setCameraError(err?.message || 'Could not access camera.');
+        }
       }
     }
 
@@ -183,6 +191,14 @@ const GearCaptureGuide: React.FC<GearCaptureGuideProps> = ({ isOpen, onClose, on
       setIsStreaming(false);
     };
   }, [isOpen]);
+
+  /* ── Re-attach stream when step changes (video element remounts) ── */
+  useEffect(() => {
+    if ((step === 1 || step === 2) && streamRef.current && videoRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current.play().catch(() => {});
+    }
+  }, [step]);
 
   /* ── Capture from canvas ───────────────────────────────────── */
   const captureFrame = useCallback((): string | null => {
@@ -257,7 +273,7 @@ const GearCaptureGuide: React.FC<GearCaptureGuideProps> = ({ isOpen, onClose, on
     setStep(1);
     setFrontImage(null);
     setLabelImage(null);
-    setCameraError(false);
+    setCameraError(null);
     setIsTransitioning(false);
     onClose();
   }, [onClose]);
@@ -285,7 +301,7 @@ const GearCaptureGuide: React.FC<GearCaptureGuideProps> = ({ isOpen, onClose, on
       role="dialog"
       aria-modal="true"
       aria-label="Guided gear photo capture"
-      className="fixed inset-0 z-50 flex flex-col bg-th-bg outline-none"
+      className="fixed inset-0 z-[60] flex flex-col bg-th-bg outline-none"
     >
       {/* Live region for step announcements */}
       <div aria-live="polite" className="sr-only">
@@ -333,9 +349,15 @@ const GearCaptureGuide: React.FC<GearCaptureGuideProps> = ({ isOpen, onClose, on
             <div className="flex-1 relative bg-black flex items-center justify-center overflow-hidden">
               {cameraError ? (
                 <div className="text-center px-6">
-                  <p className="text-th-text3 text-sm">
-                    Camera access denied. Close and use Upload Image instead.
-                  </p>
+                  <p className="text-th-text3 text-sm mb-4">{cameraError}</p>
+                  {onUploadFallback && (
+                    <button
+                      onClick={onUploadFallback}
+                      className="border border-th-surface/[0.10] text-th-text font-bold py-2.5 px-6 rounded-xl hover:bg-th-surface/[0.08] transition-all uppercase tracking-[0.2em] text-[10px]"
+                    >
+                      Upload Photo Instead
+                    </button>
+                  )}
                 </div>
               ) : (
                 <>
@@ -343,6 +365,7 @@ const GearCaptureGuide: React.FC<GearCaptureGuideProps> = ({ isOpen, onClose, on
                     ref={videoRef}
                     autoPlay
                     playsInline
+                    muted
                     className={`w-full h-full object-cover${facingMode === 'user' ? ' scale-x-[-1]' : ''}`}
                   />
                   {!isStreaming && (
@@ -407,9 +430,15 @@ const GearCaptureGuide: React.FC<GearCaptureGuideProps> = ({ isOpen, onClose, on
             <div className="flex-1 relative bg-black flex items-center justify-center overflow-hidden">
               {cameraError ? (
                 <div className="text-center px-6">
-                  <p className="text-th-text3 text-sm">
-                    Camera access denied. Close and use Upload Image instead.
-                  </p>
+                  <p className="text-th-text3 text-sm mb-4">{cameraError}</p>
+                  {onUploadFallback && (
+                    <button
+                      onClick={onUploadFallback}
+                      className="border border-th-surface/[0.10] text-th-text font-bold py-2.5 px-6 rounded-xl hover:bg-th-surface/[0.08] transition-all uppercase tracking-[0.2em] text-[10px]"
+                    >
+                      Upload Photo Instead
+                    </button>
+                  )}
                 </div>
               ) : (
                 <>
@@ -417,6 +446,7 @@ const GearCaptureGuide: React.FC<GearCaptureGuideProps> = ({ isOpen, onClose, on
                     ref={videoRef}
                     autoPlay
                     playsInline
+                    muted
                     className={`w-full h-full object-cover${facingMode === 'user' ? ' scale-x-[-1]' : ''}`}
                   />
                   {!isStreaming && (

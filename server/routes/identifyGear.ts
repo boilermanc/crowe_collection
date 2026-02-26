@@ -6,6 +6,7 @@ import { createRateLimit } from '../middleware/rateLimit.js';
 import { validateBase64Size } from '../middleware/validate.js';
 import { ai } from '../lib/gemini.js';
 import { getSubscription, incrementScanCount, PLAN_LIMITS } from '../lib/subscription.js';
+import { retryWithBackoff, isRetryableError } from '../utils/retry.js';
 import { GEAR_CATEGORIES } from '../../types.js';
 
 const router = Router();
@@ -75,7 +76,7 @@ router.post(
 
       const categoryList = GEAR_CATEGORIES.join(', ');
 
-      const response = await withTimeout(ai.models.generateContent({
+      const response = await withTimeout(retryWithBackoff(() => ai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: {
           parts: [
@@ -117,7 +118,7 @@ If you cannot identify the gear, return null for all fields.`,
             required: ['category', 'brand', 'model', 'year', 'description', 'specs', 'manual_search_query'],
           },
         },
-      }), GEMINI_TIMEOUT_MS);
+      })), GEMINI_TIMEOUT_MS);
 
       const raw = response.text || '{}';
       let data: Record<string, unknown>;
@@ -187,10 +188,12 @@ If you cannot identify the gear, return null for all fields.`,
         catalog_id,
       });
     } catch (error) {
-      console.error('Gemini Gear Identification Error:', error);
+      console.error('Gemini Gear Identification Error:', error instanceof Error ? error.message : error);
       const msg = error instanceof Error ? error.message : '';
       if (msg.includes('timed out')) {
         res.status(504).json({ error: 'AI identification timed out. Try a smaller or clearer image.' });
+      } else if (isRetryableError(error)) {
+        res.status(503).json({ success: false, error: 'gemini_unavailable', message: 'AI service is temporarily busy. Please try again in a moment.' });
       } else {
         res.status(500).json({ error: 'Failed to identify gear' });
       }

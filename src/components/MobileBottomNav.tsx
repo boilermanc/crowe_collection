@@ -59,10 +59,35 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
         <div className="mx-3 mb-2 bg-th-nav-bg/95 backdrop-blur-xl rounded-2xl border border-th-nav-text/[0.15] overflow-hidden shadow-2xl">
+          {/* Spins */}
+          <button
+            onClick={() => { onNavigate('spins'); setIsMoreOpen(false); }}
+            className={`flex items-center gap-4 w-full px-5 py-3.5 text-left active:bg-th-nav-text/[0.10] transition-colors ${
+              currentView === 'spins' ? 'bg-th-nav-text/[0.08]' : ''
+            }`}
+          >
+            <svg className="w-5 h-5 text-th-nav-text/80 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 8.5a6 6 0 0 1 12 0c0 3-2 4.5-2 7a2 2 0 0 1-2 2h-1a1 1 0 0 1-1-1v-1" />
+              <path d="M10.5 8.5a1.5 1.5 0 0 1 3 0c0 1.5-1.5 2-1.5 3.5" />
+            </svg>
+            <span className={`text-sm font-label tracking-wide ${currentView === 'spins' ? 'text-[#dd6e42]' : 'text-th-nav-text'}`}>Spins</span>
+          </button>
+
+          {/* Value Dashboard */}
+          <button
+            onClick={() => { onNavigate('value-dashboard'); setIsMoreOpen(false); }}
+            className={`flex items-center gap-4 w-full px-5 py-3.5 text-left active:bg-th-nav-text/[0.10] transition-colors border-t border-th-nav-text/[0.08] ${
+              currentView === 'value-dashboard' ? 'bg-th-nav-text/[0.08]' : ''
+            }`}
+          >
+            <TrendingUp className="w-5 h-5 text-th-nav-text/80 flex-shrink-0" />
+            <span className={`text-sm font-label tracking-wide ${currentView === 'value-dashboard' ? 'text-[#dd6e42]' : 'text-th-nav-text'}`}>Collection Value</span>
+          </button>
+
           {/* Browse Discogs */}
           <button
             onClick={() => { onNavigate('discogs'); setIsMoreOpen(false); }}
-            className={`flex items-center gap-4 w-full px-5 py-3.5 text-left active:bg-th-nav-text/[0.10] transition-colors ${
+            className={`flex items-center gap-4 w-full px-5 py-3.5 text-left active:bg-th-nav-text/[0.10] transition-colors border-t border-th-nav-text/[0.08] ${
               currentView === 'discogs' ? 'bg-th-nav-text/[0.08]' : ''
             }`}
           >

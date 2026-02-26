@@ -5,6 +5,7 @@ import { createRateLimit } from '../middleware/rateLimit.js';
 import { validateBase64Size } from '../middleware/validate.js';
 import { ai } from '../lib/gemini.js';
 import { getSubscription, incrementScanCount, PLAN_LIMITS } from '../lib/subscription.js';
+import { retryWithBackoff, isRetryableError } from '../utils/retry.js';
 import { searchDiscogs } from '../services/discogsService.js';
 import type { DiscogsMatch } from '../../types.js';
 
@@ -98,7 +99,7 @@ router.post(
         ? 'This image is a close-up of a barcode. Focus on extracting the barcode number accurately. Also attempt to identify the album if any text or artwork is visible. '
         : '';
 
-      const response = await withTimeout(ai.models.generateContent({
+      const response = await withTimeout(retryWithBackoff(() => ai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: {
           parts: [
@@ -130,7 +131,7 @@ router.post(
             required: ['artist', 'title', 'format', 'barcodes']
           }
         }
-      }), GEMINI_TIMEOUT_MS);
+      })), GEMINI_TIMEOUT_MS);
 
       const rawText = response.text || '{}';
       const data = JSON.parse(rawText);
@@ -214,6 +215,8 @@ router.post(
       const msg = error instanceof Error ? error.message : '';
       if (msg.includes('timed out')) {
         res.status(504).json({ error: 'AI identification timed out. Try a smaller or clearer image.' });
+      } else if (isRetryableError(error)) {
+        res.status(503).json({ success: false, error: 'gemini_unavailable', message: 'AI service is temporarily busy. Please try again in a moment.' });
       } else {
         res.status(500).json({ error: 'Failed to identify album' });
       }

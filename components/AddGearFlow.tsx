@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { NewGear, Gear, IdentifiedGear } from '../types';
 import { geminiService, ScanLimitError, UpgradeRequiredError, GearLimitError, checkGearLimit } from '../services/geminiService';
 import { gearService } from '../services/gearService';
@@ -29,9 +29,15 @@ const AddGearFlow: React.FC<AddGearFlowProps> = ({
 }) => {
   const { showToast } = useToast();
   const { canUse } = useSubscription();
+  const [currentMode, setCurrentMode] = useState(mode);
   const [flowStep, setFlowStep] = useState<FlowStep>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [identifiedGear, setIdentifiedGear] = useState<IdentifiedGear | null>(null);
+
+  // Sync mode with prop when re-opening
+  useEffect(() => {
+    if (isOpen) setCurrentMode(mode);
+  }, [isOpen, mode]);
 
   const resetFlow = useCallback(() => {
     setFlowStep(null);
@@ -115,7 +121,7 @@ const AddGearFlow: React.FC<AddGearFlowProps> = ({
     <>
       {/* Guided capture/upload step */}
       {effectiveStep === 'capture' && (
-        mode === 'upload' ? (
+        currentMode === 'upload' ? (
           <GearUploadGuide
             isOpen={true}
             onComplete={handleCaptureComplete}
@@ -126,6 +132,7 @@ const AddGearFlow: React.FC<AddGearFlowProps> = ({
             isOpen={true}
             onComplete={handleCaptureComplete}
             onClose={resetFlow}
+            onUploadFallback={() => setCurrentMode('upload')}
           />
         )
       )}

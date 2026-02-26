@@ -232,7 +232,7 @@ const GearUploadGuide: React.FC<GearUploadGuideProps> = ({ isOpen, onClose, onCo
       role="dialog"
       aria-modal="true"
       aria-label="Upload gear photos"
-      className="fixed inset-0 z-50 flex flex-col bg-th-bg outline-none"
+      className="fixed inset-0 z-[60] flex flex-col bg-th-bg outline-none"
     >
       {/* Live region for step announcements */}
       <div aria-live="polite" className="sr-only">

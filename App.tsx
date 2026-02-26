@@ -80,6 +80,7 @@ const App: React.FC = () => {
   const scanTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const scanTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
   const [showStats, setShowStats] = useState(false);
@@ -605,6 +606,11 @@ const App: React.FC = () => {
         base64,
       });
     } catch (err) {
+      clearScanTimers();
+      // User cancelled — handleCancelScan already reset state & toasted
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        return;
+      }
       if (err instanceof IdentificationFailedError) {
         setShowScanFailed(true);
       } else if (err instanceof ScanLimitError) {
@@ -923,15 +929,27 @@ const App: React.FC = () => {
             </button>
             <div className="flex-1 relative">
               <input
+                ref={searchInputRef}
                 type="text"
                 placeholder="Search crate..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-th-surface/[0.04] border border-th-surface/[0.10] rounded-full pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#dd6e42]/50 transition-all placeholder:text-th-text3/50"
+                className={`w-full bg-th-surface/[0.04] border border-th-surface/[0.10] rounded-full pl-10 ${searchQuery ? 'pr-9' : 'pr-4'} py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#dd6e42]/50 transition-all placeholder:text-th-text3/50`}
               />
               <svg className="absolute left-3.5 top-3 w-4 h-4 text-th-text3/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
+              {searchQuery && (
+                <button
+                  onClick={() => { setSearchQuery(''); searchInputRef.current?.focus(); }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-th-text3/50 hover:text-th-text2 active:text-th-text transition-colors"
+                  aria-label="Clear search"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 6L6 18M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
             </div>
             <button
               onClick={() => setCurrentView(currentView === 'list' ? 'grid' : 'list')}
@@ -1172,7 +1190,38 @@ const App: React.FC = () => {
             <p className={`font-label ${processingStatus === 'Already Cataloged!' ? 'text-[#6a8c9a]' : 'text-[#dd6e42]'} text-xl md:text-2xl font-bold animate-pulse tracking-[0.3em] uppercase transition-colors duration-500`}>
               {processingStatus}
             </p>
+            {scanElapsed > 0 && (
+              <p className="text-th-text3/50 text-xs mt-2 font-mono">({scanElapsed}s)</p>
+            )}
           </div>
+
+          {/* Timeout prompt */}
+          {scanTimedOut ? (
+            <div className="mt-8 text-center space-y-3">
+              <p className="text-th-text3 text-sm">Taking longer than expected…</p>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={handleKeepWaiting}
+                  className="px-5 py-2.5 rounded-xl border border-th-surface/[0.10] text-th-text text-xs font-bold uppercase tracking-[0.15em] hover:bg-th-surface/[0.08] transition-all"
+                >
+                  Keep Waiting
+                </button>
+                <button
+                  onClick={handleCancelScan}
+                  className="px-5 py-2.5 rounded-xl bg-[#dd6e42] text-th-text text-xs font-bold uppercase tracking-[0.15em] hover:bg-[#c45a30] transition-all"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={handleCancelScan}
+              className="mt-8 px-5 py-2.5 rounded-xl border border-th-surface/[0.10] text-th-text3 text-xs font-bold uppercase tracking-[0.15em] hover:text-th-text hover:bg-th-surface/[0.08] transition-all"
+            >
+              Cancel
+            </button>
+          )}
         </div>
       )}
 
