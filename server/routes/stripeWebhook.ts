@@ -60,7 +60,7 @@ async function findProfileByCustomerId(
 
 // This route expects raw body for Stripe signature verification.
 // It is mounted BEFORE express.json() in server/index.ts via express.raw().
-router.post('/api/stripe-webhook', async (req, res) => {
+router.post('/api/stripe/webhook', async (req, res) => {
   const sig = req.headers['stripe-signature'];
   if (!sig) {
     console.warn('Webhook: missing stripe-signature header');

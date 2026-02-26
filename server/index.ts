@@ -115,7 +115,7 @@ app.use(cors({
 }));
 
 // Stripe webhooks need raw body for signature verification — mount BEFORE json parser
-app.use('/api/stripe-webhook', express.raw({ type: 'application/json' }));
+app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }));
 try { app.use(stripeWebhookRouter); } catch (err) { console.error('[boot] FAILED to mount stripeWebhookRouter:', err); }
 app.use('/api/sellr/checkout/webhook', express.raw({ type: 'application/json' }));
 

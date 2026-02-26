@@ -150,7 +150,7 @@ Accessed via album card click → modal overlay.
 
 ### Stripe Integration
 - `POST /api/checkout` — Creates Stripe Checkout session
-- `POST /api/stripe-webhook` — Processes subscription events
+- `POST /api/stripe/webhook` — Processes subscription events
 - `GET /api/prices` — Fetches live pricing for landing page
 - Customer billing portal for self-service management
 - 14-day free trial on paid tiers
@@ -280,7 +280,7 @@ Protected by password (`ADMIN_PASSWORD` env var), session in localStorage.
 | `/api/subscription` | GET | Bearer | Current plan status |
 | `/api/prices` | GET | None | Stripe pricing |
 | `/api/checkout` | POST | Bearer | Create checkout session |
-| `/api/stripe-webhook` | POST | Stripe Sig | Webhook events |
+| `/api/stripe/webhook` | POST | Stripe Sig | Webhook events |
 
 ### Content APIs
 | Endpoint | Method | Auth | Purpose |
