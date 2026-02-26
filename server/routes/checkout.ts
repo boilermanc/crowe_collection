@@ -223,19 +223,6 @@ router.post(
         expand: ['latest_invoice.payment_intent'],
       });
 
-      // Temporary debug logging
-      const _debugInvoice = subscription.latest_invoice as any;
-      console.log('Subscribe debug:', JSON.stringify({
-        subscriptionId: subscription.id,
-        subscriptionStatus: subscription.status,
-        invoiceId: _debugInvoice?.id,
-        invoiceStatus: _debugInvoice?.status,
-        invoiceAmountDue: _debugInvoice?.amount_due,
-        paymentIntentId: _debugInvoice?.payment_intent?.id,
-        paymentIntentStatus: _debugInvoice?.payment_intent?.status,
-        collectionMethod: subscription.collection_method,
-      }, null, 2));
-
       // If subscription is already active (e.g. $0 invoice), treat as success
       if (subscription.status === 'active') {
         res.status(200).json({ alreadyActive: true, subscriptionId: subscription.id });
@@ -243,22 +230,41 @@ router.post(
       }
 
       const invoice = subscription.latest_invoice as Stripe.Invoice;
-      const paymentIntent = invoice.payment_intent as Stripe.PaymentIntent;
+      let paymentIntent = invoice?.payment_intent as Stripe.PaymentIntent | null;
 
-      if (!paymentIntent?.client_secret) {
-        console.error('Subscribe: missing client_secret', {
+      // If PaymentIntent not expanded on subscription create, retrieve invoice directly
+      if (!paymentIntent && invoice?.id) {
+        const expandedInvoice = await stripe.invoices.retrieve(invoice.id, {
+          expand: ['payment_intent'],
+        });
+        paymentIntent = expandedInvoice.payment_intent as Stripe.PaymentIntent | null;
+      }
+
+      // Debug log — remove after confirmed working
+      const debugInvoice = subscription.latest_invoice as any;
+      console.log('Subscribe debug:', JSON.stringify({
+        subscriptionId: subscription.id,
+        subscriptionStatus: subscription.status,
+        invoiceId: debugInvoice?.id,
+        invoiceAmountDue: debugInvoice?.amount_due,
+        paymentIntentId: paymentIntent?.id,
+        paymentIntentStatus: paymentIntent?.status,
+        clientSecretExists: !!paymentIntent?.client_secret,
+      }, null, 2));
+
+      const clientSecret = paymentIntent?.client_secret;
+
+      if (!clientSecret) {
+        console.error('Subscribe: missing client_secret after fallback', {
           subscriptionId: subscription.id,
-          invoiceId: invoice.id,
-          invoiceStatus: invoice.status,
-          paymentIntentType: typeof invoice.payment_intent,
+          invoiceId: debugInvoice?.id,
           paymentIntentId: paymentIntent?.id,
         });
-        res.status(500).json({ error: 'Failed to create payment intent' });
-        return;
+        return res.status(500).json({ error: 'Failed to create payment intent' });
       }
 
       res.status(200).json({
-        clientSecret: paymentIntent.client_secret,
+        clientSecret,
         subscriptionId: subscription.id,
       });
     } catch (error) {
