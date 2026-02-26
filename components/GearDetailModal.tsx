@@ -6,6 +6,7 @@ import { geminiService } from '../services/geminiService';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useToast } from '../contexts/ToastContext';
 import { useSubscription } from '../contexts/SubscriptionContext';
+import { getGearImage } from '../src/constants/gearCategoryImages';
 
 const CATEGORY_LABELS: Record<GearCategory, string> = {
   turntable: 'Turntable',
@@ -135,6 +136,7 @@ const GearDetailModal: React.FC<GearDetailModalProps> = ({
   if (!isOpen || !gear) return null;
 
   const imageUrl = gear.image_url || gear.original_photo_url;
+  const gearImageSrc = getGearImage(gear.image_url, gear.category);
   const label = CATEGORY_LABELS[gear.category] || gear.category;
   const specs = gear.specs && typeof gear.specs === 'object' ? gear.specs : {};
   const specEntries = Object.entries(specs);
@@ -390,6 +392,13 @@ const GearDetailModal: React.FC<GearDetailModalProps> = ({
                 )}
               </button>
             </>
+          ) : gearImageSrc ? (
+            <img
+              src={gearImageSrc}
+              alt={`${gear.category} category`}
+              loading="lazy"
+              className="w-full h-full object-cover"
+            />
           ) : (
             <div className="flex flex-col items-center gap-3">
               <HeroPlaceholderIcon category={gear.category} />
