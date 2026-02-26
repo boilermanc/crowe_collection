@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Gear, SetupGuide, GearCategory } from '../types';
 import { gearService } from '../services/gearService';
 import { geminiService, UpgradeRequiredError } from '../services/geminiService';
+import { supabase } from '../services/supabaseService';
 import { useToast } from '../contexts/ToastContext';
 import { useSubscription } from '../contexts/SubscriptionContext';
 import AddGearFlow from './AddGearFlow';
@@ -12,6 +13,42 @@ import GearCard from './GearCard';
 import GearDetailModal from './GearDetailModal';
 import SetupGuideModal from './SetupGuideModal';
 import SpinningRecord from './SpinningRecord';
+
+interface SavedGuide {
+  id: string;
+  name: string;
+  created_at: string;
+  updated_at: string;
+}
+
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (supabase) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      headers['Authorization'] = `Bearer ${session.access_token}`;
+      return headers;
+    }
+  }
+  const secret = import.meta.env.VITE_API_SECRET;
+  if (secret) headers['Authorization'] = `Bearer ${secret}`;
+  return headers;
+}
+
+function formatTimeAgo(dateStr: string): string {
+  const now = Date.now();
+  const then = new Date(dateStr).getTime();
+  const seconds = Math.floor((now - then) / 1000);
+  if (seconds < 60) return 'just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d ago`;
+  const months = Math.floor(days / 30);
+  return `${months}mo ago`;
+}
 
 type SortMode = 'position' | 'brand' | 'newest' | 'category';
 
@@ -61,6 +98,11 @@ const StakkdPage: React.FC<StakkdPageProps> = ({ onUpgradeRequired }) => {
   const [hintDismissed, setHintDismissed] = useState(false);
   const [activeCategory, setActiveCategory] = useState<GearCategory | null>(null);
   const [sortMode, setSortMode] = useState<SortMode>('position');
+
+  // Saved guides state
+  const [savedGuides, setSavedGuides] = useState<SavedGuide[]>([]);
+  const [isLoadingGuides, setIsLoadingGuides] = useState(false);
+  const [loadingSavedGuideId, setLoadingSavedGuideId] = useState<string | null>(null);
 
   const isFreeTier = gearLimit !== -1;
   const gearLimitReached = subGearLimitReached;
@@ -121,6 +163,82 @@ const StakkdPage: React.FC<StakkdPageProps> = ({ onUpgradeRequired }) => {
   useEffect(() => {
     fetchGear();
   }, [fetchGear]);
+
+  // ── Saved Guides ──────────────────────────────────────────────────
+
+  const fetchSavedGuides = useCallback(async () => {
+    setIsLoadingGuides(true);
+    try {
+      const headers = await getAuthHeaders();
+      const resp = await fetch('/api/setup-guides', { headers });
+      if (resp.ok) {
+        const data = await resp.json();
+        setSavedGuides(data.guides || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch saved guides:', err);
+    } finally {
+      setIsLoadingGuides(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSavedGuides();
+  }, [fetchSavedGuides]);
+
+  const handleSaveGuide = useCallback(async (name: string) => {
+    if (!setupGuide) throw new Error('No guide to save');
+    const headers = await getAuthHeaders();
+    const gearSnapshot = gear.map(g => ({
+      category: g.category,
+      brand: g.brand,
+      model: g.model,
+      specs: g.specs,
+    }));
+    const resp = await fetch('/api/setup-guides', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ name, gear_snapshot: gearSnapshot, guide: setupGuide }),
+    });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({ error: `HTTP ${resp.status}` }));
+      throw new Error(err.error || `HTTP ${resp.status}`);
+    }
+    fetchSavedGuides();
+  }, [setupGuide, gear, fetchSavedGuides]);
+
+  const handleDeleteSavedGuide = useCallback(async (id: string) => {
+    try {
+      const headers = await getAuthHeaders();
+      const resp = await fetch(`/api/setup-guides/${id}`, { method: 'DELETE', headers });
+      if (resp.ok || resp.status === 204) {
+        setSavedGuides(prev => prev.filter(g => g.id !== id));
+        showToast('Guide deleted.', 'success');
+      } else {
+        showToast('Failed to delete guide.', 'error');
+      }
+    } catch (err) {
+      console.error('Failed to delete saved guide:', err);
+      showToast('Failed to delete guide.', 'error');
+    }
+  }, [showToast]);
+
+  const handleOpenSavedGuide = useCallback(async (id: string) => {
+    setLoadingSavedGuideId(id);
+    try {
+      const headers = await getAuthHeaders();
+      const resp = await fetch(`/api/setup-guides/${id}`, { headers });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
+      setSetupGuide(data.guide as SetupGuide);
+      setIsGuideModalOpen(true);
+    } catch (err) {
+      console.error('Failed to load saved guide:', err);
+      showToast('Failed to load guide.', 'error');
+    } finally {
+      setLoadingSavedGuideId(null);
+    }
+  }, [showToast]);
 
   const handleGearSaved = useCallback((saved: Gear) => {
     setGear(prev => [...prev, saved]);
@@ -532,6 +650,49 @@ const StakkdPage: React.FC<StakkdPageProps> = ({ onUpgradeRequired }) => {
         </div>
       )}
 
+      {/* Saved Guides */}
+      {savedGuides.length > 0 && (
+        <div className="mb-6 rounded-xl border border-th-surface/[0.10] bg-th-surface/[0.03] p-4">
+          <h4 className="text-th-text3/70 text-[9px] font-label tracking-[0.3em] uppercase mb-3">Saved Guides</h4>
+          <div className="space-y-2">
+            {savedGuides.map((g) => (
+              <div
+                key={g.id}
+                className="flex items-center gap-3 group"
+              >
+                <button
+                  onClick={() => handleOpenSavedGuide(g.id)}
+                  disabled={loadingSavedGuideId === g.id}
+                  className="flex-1 flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-th-surface/[0.06] transition-all text-left disabled:opacity-50"
+                >
+                  {loadingSavedGuideId === g.id ? (
+                    <svg className="w-3.5 h-3.5 text-[#dd6e42] animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-3.5 h-3.5 text-[#dd6e42]/60 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+                    </svg>
+                  )}
+                  <span className="text-th-text text-sm font-medium truncate">{g.name}</span>
+                  <span className="text-th-text3/40 text-[10px] tracking-widest ml-auto shrink-0">{formatTimeAgo(g.created_at)}</span>
+                </button>
+                <button
+                  onClick={() => handleDeleteSavedGuide(g.id)}
+                  className="opacity-0 group-hover:opacity-100 p-1 text-th-text3/40 hover:text-red-400 transition-all shrink-0"
+                  aria-label={`Delete ${g.name}`}
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* First-time hint — visible for 1-2 gear items */}
       {gear.length >= 1 && gear.length <= 2 && !hintDismissed && (
         <div className="mb-4 rounded-xl border border-th-surface/[0.15] bg-th-surface/[0.05] px-4 py-3 flex items-center gap-3">
@@ -685,6 +846,7 @@ const StakkdPage: React.FC<StakkdPageProps> = ({ onUpgradeRequired }) => {
         loading={isGuideLoading}
         isOpen={isGuideModalOpen}
         onClose={() => { setIsGuideModalOpen(false); setSetupGuide(null); }}
+        onSave={handleSaveGuide}
       />
 
       {/* Upgrade banner for free-tier users */}

@@ -1,5 +1,5 @@
 
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useCallback, useState } from 'react';
 import { SetupGuide } from '../types';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import SpinningRecord from './SpinningRecord';
@@ -9,12 +9,44 @@ interface SetupGuideModalProps {
   loading: boolean;
   isOpen: boolean;
   onClose: () => void;
+  onSave?: (name: string) => Promise<void>;
 }
 
-const SetupGuideModal: React.FC<SetupGuideModalProps> = ({ guide, loading, isOpen, onClose }) => {
+const SetupGuideModal: React.FC<SetupGuideModalProps> = ({ guide, loading, isOpen, onClose, onSave }) => {
   const modalRef = useRef<HTMLDivElement>(null);
   const stableOnClose = useCallback(onClose, [onClose]);
   useFocusTrap(modalRef, stableOnClose);
+
+  // Save UI state
+  const [showSaveInput, setShowSaveInput] = useState(false);
+  const [saveName, setSaveName] = useState('My Setup Guide');
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const handleSave = async () => {
+    if (!onSave || !saveName.trim()) return;
+    setSaving(true);
+    setSaveError(false);
+    try {
+      await onSave(saveName.trim());
+      setSaveSuccess(true);
+      setTimeout(() => {
+        setSaveSuccess(false);
+        setShowSaveInput(false);
+      }, 2000);
+    } catch {
+      setSaveError(true);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancelSave = () => {
+    setShowSaveInput(false);
+    setSaveError(false);
+    setSaveName('My Setup Guide');
+  };
 
   if (!isOpen) return null;
 
@@ -41,13 +73,78 @@ const SetupGuideModal: React.FC<SetupGuideModalProps> = ({ guide, loading, isOpe
 
         {/* Header */}
         <div className="p-6 pb-0 flex-shrink-0">
-          <h2 className="font-label text-lg md:text-2xl font-bold tracking-tighter text-th-text">
-            How to Connect
-          </h2>
-          <p className="text-th-text3 text-[10px] uppercase tracking-widest mt-1">
-            Setup Guide
-          </p>
+          <div className="flex items-center gap-3">
+            <div>
+              <h2 className="font-label text-lg md:text-2xl font-bold tracking-tighter text-th-text">
+                How to Connect
+              </h2>
+              <p className="text-th-text3 text-[10px] uppercase tracking-widest mt-1">
+                Setup Guide
+              </p>
+            </div>
+            {onSave && !loading && guide && !showSaveInput && !saveSuccess && (
+              <button
+                onClick={() => setShowSaveInput(true)}
+                className="ml-auto mr-12 inline-flex items-center gap-1.5 border border-th-surface/[0.15] text-th-text3 font-bold py-1.5 px-3 rounded-lg hover:border-th-surface/[0.3] hover:text-th-text2 transition-all uppercase tracking-[0.15em] text-[9px]"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+                </svg>
+                Save
+              </button>
+            )}
+          </div>
         </div>
+
+        {/* Save input bar */}
+        {showSaveInput && (
+          <div className="mx-6 mt-4 flex items-center gap-2">
+            <input
+              type="text"
+              value={saveName}
+              onChange={(e) => setSaveName(e.target.value)}
+              placeholder="Guide name"
+              autoFocus
+              onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') handleCancelSave(); }}
+              className="flex-1 bg-th-surface/[0.04] border border-th-surface/[0.10] rounded-lg px-3 py-2 text-sm text-th-text placeholder:text-th-text3/50 focus:outline-none focus:ring-1 focus:ring-[#dd6e42]/50"
+            />
+            <button
+              onClick={handleSave}
+              disabled={saving || !saveName.trim()}
+              className="inline-flex items-center gap-1.5 bg-[#dd6e42] text-th-text font-bold py-2 px-3 rounded-lg hover:bg-[#c45e38] transition-all uppercase tracking-[0.15em] text-[9px] disabled:opacity-40"
+            >
+              {saving ? (
+                <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+              ) : 'Save'}
+            </button>
+            <button
+              onClick={handleCancelSave}
+              className="text-th-text3 hover:text-th-text transition-colors text-[9px] uppercase tracking-widest font-bold py-2 px-2"
+            >
+              Cancel
+            </button>
+          </div>
+        )}
+
+        {/* Save success indicator */}
+        {saveSuccess && (
+          <div className="mx-6 mt-4 flex items-center gap-2 text-green-400 text-xs">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+            </svg>
+            Guide saved
+          </div>
+        )}
+
+        {/* Save error */}
+        {saveError && (
+          <div className="mx-6 mt-2 text-red-400 text-xs">
+            Failed to save
+          </div>
+        )}
 
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
