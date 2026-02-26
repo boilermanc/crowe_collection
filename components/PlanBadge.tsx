@@ -171,10 +171,10 @@ const PlanBadge: React.FC<PlanBadgeProps> = ({ albumCount, onUpgrade }) => {
           <button
             onClick={() => { setIsOpen(false); onUpgrade(); }}
             aria-label={`Free trial: ${trialDaysLeft} days remaining`}
-            className={`ml-1.5 text-xs px-2 py-0.5 rounded-full border cursor-pointer transition-all hover:brightness-110 ${
+            className={`ml-1.5 text-sm font-bold px-3 py-1 rounded-full cursor-pointer transition-all hover:brightness-110 ${
               isUrgent
-                ? 'bg-red-500/20 text-red-400 border-red-500/30'
-                : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                ? 'bg-red-500 text-white'
+                : 'bg-amber-500 text-white'
             }`}
           >
             {trialDaysLeft}d left

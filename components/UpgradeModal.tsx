@@ -66,6 +66,7 @@ interface UpgradeModalProps {
   onClose: () => void;
   feature?: string;
   defaultPriceId?: string;
+  onSuccess?: (planName: string) => void;
 }
 
 type ModalStep = 'plan_select' | 'loading' | 'payment';
@@ -185,7 +186,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ priceLabel, onSuccess }) => {
 
 // ── Main modal ──────────────────────────────────────────────────────
 
-const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, feature, defaultPriceId }) => {
+const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, feature, defaultPriceId, onSuccess }) => {
   const modalRef = useRef<HTMLDivElement>(null);
   useFocusTrap(modalRef, onClose);
 
@@ -199,6 +200,7 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, feature, d
   const [step, setStep] = useState<ModalStep>('plan_select');
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [selectedPriceLabel, setSelectedPriceLabel] = useState('');
+  const [selectedTierName, setSelectedTierName] = useState('');
 
   // Context-aware button labels
   const alreadyHasPlan = isTrialing || plan !== 'collector';
@@ -269,11 +271,16 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, feature, d
       (async () => {
         setStep('loading');
         setSelectedPriceLabel(label);
+        setSelectedTierName(tier);
         const result = await createSubscription(priceObj.priceId);
         if (result?.alreadyActive) {
-          onClose();
           refreshSubscription().then(() => {
-            showToast('Welcome! Your subscription is now active.', 'success');
+            if (onSuccess) {
+              onSuccess(tier);
+            } else {
+              onClose();
+              showToast('Welcome! Your subscription is now active.', 'success');
+            }
           });
         } else if (result?.clientSecret) {
           setClientSecret(result.clientSecret);
@@ -286,11 +293,23 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, feature, d
       console.error('[upgrade-modal] could not resolve priceId for', { tier, interval, tierData });
       setStep('plan_select');
     }
-  }, [isOpen, defaultPriceId, pricing, createSubscription, onClose, refreshSubscription, showToast]);
+  }, [isOpen, defaultPriceId, pricing, createSubscription, onClose, refreshSubscription, showToast, onSuccess]);
 
-  const handleSelectPlan = useCallback(async (priceId: string, priceLabel: string) => {
+  const handlePaymentSuccess = useCallback(() => {
+    refreshSubscription().then(() => {
+      if (onSuccess) {
+        onSuccess(selectedTierName);
+      } else {
+        onClose();
+        showToast('Welcome! Your subscription is now active.', 'success');
+      }
+    });
+  }, [onClose, refreshSubscription, showToast, onSuccess, selectedTierName]);
+
+  const handleSelectPlan = useCallback(async (priceId: string, priceLabel: string, tierName: string) => {
     setStep('loading');
     setSelectedPriceLabel(priceLabel);
+    setSelectedTierName(tierName);
 
     const result = await createSubscription(priceId);
     if (result?.alreadyActive) {
@@ -303,14 +322,7 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, feature, d
       // createSubscription already showed a toast on failure
       setStep('plan_select');
     }
-  }, [createSubscription]);
-
-  const handlePaymentSuccess = useCallback(() => {
-    onClose();
-    refreshSubscription().then(() => {
-      showToast('Welcome! Your subscription is now active.', 'success');
-    });
-  }, [onClose, refreshSubscription, showToast]);
+  }, [createSubscription, handlePaymentSuccess]);
 
   const elementsOptions = useMemo(() => {
     if (!clientSecret) return null;
@@ -471,7 +483,7 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, feature, d
                   ))}
                 </ul>
                 <button
-                  onClick={() => curatorPriceId && handleSelectPlan(curatorPriceId, `$${curatorPrice}${intervalLabel}`)}
+                  onClick={() => curatorPriceId && handleSelectPlan(curatorPriceId, `$${curatorPrice}${intervalLabel}`, 'curator')}
                   disabled={isLoading || !curatorPriceId}
                   className="w-full rounded-xl bg-[#4f6d7a] px-4 py-2.5 text-[10px] font-label tracking-widest uppercase text-white font-bold hover:bg-[#3a525d] transition-all disabled:opacity-50"
                 >
@@ -498,7 +510,7 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, feature, d
                   ))}
                 </ul>
                 <button
-                  onClick={() => enthusiastPriceId && handleSelectPlan(enthusiastPriceId, `$${enthusiastPrice}${intervalLabel}`)}
+                  onClick={() => enthusiastPriceId && handleSelectPlan(enthusiastPriceId, `$${enthusiastPrice}${intervalLabel}`, 'enthusiast')}
                   disabled={isLoading || !enthusiastPriceId}
                   className="w-full rounded-xl border border-[#dd6e42] px-4 py-2.5 text-[10px] font-label tracking-widest uppercase text-[#dd6e42] font-bold hover:bg-[#dd6e42] hover:text-white transition-all disabled:opacity-50"
                 >

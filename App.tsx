@@ -26,6 +26,7 @@ import UpgradeModal from './components/UpgradeModal';
 import DuplicateAlbumModal from './components/DuplicateAlbumModal';
 import ScanConfirmModal from './components/ScanConfirmModal';
 import ScanFailedModal from './components/ScanFailedModal';
+import SubscriptionSuccessModal from './components/SubscriptionSuccessModal';
 import SubscriptionBanner from './components/SubscriptionBanner';
 import PlanBadge from './components/PlanBadge';
 import ErrorPage from './components/ErrorPage';
@@ -70,6 +71,8 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [upgradeFeature, setUpgradeFeature] = useState<string | null>(null);
   const [pendingPriceId, setPendingPriceId] = useState<string | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successPlanName, setSuccessPlanName] = useState('');
   const [showPricingPage, setShowPricingPage] = useState(false);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [isStudioOpen, setIsStudioOpen] = useState(false);
@@ -1797,8 +1800,19 @@ const App: React.FC = () => {
           onClose={() => { setUpgradeFeature(null); setPendingPriceId(null); }}
           feature={upgradeFeature}
           defaultPriceId={pendingPriceId ?? undefined}
+          onSuccess={(planName) => {
+            setUpgradeFeature(null);
+            setPendingPriceId(null);
+            setSuccessPlanName(planName);
+            setShowSuccessModal(true);
+          }}
         />
       )}
+      <SubscriptionSuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        planName={successPlanName}
+      />
       {duplicatePending && (
         <DuplicateAlbumModal
           existingAlbum={duplicatePending.existingAlbum}
