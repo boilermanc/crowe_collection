@@ -223,6 +223,19 @@ router.post(
         expand: ['latest_invoice.payment_intent'],
       });
 
+      // Temporary debug logging
+      const _debugInvoice = subscription.latest_invoice as any;
+      console.log('Subscribe debug:', JSON.stringify({
+        subscriptionId: subscription.id,
+        subscriptionStatus: subscription.status,
+        invoiceId: _debugInvoice?.id,
+        invoiceStatus: _debugInvoice?.status,
+        invoiceAmountDue: _debugInvoice?.amount_due,
+        paymentIntentId: _debugInvoice?.payment_intent?.id,
+        paymentIntentStatus: _debugInvoice?.payment_intent?.status,
+        collectionMethod: subscription.collection_method,
+      }, null, 2));
+
       // If subscription is already active (e.g. $0 invoice), treat as success
       if (subscription.status === 'active') {
         res.status(200).json({ alreadyActive: true, subscriptionId: subscription.id });
