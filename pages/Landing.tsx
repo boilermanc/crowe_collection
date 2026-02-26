@@ -256,10 +256,16 @@ const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
         const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
         if (error) throw error;
       } else {
-        const { error: signUpError } = await supabase.auth.signUp({ email: email.trim(), password });
+        const { data, error: signUpError } = await supabase.auth.signUp({ email: email.trim(), password });
         if (signUpError) throw signUpError;
-        const { error: signInError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-        if (signInError) throw signInError;
+
+        if (data.user && (!data.user.identities || data.user.identities.length === 0)) {
+          throw new Error('An account with this email already exists. Try signing in instead.');
+        }
+
+        if (!data.session) {
+          throw new Error('Please check your email to confirm your account.');
+        }
       }
     } catch (err: unknown) {
       setAuthError(err instanceof Error ? err.message : 'Something went wrong.');

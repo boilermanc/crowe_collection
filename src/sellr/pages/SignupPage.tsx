@@ -72,21 +72,22 @@ const SignupPage: React.FC = () => {
         throw new Error(data.error || 'Verification failed. Please try again.');
       }
 
-      const { error: signUpError } = await supabase.auth.signUp({
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
         password,
       });
       if (signUpError) throw signUpError;
 
-      // Immediately sign in since no email confirmation is required
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
-      if (signInError) throw signInError;
+      if (data.user && (!data.user.identities || data.user.identities.length === 0)) {
+        throw new Error('An account with this email already exists. Try signing in instead.');
+      }
+
+      if (!data.session) {
+        throw new Error('Please check your email to confirm your account.');
+      }
 
       // New users with no slots go to onboarding to pick a plan
-      const token = signInData.session?.access_token;
+      const token = data.session.access_token;
       if (token) {
         try {
           const res = await fetch('/api/sellr/dashboard', {

@@ -87,18 +87,21 @@ const AuthPage: React.FC = () => {
         });
         if (signInError) throw signInError;
       } else {
-        const { error: signUpError } = await supabase.auth.signUp({
+        const { data, error: signUpError } = await supabase.auth.signUp({
           email: email.trim(),
           password,
         });
         if (signUpError) throw signUpError;
 
-        // Immediately sign in since no email confirmation is required
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
-          password,
-        });
-        if (signInError) throw signInError;
+        // Supabase returns user with empty identities when the email is already registered
+        if (data.user && (!data.user.identities || data.user.identities.length === 0)) {
+          throw new Error('An account with this email already exists. Try signing in instead.');
+        }
+
+        // signUp auto-signs in when email confirmation is off — no extra signIn needed
+        if (!data.session) {
+          throw new Error('Please check your email to confirm your account.');
+        }
       }
     } catch (err: unknown) {
       const message =
