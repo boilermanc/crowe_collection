@@ -162,6 +162,41 @@ router.post('/api/stripe/webhook', async (req, res) => {
         break;
       }
 
+      case 'customer.subscription.created': {
+        const subscription = event.data.object as Stripe.Subscription;
+        const userId = subscription.metadata?.supabase_user_id;
+        if (!userId) {
+          console.warn('Webhook customer.subscription.created: no supabase_user_id in metadata');
+          break;
+        }
+
+        const priceId = subscription.items.data[0]?.price?.id;
+        const interval = subscription.items.data[0]?.price?.recurring?.interval;
+        const plan = priceId ? await getPlanFromPriceId(priceId) : 'curator';
+
+        const subRawCreated = subscription as unknown as Record<string, unknown>;
+        const periodEndCreated = typeof subRawCreated.current_period_end === 'number'
+          ? new Date(subRawCreated.current_period_end * 1000).toISOString()
+          : null;
+
+        await supabase.from('subscriptions').update({
+          plan,
+          status: subscription.status === 'active' ? 'active' : 'trialing',
+          stripe_customer_id: extractCustomerId(subscription.customer),
+          stripe_subscription_id: subscription.id,
+          billing_interval: interval ?? 'month',
+          ...(periodEndCreated && { current_period_end: periodEndCreated }),
+        }).eq('user_id', userId);
+
+        await supabase.from('profiles').update({
+          stripe_customer_id: extractCustomerId(subscription.customer),
+          plan,
+        }).eq('id', userId);
+
+        console.log(`Webhook customer.subscription.created: user ${userId} → plan=${plan}`);
+        break;
+      }
+
       case 'customer.subscription.updated': {
         const subscription = event.data.object as Stripe.Subscription;
         const customerId = extractCustomerId(subscription.customer);
@@ -255,6 +290,23 @@ router.post('/api/stripe/webhook', async (req, res) => {
           })
           .catch(err => console.error('[email] Could not retrieve customer for cancellation email:', err));
 
+        break;
+      }
+
+      case 'invoice.payment_succeeded': {
+        const invoice = event.data.object as Stripe.Invoice;
+        const subId = (invoice as unknown as Record<string, unknown>).subscription as string | undefined
+          || ((invoice.parent as unknown as Record<string, unknown>)?.subscription_details as Record<string, unknown>)?.subscription as string | undefined;
+        if (!subId) {
+          console.warn('Webhook invoice.payment_succeeded: no subscription ID');
+          break;
+        }
+
+        await supabase.from('subscriptions').update({
+          status: 'active',
+        }).eq('stripe_subscription_id', subId);
+
+        console.log(`Webhook invoice.payment_succeeded: subscription ${subId} → active`);
         break;
       }
 
