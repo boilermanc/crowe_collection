@@ -240,6 +240,27 @@ router.post('/api/stripe/webhook', async (req, res) => {
           .eq('user_id', profile.id);
 
         console.log(`Webhook customer.subscription.updated: profile ${profile.id} → plan=${plan}, status=${status}`);
+
+        // Also update via metadata user ID when subscription transitions to active
+        if (subscription.status === 'active') {
+          const metaUserId = subscription.metadata?.supabase_user_id;
+          if (metaUserId) {
+            const activeInterval = subscription.items.data[0]?.price?.recurring?.interval;
+            const itemPeriodEnd = subscription.items.data[0]?.current_period_end;
+            const activePeriodEnd = typeof itemPeriodEnd === 'number'
+              ? new Date(itemPeriodEnd * 1000).toISOString()
+              : null;
+
+            await supabase.from('subscriptions').update({
+              status: 'active',
+              ...(activeInterval && { billing_interval: activeInterval }),
+              ...(activePeriodEnd && { current_period_end: activePeriodEnd }),
+            }).eq('user_id', metaUserId);
+
+            console.log(`Webhook subscription.updated: user ${metaUserId} → active`);
+          }
+        }
+
         break;
       }
 
