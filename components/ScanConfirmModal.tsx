@@ -7,7 +7,7 @@ import FormatBadge from './FormatBadge';
 
 interface ScanConfirmModalProps {
   scan: ScanConfirmation;
-  onConfirm: (artist: string, title: string, discogsReleaseId?: number, barcode?: string, format?: string) => void;
+  onConfirm: (artist: string, title: string, discogsReleaseId?: number, barcode?: string, format?: string, discogsCoverUrl?: string) => void;
   onCancel: () => void;
 }
 
@@ -55,6 +55,7 @@ const ScanConfirmModal: React.FC<ScanConfirmModalProps> = ({ scan, onConfirm, on
           match.id,
           scan.barcode,
           format,
+          match.thumb || undefined,
         );
         return;
       }

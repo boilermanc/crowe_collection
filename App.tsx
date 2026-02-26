@@ -40,6 +40,7 @@ import PriceAlertsView from './src/components/PriceAlertsView';
 import CollectionInsightsCard from './src/components/CollectionInsightsCard';
 import ProfilePage from './src/components/ProfilePage';
 import MobileBottomNav from './src/components/MobileBottomNav';
+import SpinsPage from './src/components/SpinsPage';
 import { Bell, TrendingUp, User } from 'lucide-react';
 import { wantlistService } from './services/wantlistService';
 import { engagementService } from './services/engagementService';
@@ -49,7 +50,7 @@ import { MEDIA_FORMATS, FORMAT_COLORS, type MediaFormat } from './constants/form
 const PAGE_SIZE = 40;
 
 type SortOption = 'recent' | 'year' | 'artist' | 'title' | 'value' | 'format';
-type ViewMode = 'public-landing' | 'landing' | 'grid' | 'list' | 'stakkd' | 'discogs' | 'wantlist' | 'value-dashboard' | 'profile' | 'price-alerts';
+type ViewMode = 'public-landing' | 'landing' | 'grid' | 'list' | 'stakkd' | 'discogs' | 'wantlist' | 'value-dashboard' | 'profile' | 'price-alerts' | 'spins';
 
 interface DuplicatePendingData {
   identity: { artist: string; title: string; barcode?: string; discogsMatches?: DiscogsMatch[]; scanMode?: ScanMode };
@@ -911,7 +912,7 @@ const App: React.FC = () => {
             )}
           </div>
 
-          {currentView !== 'landing' && currentView !== 'stakkd' && currentView !== 'discogs' && currentView !== 'wantlist' && currentView !== 'value-dashboard' && currentView !== 'profile' && currentView !== 'price-alerts' && <div className="flex-1 max-w-xl flex items-center gap-2">
+          {currentView !== 'landing' && currentView !== 'stakkd' && currentView !== 'discogs' && currentView !== 'wantlist' && currentView !== 'value-dashboard' && currentView !== 'profile' && currentView !== 'price-alerts' && currentView !== 'spins' && <div className="flex-1 max-w-xl flex items-center gap-2">
             <button
               onClick={() => setShowStats(!showStats)}
               className={`hidden md:flex p-3 rounded-full border transition-all flex-shrink-0 ${showStats ? 'bg-[#dd6e42] border-[#dd6e42] text-th-text shadow-lg' : 'bg-th-surface/[0.04] border-th-surface/[0.10] text-th-text2 hover:text-th-text'}`}
@@ -1003,6 +1004,16 @@ const App: React.FC = () => {
                   {priceAlertCount}
                 </span>
               )}
+            </button>
+            <button
+              onClick={() => setCurrentView('spins')}
+              className={`hidden md:flex p-3 rounded-full border transition-all flex-shrink-0 ${currentView === 'spins' ? 'bg-[#dd6e42] border-[#dd6e42] text-th-text shadow-lg' : 'bg-th-surface/[0.04] border-th-surface/[0.10] text-th-text2 hover:text-th-text'}`}
+              title="Spins — listening history"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 8.5a6 6 0 0 1 12 0c0 3-2 4.5-2 7a2 2 0 0 1-2 2h-1a1 1 0 0 1-1-1v-1" />
+                <path d="M10.5 8.5a1.5 1.5 0 0 1 3 0c0 1.5-1.5 2-1.5 3.5" />
+              </svg>
             </button>
             <button
               onClick={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
@@ -1512,6 +1523,10 @@ const App: React.FC = () => {
       ) : currentView === 'price-alerts' ? (
         <main className="max-w-7xl mx-auto px-4 md:px-6 mt-8 pb-8">
           <PriceAlertsView onNavigateToWantlist={() => setCurrentView('wantlist')} />
+        </main>
+      ) : currentView === 'spins' ? (
+        <main className="max-w-7xl mx-auto px-4 md:px-6 mt-8 pb-8">
+          <SpinsPage allAlbums={albums} onSelectAlbum={setSelectedAlbum} />
         </main>
       ) : currentView === 'value-dashboard' ? (
         <CollectionValueDashboard />

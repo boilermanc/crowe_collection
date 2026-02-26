@@ -1,5 +1,10 @@
-const MAX_EDGE = 1536;
-const JPEG_QUALITY = 0.8;
+const DEFAULT_MAX_EDGE = 1536;
+const DEFAULT_QUALITY = 0.8;
+
+export interface CompressOptions {
+  maxSize?: number;
+  quality?: number;
+}
 
 /**
  * Decode a raw base64 string + mimeType into a Blob.
@@ -19,6 +24,8 @@ function base64ToBlob(base64: string, mimeType: string): Blob {
 async function compressWithOffscreen(
   base64: string,
   mimeType: string,
+  maxEdge: number,
+  quality: number,
 ): Promise<{ base64: string; mimeType: string }> {
   const blob = base64ToBlob(base64, mimeType);
   const bitmap = await createImageBitmap(blob);
@@ -26,8 +33,8 @@ async function compressWithOffscreen(
   let w = bitmap.width;
   let h = bitmap.height;
   const longest = Math.max(w, h);
-  if (longest > MAX_EDGE) {
-    const scale = MAX_EDGE / longest;
+  if (longest > maxEdge) {
+    const scale = maxEdge / longest;
     w = Math.round(w * scale);
     h = Math.round(h * scale);
   }
@@ -40,7 +47,7 @@ async function compressWithOffscreen(
 
   const outBlob = await canvas.convertToBlob({
     type: 'image/jpeg',
-    quality: JPEG_QUALITY,
+    quality,
   });
 
   const buffer = await outBlob.arrayBuffer();
@@ -58,6 +65,8 @@ async function compressWithOffscreen(
 function compressWithCanvas(
   base64: string,
   mimeType: string,
+  maxEdge: number,
+  quality: number,
 ): Promise<{ base64: string; mimeType: string }> {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -65,8 +74,8 @@ function compressWithCanvas(
       let w = img.width;
       let h = img.height;
       const longest = Math.max(w, h);
-      if (longest > MAX_EDGE) {
-        const scale = MAX_EDGE / longest;
+      if (longest > maxEdge) {
+        const scale = maxEdge / longest;
         w = Math.round(w * scale);
         h = Math.round(h * scale);
       }
@@ -81,7 +90,7 @@ function compressWithCanvas(
       }
       ctx.drawImage(img, 0, 0, w, h);
 
-      const dataUrl = canvas.toDataURL('image/jpeg', JPEG_QUALITY);
+      const dataUrl = canvas.toDataURL('image/jpeg', quality);
       // Strip the "data:image/jpeg;base64," prefix
       const commaIdx = dataUrl.indexOf(',');
       resolve({
@@ -95,26 +104,30 @@ function compressWithCanvas(
 }
 
 /**
- * Compress/resize an image for AI identification.
+ * Compress/resize an image.
  *
- * - Resizes so the longest edge is max 1536 px (Gemini sweet spot)
- * - Re-encodes as JPEG at quality 0.8
+ * - Resizes so the longest edge is at most `maxSize` px (default 1536)
+ * - Re-encodes as JPEG at the given `quality` (default 0.8)
  * - Uses OffscreenCanvas when available, HTMLCanvasElement as fallback
  * - On failure returns the original image unchanged
  *
  * @param base64   Raw base64 string (no data: prefix)
  * @param mimeType Original MIME type (e.g. "image/jpeg")
+ * @param options  Optional overrides for maxSize and quality
  * @returns        Compressed base64 string and mimeType
  */
 export async function compressImage(
   base64: string,
   mimeType: string,
+  options?: CompressOptions,
 ): Promise<{ base64: string; mimeType: string }> {
+  const maxEdge = options?.maxSize ?? DEFAULT_MAX_EDGE;
+  const quality = options?.quality ?? DEFAULT_QUALITY;
   try {
     if (typeof OffscreenCanvas !== 'undefined') {
-      return await compressWithOffscreen(base64, mimeType);
+      return await compressWithOffscreen(base64, mimeType, maxEdge, quality);
     }
-    return await compressWithCanvas(base64, mimeType);
+    return await compressWithCanvas(base64, mimeType, maxEdge, quality);
   } catch (err) {
     console.warn('Image compression failed, using original:', err);
     return { base64, mimeType };

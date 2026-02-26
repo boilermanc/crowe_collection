@@ -4,6 +4,7 @@ import { Album } from '../types';
 import { proxyImageUrl } from '../services/imageProxy';
 import { geminiService } from '../services/geminiService';
 import { supabase } from '../services/supabaseService';
+import { compressImage } from '../src/utils/imageCompressor';
 import SpinningRecord from './SpinningRecord';
 import CoverPicker from './CoverPicker';
 import FormatBadge from './FormatBadge';
@@ -52,8 +53,10 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
   const [showCoverPicker, setShowCoverPicker] = useState(false);
   const [displayCoverUrl, setDisplayCoverUrl] = useState(album.cover_url);
   const [uploadingCover, setUploadingCover] = useState(false);
+  const coverFileRef = useRef<HTMLInputElement>(null);
   const hasLoggedTracklistExpand = useRef(false);
   const [isSpinning, setIsSpinning] = useState(false);
+  const [spinRecorded, setSpinRecorded] = useState(false);
 
   useEffect(() => {
     if (album?.id) {
@@ -82,9 +85,21 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
       setIsSpinning(false);
       showToast('Stopped spinning', 'info');
     } else {
-      await engagementService.setNowSpinning(album.id);
-      setIsSpinning(true);
-      showToast('Now Spinning! 🎶', 'success');
+      try {
+        await engagementService.setNowSpinning(album.id);
+        await engagementService.recordSpin(album.id);
+        setIsSpinning(true);
+        // Update local play_count immediately
+        const newPlayCount = (album.play_count || 0) + 1;
+        onUpdateAlbum?.(album.id, { play_count: newPlayCount });
+        // Brief visual feedback
+        setSpinRecorded(true);
+        setTimeout(() => setSpinRecorded(false), 1200);
+        showToast('Spin recorded! 🎶', 'success');
+      } catch (error) {
+        console.error('Failed to record spin:', error);
+        showToast('Failed to record spin', 'error');
+      }
     }
   };
 
@@ -209,6 +224,63 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
     }
   };
 
+  const handleCoverFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !supabase) return;
+    // Reset input so re-selecting the same file still triggers onChange
+    e.target.value = '';
+
+    setUploadingCover(true);
+    const previousCoverUrl = displayCoverUrl;
+    try {
+      // Read file as base64
+      const rawBase64: string = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result as string;
+          const commaIdx = result.indexOf(',');
+          resolve(commaIdx !== -1 ? result.slice(commaIdx + 1) : result);
+        };
+        reader.onerror = () => reject(new Error('Failed to read file'));
+        reader.readAsDataURL(file);
+      });
+
+      // Compress: 800px max, 0.85 quality for cover art
+      const compressed = await compressImage(rawBase64, file.type || 'image/jpeg', { maxSize: 800, quality: 0.85 });
+
+      // Convert back to Blob for Supabase upload
+      const byteChars = atob(compressed.base64);
+      const byteArray = new Uint8Array(byteChars.length);
+      for (let i = 0; i < byteChars.length; i++) {
+        byteArray[i] = byteChars.charCodeAt(i);
+      }
+      const blob = new Blob([byteArray], { type: compressed.mimeType });
+
+      const fileName = `covers/${album.id}-${Date.now()}.jpg`;
+      const { error: uploadError } = await supabase.storage
+        .from('album-photos')
+        .upload(fileName, blob, { contentType: compressed.mimeType, upsert: false });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('album-photos')
+        .getPublicUrl(fileName);
+
+      setDisplayCoverUrl(publicUrl);
+      if (onUpdateAlbum) {
+        await onUpdateAlbum(album.id, { cover_url: publicUrl });
+      }
+      showToast('Cover art updated', 'success');
+    } catch (err) {
+      console.error('Cover file upload failed:', err);
+      setDisplayCoverUrl(previousCoverUrl);
+      showToast('Failed to upload cover art', 'error');
+    } finally {
+      setUploadingCover(false);
+    }
+  };
+
   return (
     <div ref={modalRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label={`${album.title} by ${album.artist}`} className="fixed inset-0 z-50 flex items-center justify-center bg-th-bg/95 p-2 md:p-8 backdrop-blur-xl animate-in fade-in duration-300 outline-none">
       <div className="relative w-full max-w-6xl max-h-[98vh] md:max-h-[95vh] glass-morphism rounded-3xl overflow-hidden border border-th-surface/[0.10] flex flex-col md:flex-row animate-in zoom-in-95 duration-500">
@@ -246,6 +318,29 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
                    <span className="text-th-text/80 text-[9px] font-label tracking-widest uppercase">Tap to change cover</span>
                  </div>
                </div>
+               )}
+             </button>
+             {/* Upload cover from device */}
+             <input
+               ref={coverFileRef}
+               type="file"
+               accept="image/jpeg,image/png,image/webp"
+               onChange={handleCoverFileUpload}
+               className="hidden"
+             />
+             <button
+               type="button"
+               onClick={(e) => { e.stopPropagation(); coverFileRef.current?.click(); }}
+               disabled={uploadingCover}
+               aria-label="Change cover art"
+               className="absolute bottom-8 right-8 z-20 w-10 h-10 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-all active:scale-95 shadow-lg"
+             >
+               {uploadingCover ? (
+                 <SpinningRecord size="w-5 h-5" />
+               ) : (
+                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                 </svg>
                )}
              </button>
              <div className="absolute -bottom-10 -left-10 text-[80px] md:text-[120px] font-label font-black text-th-text/5 select-none pointer-events-none uppercase whitespace-nowrap">
@@ -324,16 +419,18 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
                 onClick={handleNowSpinning}
                 aria-pressed={isSpinning}
                 className={`flex items-center justify-center gap-2 flex-1 py-4 rounded-xl font-label text-[10px] tracking-widest uppercase font-bold transition-all active:scale-95 ${
-                  isSpinning
+                  spinRecorded
+                    ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 scale-105'
+                    : isSpinning
                     ? 'bg-[#c45a30] text-th-text shadow-lg shadow-[#c45a30]/30 animate-pulse'
                     : 'bg-th-surface/[0.08] border border-th-surface/[0.15] text-th-text3 hover:text-th-text hover:border-th-text'
                 }`}
               >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                <svg className={`w-4 h-4 ${isSpinning ? 'animate-spin' : ''}`} style={isSpinning ? { animationDuration: '2s' } : undefined} viewBox="0 0 24 24" fill="currentColor">
                   <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="2"/>
                   <circle cx="12" cy="12" r="3" fill="currentColor"/>
                 </svg>
-                {isSpinning ? 'Spinning' : 'Now Spinning'}
+                {spinRecorded ? 'Spin Logged!' : isSpinning ? 'Spinning' : 'Now Spinning'}
               </button>
               <button onClick={handlePlaySample} className="flex-1 border border-th-surface/[0.10] text-th-text font-bold py-4 rounded-xl hover:bg-th-surface/[0.08] transition-all uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-2">
                 Listen Sample

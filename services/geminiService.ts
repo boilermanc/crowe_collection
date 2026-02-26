@@ -54,6 +54,13 @@ export class GearLimitError extends Error {
   }
 }
 
+export class IdentificationFailedError extends Error {
+  constructor(public serverMessage: string) {
+    super(serverMessage);
+    this.name = 'IdentificationFailedError';
+  }
+}
+
 async function handleGatingError(response: Response): Promise<void> {
   if (response.status !== 403) return;
   try {
@@ -104,7 +111,7 @@ export async function checkGearLimit(): Promise<void> {
 }
 
 export const geminiService = {
-  async identifyAlbum(base64DataUrl: string, scanMode?: 'cover' | 'barcode'): Promise<{ artist: string; title: string; format?: string; barcode?: string; discogsMatches?: DiscogsMatch[] } | null> {
+  async identifyAlbum(base64DataUrl: string, scanMode?: 'cover' | 'barcode', signal?: AbortSignal): Promise<{ artist: string; title: string; format?: string; barcode?: string; discogsMatches?: DiscogsMatch[] } | null> {
     try {
       const [rawHeader, rawBase64] = base64DataUrl.split(',');
       const rawMime = rawHeader.match(/:(.*?);/)?.[1] || 'image/jpeg';
@@ -115,7 +122,8 @@ export const geminiService = {
       const response = await fetch('/api/identify', {
         method: 'POST',
         headers: await getAuthHeaders(),
-        body: JSON.stringify({ base64Data, mimeType, ...(scanMode === 'barcode' ? { scanMode } : {}) })
+        body: JSON.stringify({ base64Data, mimeType, ...(scanMode === 'barcode' ? { scanMode } : {}) }),
+        signal,
       });
 
       if (!response.ok) {
@@ -141,6 +149,9 @@ export const geminiService = {
         throw new Error(`Server returned ${response.status}: ${detail || 'unknown error'}`);
       }
       const data = await response.json();
+      if (data && data.success === false && data.error === 'identification_failed') {
+        throw new IdentificationFailedError(data.message || 'Could not identify this album.');
+      }
       if (!data || typeof data.artist !== 'string' || typeof data.title !== 'string') {
         return null;
       }
@@ -159,7 +170,7 @@ export const geminiService = {
       }
       return result;
     } catch (error) {
-      if (error instanceof ScanLimitError || error instanceof UpgradeRequiredError) throw error;
+      if (error instanceof ScanLimitError || error instanceof UpgradeRequiredError || error instanceof IdentificationFailedError) throw error;
       console.error('Identification Error:', error);
       throw error;
     }
@@ -205,12 +216,12 @@ export const geminiService = {
     }
   },
 
-  async fetchAlbumMetadata(artist: string, title: string): Promise<Partial<NewAlbum>> {
+  async fetchAlbumMetadata(artist: string, title: string, discogsCoverUrl?: string): Promise<Partial<NewAlbum>> {
     try {
       const response = await fetch('/api/metadata', {
         method: 'POST',
         headers: await getAuthHeaders(),
-        body: JSON.stringify({ artist, title })
+        body: JSON.stringify({ artist, title, ...(discogsCoverUrl ? { discogsCoverUrl } : {}) })
       });
 
       if (!response.ok) return { artist, title, year: 'Unknown', genre: 'Unknown' };

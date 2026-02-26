@@ -40,6 +40,41 @@ export const engagementService = {
     }
   },
 
+  /**
+   * Record a spin in the spins table and increment album play_count.
+   * Throws on failure so callers can show error toasts.
+   */
+  async recordSpin(albumId: string): Promise<void> {
+    if (!supabase) throw new Error('Supabase not initialized');
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    // 1. Insert into spins table
+    const { error: spinError } = await supabase.from('spins').insert({
+      user_id: user.id,
+      album_id: albumId,
+      spun_at: new Date().toISOString(),
+    });
+    if (spinError) throw spinError;
+
+    // 2. Increment play_count on the album
+    // Use rpc if available, otherwise read-then-write
+    const { data: album, error: fetchError } = await supabase
+      .from('albums')
+      .select('play_count')
+      .eq('id', albumId)
+      .eq('user_id', user.id)
+      .single();
+    if (fetchError) throw fetchError;
+
+    const { error: updateError } = await supabase
+      .from('albums')
+      .update({ play_count: (album.play_count || 0) + 1 })
+      .eq('id', albumId)
+      .eq('user_id', user.id);
+    if (updateError) throw updateError;
+  },
+
   async clearNowSpinning(): Promise<void> {
     try {
       if (!supabase) return;

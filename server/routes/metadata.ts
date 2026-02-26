@@ -9,7 +9,7 @@ import { searchItunes } from '../lib/itunes.js';
 
 const router = Router();
 
-async function findCoverUrl(artist: string, title: string, geminiUrl?: string): Promise<string> {
+async function findCoverUrl(artist: string, title: string, geminiUrl?: string, discogsCoverUrl?: string): Promise<string> {
   // Try the URL Gemini returned
   if (geminiUrl) {
     try {
@@ -22,6 +22,9 @@ async function findCoverUrl(artist: string, title: string, geminiUrl?: string): 
   const results = await searchItunes(artist, title, 1);
   if (results.length > 0) return results[0].url;
 
+  // Last resort: Discogs cover thumbnail from the matched release
+  if (discogsCoverUrl) return discogsCoverUrl;
+
   return '';
 }
 
@@ -31,7 +34,7 @@ router.post(
   createRateLimit(10, 60),
   async (req, res) => {
     try {
-      const { artist: rawArtist, title: rawTitle } = req.body;
+      const { artist: rawArtist, title: rawTitle, discogsCoverUrl: rawDiscogsCoverUrl } = req.body;
       if (!rawArtist || !rawTitle || typeof rawArtist !== 'string' || typeof rawTitle !== 'string') {
         res.status(400).json({ error: 'Missing artist or title' });
         return;
@@ -82,7 +85,8 @@ Respond with ONLY valid JSON matching this exact structure (no markdown, no code
       if (!Array.isArray(data.tags)) data.tags = [];
 
       // Validate cover_url — Gemini often returns stale/invalid Discogs URLs
-      data.cover_url = await findCoverUrl(artist, title, data.cover_url);
+      const discogsCoverUrl = typeof rawDiscogsCoverUrl === 'string' && rawDiscogsCoverUrl.startsWith('https://') ? rawDiscogsCoverUrl : undefined;
+      data.cover_url = await findCoverUrl(artist, title, data.cover_url, discogsCoverUrl);
 
       const missingPricing = !data.price_low || !data.price_median || !data.price_high;
       if (!data.year || !data.genre || missingPricing) {

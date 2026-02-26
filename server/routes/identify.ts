@@ -136,7 +136,17 @@ router.post(
       const data = JSON.parse(rawText);
       if (typeof data.artist !== 'string' || typeof data.title !== 'string') {
         console.warn(`[identify] Gemini returned invalid data:`, rawText.slice(0, 200));
-        res.status(200).json(null);
+        res.status(200).json({ success: false, error: 'identification_failed', message: 'Could not identify this album. Try a clearer photo or search manually.' });
+        return;
+      }
+
+      // Treat null-like values as identification failure
+      const artistTrimmed = data.artist.trim();
+      const titleTrimmed = data.title.trim();
+      const isNullish = (v: string) => !v || v.toLowerCase() === 'null' || v.toLowerCase() === 'unknown';
+      if (isNullish(artistTrimmed) || isNullish(titleTrimmed)) {
+        console.warn(`[identify] Gemini returned null-like values: artist="${data.artist}", title="${data.title}"`);
+        res.status(200).json({ success: false, error: 'identification_failed', message: 'Could not identify this album. Try a clearer photo or search manually.' });
         return;
       }
 

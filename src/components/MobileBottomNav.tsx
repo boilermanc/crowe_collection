@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Bell, TrendingUp } from 'lucide-react';
 
 type ViewMode = 'public-landing' | 'landing' | 'grid' | 'list' | 'stakkd'
-  | 'discogs' | 'wantlist' | 'value-dashboard' | 'profile' | 'price-alerts';
+  | 'discogs' | 'wantlist' | 'value-dashboard' | 'profile' | 'price-alerts' | 'spins';
 
 interface MobileBottomNavProps {
   currentView: ViewMode;
@@ -36,7 +36,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
     setIsMoreOpen(false);
   }, [currentView]);
 
-  const isMoreActive = isMoreOpen || currentView === 'discogs' || currentView === 'wantlist' || currentView === 'price-alerts';
+  const isMoreActive = isMoreOpen || currentView === 'discogs' || currentView === 'wantlist' || currentView === 'price-alerts' || currentView === 'value-dashboard';
 
   return (
     <>
@@ -206,17 +206,20 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             )}
           </button>
 
-          {/* Dashboard */}
+          {/* Spins */}
           <button
-            onClick={() => onNavigate('value-dashboard')}
+            onClick={() => onNavigate('spins')}
             className={`flex flex-col items-center justify-center flex-1 h-full gap-0.5 transition-colors ${
-              currentView === 'value-dashboard' ? 'text-[#dd6e42]' : 'text-th-nav-text/70'
+              currentView === 'spins' ? 'text-[#dd6e42]' : 'text-th-nav-text/70'
             }`}
-            aria-label="Collection value dashboard"
-            aria-current={currentView === 'value-dashboard' ? 'page' : undefined}
+            aria-label="Spins"
+            aria-current={currentView === 'spins' ? 'page' : undefined}
           >
-            <TrendingUp className="w-5 h-5" />
-            <span className="text-[9px] font-label tracking-widest uppercase">Value</span>
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 8.5a6 6 0 0 1 12 0c0 3-2 4.5-2 7a2 2 0 0 1-2 2h-1a1 1 0 0 1-1-1v-1" />
+              <path d="M10.5 8.5a1.5 1.5 0 0 1 3 0c0 1.5-1.5 2-1.5 3.5" />
+            </svg>
+            <span className="text-[9px] font-label tracking-widest uppercase">Spins</span>
           </button>
 
           {/* More */}
