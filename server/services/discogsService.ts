@@ -68,7 +68,7 @@ export async function discogsRequest<T>(
 
   const headers = getHeaders();
 
-  let response = await fetch(url.toString(), { headers });
+  let response = await fetch(url.toString(), { headers, signal: AbortSignal.timeout(15_000) });
 
   // Handle rate limiting — retry once after waiting
   if (response.status === 429) {
@@ -80,7 +80,7 @@ export async function discogsRequest<T>(
     console.warn(`${LOG_PREFIX} Rate limited (429). Retrying after ${waitSeconds}s...`);
     await sleep(waitSeconds * 1000);
 
-    response = await fetch(url.toString(), { headers });
+    response = await fetch(url.toString(), { headers, signal: AbortSignal.timeout(15_000) });
   }
 
   // Check remaining rate limit
