@@ -168,7 +168,10 @@ router.post('/api/blog/generate-image', requireAuthWithUser, async (req, res) =>
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ parts: [{ text: imagePrompt }] }],
-          generationConfig: { responseModalities: ['TEXT', 'IMAGE'] },
+          generationConfig: {
+            responseModalities: ['TEXT', 'IMAGE'],
+            image_config: { aspect_ratio: '16:9' },
+          },
         }),
       }
     );

@@ -6,7 +6,7 @@
 
 ## Project Context
 
-Rekkrd is a **vinyl record collection management app** with AI-powered identification, metadata enrichment, and playlist generation.
+Rekkrd is a **vinyl record collection management app** with AI-powered identification, metadata enrichment, playlist generation, gear cataloging, and a built-in blog.
 
 **Core Flow:**
 - User scans a vinyl record cover with their phone camera
@@ -14,13 +14,17 @@ Rekkrd is a **vinyl record collection management app** with AI-powered identific
 - Album is saved to collection with cover art, condition grading, notes, and tags
 - User can browse, search, sort, and filter their collection (grid + list views)
 - PlaylistStudio generates mood-based playlists from the user's collection
-- Lyrics lookup available per track
+- Stakkd lets users catalog their audio gear (turntables, amps, speakers, etc.) with AI identification
+- Blog with AI-generated content and hero images via n8n automation
+- Wantlist for tracking desired records with Discogs pricing
+- Sellr offers vinyl collection appraisal services (one-time payments)
 
 **Current State:**
-- Deployed on Vercel (serverless functions + static frontend)
+- Deployed on IONOS VPS with Plesk management, PM2 process management, nginx reverse proxy
 - Database & Storage: Supabase
-- AI: Google Gemini API
+- AI: Google Gemini API (Vision identification, content generation, image generation)
 - Full code review completed (41 tasks across 8 batches — all resolved)
+- 30+ feature batches completed
 
 ---
 
@@ -29,13 +33,18 @@ Rekkrd is a **vinyl record collection management app** with AI-powered identific
 | Layer | Technology | Notes |
 |-------|------------|-------|
 | Frontend | React + TypeScript | Vite build, TailwindCSS |
-| Backend | Vercel Serverless Functions | `api/` directory, Node.js runtime |
-| Database | Supabase (PostgreSQL) | Album storage, auth |
-| Storage | Supabase Storage | Album photos, cover art |
-| AI | Google Gemini API | Vision identification, metadata, covers, playlists |
-| External APIs | iTunes Search, MusicBrainz | Cover art, metadata enrichment |
+| Backend | Express / Node.js | Standalone server, `server/` directory |
+| Database | Supabase (PostgreSQL) | Album storage, auth, blog, gear, wantlist |
+| Storage | Supabase Storage | Album photos, cover art, blog hero images, gear photos |
+| AI | Google Gemini API | Vision identification, metadata, covers, playlists, blog content, image generation |
+| External APIs | iTunes Search, MusicBrainz, Discogs | Cover art, metadata enrichment, pricing |
+| Email | Resend | Onboarding, Sellr order emails, transactional triggers |
+| Payments | Stripe | Subscriptions (Rekkrd plans) + one-time payments (Sellr) |
+| Automation | n8n (self-hosted) | Blog content generation, image generation, Slack integration |
+| CDN/Security | Cloudflare | DNS, CDN, SSL (Full Strict mode) |
+| CI/CD | GitHub Actions | Auto-deploy on push to main via SSH |
 | Env Vars (Frontend) | `import.meta.env.VITE_*` | Vite auto-exposes; do NOT use `process.env` in frontend |
-| Env Vars (Backend) | `process.env.*` | Standard Node.js pattern for `api/` functions |
+| Env Vars (Backend) | `process.env.*` | Standard Node.js pattern for `server/` |
 
 ---
 
@@ -43,7 +52,15 @@ Rekkrd is a **vinyl record collection management app** with AI-powered identific
 
 | Person | Role | Domain |
 |--------|------|--------|
-| **Clint** | Developer | Architecture, code, deployment |
+| **Clint** | Founder / Developer | Architecture, code, deployment |
+
+---
+
+## Cursor Prompt Delivery
+
+When providing Cursor IDE prompts, deliver each prompt as a standalone `.md` file artifact
+that renders in the Claude chat canvas. Do NOT put Cursor prompts in inline code blocks.
+This lets the user copy the full prompt cleanly from the canvas view.
 
 ---
 
@@ -78,50 +95,94 @@ src/
 │   ├── CameraModal.tsx      # Camera capture for identification
 │   ├── CollectionList.tsx   # List/table view
 │   ├── CoverPicker.tsx      # Cover art selection modal
-│   └── PlaylistStudio.tsx   # AI playlist generator
+│   ├── PlaylistStudio.tsx   # AI playlist generator
+│   └── blog/
+│       └── BlogFilterBar.tsx # Category/tag/search filter bar
 ├── constants/
 │   └── conditionGrades.ts   # Shared condition grade constants
 ├── contexts/
 │   └── ToastContext.tsx     # Toast notification system
 ├── hooks/
 │   └── useFocusTrap.ts      # Focus trapping for modals
+├── pages/
+│   ├── BlogList.tsx         # Public blog list with filters
+│   ├── BlogPost.tsx         # Public blog detail (markdown)
+│   └── NotFound.tsx         # 404 page
 ├── services/
-│   ├── geminiService.ts     # Client-side Gemini API calls (via serverless)
+│   ├── geminiService.ts     # Client-side Gemini API calls (via server)
 │   └── supabaseService.ts   # Supabase client (DB + Storage)
-├── types.ts                 # NewAlbum, Album, RawPlaylistItem
+├── admin/
+│   └── pages/
+│       ├── BlogPage.tsx     # Admin blog management
+│       └── BlogEditor.tsx   # Blog post editor with markdown preview
+├── types.ts                 # NewAlbum, Album, NewGear, Gear, GearCategory, RawPlaylistItem
 ├── App.tsx                  # Main app component, state management
 └── env.d.ts                 # ImportMetaEnv type declarations
 
-api/                     # Vercel serverless functions
-├── _auth.ts                 # Shared auth helper (Bearer token)
-├── _constants.ts            # Shared constants (USER_AGENT)
-├── _cors.ts                 # Shared CORS helper
-├── _gemini.ts               # Shared Gemini client instance
-├── _itunes.ts               # Shared iTunes search helper
-├── _rateLimit.ts            # Shared rate limiting helper
-├── _sanitize.ts             # Shared prompt sanitization
-├── _types.ts                # Server-side API types
-├── _validate.ts             # Shared input validation
-├── covers.ts                # Cover art search (iTunes + MusicBrainz)
-├── identify.ts              # Gemini Vision album identification
-├── image-proxy.ts           # Image proxy (no auth, domain allowlist)
-├── lyrics.ts                # Lyrics lookup
-├── metadata.ts              # Metadata enrichment
-├── playlist.ts              # AI playlist generation
-└── upload-cover.ts          # Cover upload to Supabase Storage
+server/                  # Express backend
+├── index.ts                 # Express app, route registration, SPA fallback
+├── routes/
+│   ├── blog.ts              # Blog CRUD + categories + tags + generate-image
+│   ├── identify.ts          # Gemini Vision album identification
+│   ├── metadata.ts          # Metadata enrichment
+│   ├── playlist.ts          # AI playlist generation
+│   ├── covers.ts            # Cover art search
+│   ├── lyrics.ts            # Lyrics lookup
+│   ├── uploadCover.ts       # Cover upload to Supabase Storage
+│   ├── imageProxy.ts        # Image proxy (no auth, domain allowlist)
+│   ├── subscription.ts      # Subscription status
+│   ├── checkout.ts          # Stripe checkout
+│   ├── prices.ts            # Stripe prices (public)
+│   ├── stripeWebhook.ts     # Stripe webhook handler
+│   └── admin.ts             # Admin endpoints
+├── services/
+│   └── blogService.ts       # Blog post CRUD, categories, tags, full-text search
+├── lib/
+│   └── subscription.ts      # Plan limits, scan counting, tier checking
+├── middleware/
+│   └── adminAuth.ts         # Supabase JWT + admin role check
+└── migrations/              # SQL migration files
 ```
 
 ### Type System
 
 ```typescript
-// types.ts
+// types.ts — Albums
 NewAlbum    // Pre-save shape — no id, no created_at
 Album       // Post-save shape — extends NewAlbum, required id: string + created_at: string
+
+// types.ts — Gear (Stakkd)
+GEAR_CATEGORIES  // Const array of allowed category values
+GearCategory     // Union type derived from GEAR_CATEGORIES
+NewGear          // Pre-save shape
+Gear             // Post-save shape with id + created_at
 ```
 
 - `saveAlbum` accepts `NewAlbum`, returns `Album`
 - All component props and state arrays use `Album` (required `id`)
 - No optional `id` gymnastics — if it's saved, it has an `id`
+- Same pattern for `Gear` / `NewGear`
+
+---
+
+## Database Tables
+
+| Table | Purpose |
+|-------|---------|
+| `albums` | Vinyl record collection |
+| `gear` | Stakkd audio equipment catalog |
+| `blog_posts` | Blog articles (title, body, slug, category, tags, featured_image, search_vector) |
+| `blog_ideas` | Blog idea pipeline (Slack workflow) |
+| `profiles` | User profiles with subscription tier |
+| `wantlist` | Desired records with Discogs pricing |
+
+### Blog-Specific Schema Notes
+
+- `category` column: CHECK constraint limits to `gear`, `collecting`, `culture`, `how-to`, `news`, `reviews`, `general`
+- `search_vector` column: Generated tsvector from title (weight A), excerpt (weight B), body (weight C) — auto-computed
+- `tags` column: TEXT[] array, queried with `.contains()`
+- `image_prompt` column: Stores the Gemini prompt used to generate the hero image
+- RPC functions: `get_blog_categories()` and `get_popular_blog_tags(tag_limit)` for aggregated counts
 
 ---
 
@@ -131,7 +192,7 @@ All API routes apply middleware in this order:
 
 ```
 1. CORS          → Preflight handling (before auth, so OPTIONS works)
-2. Auth          → Bearer token from API_SECRET env var
+2. Auth          → Bearer token or Supabase JWT depending on route
 3. Method check  → Restrict to expected HTTP method
 4. Rate limiting → In-memory per-IP (Gemini endpoints only)
 5. Input validation → Size/length limits
@@ -139,35 +200,24 @@ All API routes apply middleware in this order:
 7. Handler logic
 ```
 
-**Exception:** `image-proxy.ts` skips auth (called from `<img src>`, can't attach headers). Protected by domain allowlist + GET-only + Content-Type validation instead.
+**Exception:** `imageProxy.ts` skips auth (called from `<img src>`, can't attach headers). Protected by domain allowlist + GET-only + Content-Type validation instead.
 
-### Shared Helpers (api/_*.ts)
-
-| File | Purpose |
-|------|---------|
-| `_auth.ts` | `requireAuth(req, res)` — checks Bearer token |
-| `_cors.ts` | `cors(req, res, method)` — origin allowlist, preflight |
-| `_rateLimit.ts` | `rateLimit(req, res, max?, window?)` — per-IP, in-memory |
-| `_validate.ts` | `validateStringLength()`, `validateBase64Size()` |
-| `_sanitize.ts` | Strips prompt injection patterns, truncates |
-| `_gemini.ts` | Pre-configured Gemini client instance |
-| `_itunes.ts` | `searchItunes(artist, title, limit?)` |
-| `_constants.ts` | `USER_AGENT` constant |
+**Stripe webhook:** Mounted before `express.json()` with `express.raw()` so raw body is available for signature verification.
 
 ---
 
 ## Environment Variables
 
 ### Frontend (Vite — use `import.meta.env.VITE_*`)
-| Variable | Purpose | Sellr? |
-|----------|---------|--------|
-| `VITE_SUPABASE_URL` | Supabase project URL | |
-| `VITE_SUPABASE_ANON_KEY` | Supabase anonymous key | |
-| `VITE_API_SECRET` | Bearer token for Rekkrd API calls | |
-| `VITE_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key — shared by Rekkrd subscriptions + Sellr payments | Shared |
-| `VITE_API_URL` | API base URL override for blog routes (default: `''`) | |
-| `VITE_TURNSTILE_SITE_KEY` | Cloudflare Turnstile site key | |
-| `VITE_SELLR_ADMIN_TOKEN` | Token for Sellr admin panel API calls | Sellr |
+| Variable | Purpose |
+|----------|---------|
+| `VITE_SUPABASE_URL` | Supabase project URL |
+| `VITE_SUPABASE_ANON_KEY` | Supabase anonymous key |
+| `VITE_API_SECRET` | Bearer token for Rekkrd API calls |
+| `VITE_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key (shared Rekkrd + Sellr) |
+| `VITE_API_URL` | API base URL override (default: `''`) |
+| `VITE_TURNSTILE_SITE_KEY` | Cloudflare Turnstile site key |
+| `VITE_SELLR_ADMIN_TOKEN` | Token for Sellr admin panel API calls |
 
 ### Backend (Node.js — use `process.env.*`)
 
@@ -175,20 +225,20 @@ All API routes apply middleware in this order:
 
 | Variable | Purpose |
 |----------|---------|
-| `PORT` | Server listen port (default: `3001`) |
-| `NODE_ENV` | `production` or `development` — controls cookie secure flag, admin health display |
-| `SUPABASE_URL` | Supabase project URL (e.g. `https://xxxx.supabase.co`) |
+| `PORT` | Server listen port (default: `3001`, VPS uses `3002`) |
+| `NODE_ENV` | `production` or `development` |
+| `SUPABASE_URL` | Supabase project URL |
 | `SUPABASE_ANON_KEY` | Supabase anonymous key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (admin access) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (admin access, bypasses RLS) |
 | `API_SECRET` | Bearer token for Rekkrd auth middleware |
-| `ALLOWED_ORIGINS` | Comma-separated CORS origins (e.g. `https://rekkrd.com,https://www.rekkrd.com`) |
-| `GEMINI_API_KEY` | Google Gemini API key — used by Rekkrd identify + Sellr scan/copy |
-| `RESEND_API_KEY` | Resend email API key (`re_...`) — onboarding, Sellr order emails |
-| `BASE_URL` | Public site URL (`https://rekkrd.com`) — used in email links |
-| `APP_URL` | Public app URL (fallback: `https://rekkrd.com`) — Stripe checkout/portal return URLs |
-| `SITE_URL` | Site URL for sitemap generation (fallback: `https://rekkrd.com`) |
-| `ADMIN_EMAIL` | Admin notification recipient for Sellr order alerts |
-| `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile server-side verification secret |
+| `ALLOWED_ORIGINS` | Comma-separated CORS origins |
+| `GEMINI_API_KEY` | Google Gemini API key |
+| `RESEND_API_KEY` | Resend email API key |
+| `BASE_URL` | Public site URL (`https://rekkrd.com`) |
+| `APP_URL` | Public app URL (Stripe return URLs) |
+| `SITE_URL` | Site URL for sitemap generation |
+| `ADMIN_EMAIL` | Admin notification recipient |
+| `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile server-side secret |
 | `BLOG_API_KEY` | Secret for blog admin write endpoints |
 | `INTERNAL_ALERTS_SECRET` | Secret for internal alerts-check cron endpoint |
 
@@ -196,13 +246,13 @@ All API routes apply middleware in this order:
 
 | Variable | Purpose |
 |----------|---------|
-| `STRIPE_SECRET_KEY` | Stripe secret API key (`sk_live_...`) — shared by subscriptions + Sellr |
-| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret — Rekkrd subscriptions (`whsec_...`) |
-| `STRIPE_SELLR_WEBHOOK_SECRET` | Stripe webhook signing secret — Sellr one-time payments (`whsec_...`) |
-| `STRIPE_PRICE_CURATOR_MONTHLY` | Stripe Price ID for Curator monthly plan |
-| `STRIPE_PRICE_CURATOR_ANNUAL` | Stripe Price ID for Curator annual plan |
-| `STRIPE_PRICE_ENTHUSIAST_MONTHLY` | Stripe Price ID for Enthusiast monthly plan |
-| `STRIPE_PRICE_ENTHUSIAST_ANNUAL` | Stripe Price ID for Enthusiast annual plan |
+| `STRIPE_SECRET_KEY` | Stripe secret API key (shared subscriptions + Sellr) |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret (subscriptions) |
+| `STRIPE_SELLR_WEBHOOK_SECRET` | Stripe webhook signing secret (Sellr payments) |
+| `STRIPE_PRICE_CURATOR_MONTHLY` | Stripe Price ID for Curator monthly |
+| `STRIPE_PRICE_CURATOR_ANNUAL` | Stripe Price ID for Curator annual |
+| `STRIPE_PRICE_ENTHUSIAST_MONTHLY` | Stripe Price ID for Enthusiast monthly |
+| `STRIPE_PRICE_ENTHUSIAST_ANNUAL` | Stripe Price ID for Enthusiast annual |
 
 **Discogs:**
 
@@ -210,17 +260,102 @@ All API routes apply middleware in this order:
 |----------|---------|
 | `DISCOGS_CONSUMER_KEY` | Discogs OAuth consumer key |
 | `DISCOGS_CONSUMER_SECRET` | Discogs OAuth consumer secret |
-| `DISCOGS_PERSONAL_TOKEN` | Discogs personal access token for API calls |
-| `DISCOGS_USER_AGENT` | User-Agent string for Discogs API (e.g. `Rekkrd/1.0`) |
-| `DISCOGS_CALLBACK_URL` | OAuth callback URL for Discogs auth flow |
+| `DISCOGS_PERSONAL_TOKEN` | Discogs personal access token |
+| `DISCOGS_USER_AGENT` | User-Agent string for Discogs API |
+| `DISCOGS_CALLBACK_URL` | OAuth callback URL |
 
 **Sellr-specific:**
 
 | Variable | Purpose |
 |----------|---------|
-| `SELLR_ADMIN_TOKEN` | Bearer token for Sellr admin endpoints (cron-status, health, etc.) |
+| `SELLR_ADMIN_TOKEN` | Bearer token for Sellr admin endpoints |
 
-**⚠️ Never use `process.env` in frontend code.** Vite uses `import.meta.env.VITE_*`. The old `define` block pattern was removed.
+**⚠️ Never use `process.env` in frontend code.** Vite uses `import.meta.env.VITE_*`.
+
+---
+
+## Deployment
+
+### Infrastructure
+- **Hosting:** IONOS VPS with Plesk panel
+- **Domain:** rekkrd.com
+- **DNS:** Cloudflare (nameservers pointed from IONOS)
+- **SSL:** Let's Encrypt via Plesk (auto-renews)
+- **Cloudflare SSL mode:** Full (Strict)
+
+### Server Details
+- **VPS IP:** 82.165.209.226
+- **SSH Port:** 2222 (port 22 is firewalled)
+- **Node.js:** v18.18.1
+- **PM2:** v6.0.13
+- **Express API port:** 3002 (port 3001 reserved by Plesk)
+- **App directory:** `/var/www/vhosts/rekkrd.com/app/`
+- **Web root:** `/var/www/vhosts/rekkrd.com/httpdocs/`
+- **PM2 start script:** `~/app/start.sh`
+- **GitHub repo:** `github.com/boilermanc/crowe_collection`
+
+### start.sh
+```bash
+#!/bin/bash
+cd /var/www/vhosts/rekkrd.com/app
+PORT=3002 exec ./node_modules/.bin/tsx server/index.ts
+```
+
+### CI/CD
+GitHub Actions auto-deploys on push to `main` via `appleboy/ssh-action@v1`. The workflow SSHs in, pulls, installs, builds, copies dist to httpdocs, and restarts PM2.
+
+### Nginx (Plesk → Additional nginx directives)
+```nginx
+location /api/ {
+    proxy_pass http://127.0.0.1:3002;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_read_timeout 60s;
+}
+```
+Each SPA route needs its own `location` block for direct URL navigation:
+```nginx
+location /blog { try_files $uri /index.html; }
+location /admin { try_files $uri /index.html; }
+location /collection { try_files $uri /index.html; }
+location /stakkd { try_files $uri /index.html; }
+location /sellr { try_files $uri /index.html; }
+location /login { try_files $uri /index.html; }
+location /signup { try_files $uri /index.html; }
+location /onboarding { try_files $uri /index.html; }
+```
+
+### Deployment Gotchas
+- **PM2 + nodenv shims don't mix** — use `start.sh` wrapper
+- **Plesk owns `location /`** — can't use `try_files` there, need explicit SPA route blocks
+- **Cloudflare proxy (orange cloud) must be OFF** when issuing/renewing Let's Encrypt certs
+- **Express routes include `/api/` prefix** — nginx `proxy_pass` should NOT have trailing slash
+- **Plesk bash terminal** — select `/bin/bash` when opening
+
+---
+
+## n8n Automation
+
+Self-hosted n8n at `https://n8n.sproutify.app`
+
+### Active Workflows
+
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| Rekkrd Blog - Slash Command | `/blog-idea` Slack command | Generates 5 blog title/angle options via Gemini, posts as Slack buttons |
+| Rekkrd Blog - Interactions | Slack button clicks | Handles option selection → writes full draft → preview with approve/reject |
+| Rekkrd Blog - Post Submit | `/blog-post` Slack command | Receives full written post, parses with Gemini, generates hero image, posts for approval |
+| Rekkrd Blog - Image Generation | Webhook from approval flow | Generates hero image via Gemini image generation (Nano Banana), uploads to Supabase Storage |
+
+### n8n Conventions
+- Use `$http.request()` in Code nodes, NOT `fetch` (n8n compatibility)
+- Use native Supabase nodes for DB operations when possible
+- Code nodes only for parsing/formatting logic
+- Slack interactivity URL points to the Interactions workflow webhook
+- All workflows use the same Gemini credential and Supabase credential
 
 ---
 
@@ -235,6 +370,9 @@ All API routes apply middleware in this order:
 ### Supabase Client Null
 All `supabaseService` methods call `assertClient()` first and throw if Supabase isn't initialized. Callers have try/catch blocks.
 
+### Supabase Schema Cache
+After adding columns via ALTER TABLE, PostgREST schema cache may be stale. Run `NOTIFY pgrst, 'reload schema';` to refresh.
+
 ### Camera Mirror
 `CameraModal.tsx` conditionally mirrors the video feed — only when `facingMode === 'user'` (front camera). Back camera is not mirrored so album text is readable.
 
@@ -245,7 +383,10 @@ When generating a new playlist, `currentIndex` must be reset to 0 to avoid out-o
 `upload-cover.ts` validates URLs before fetching: HTTPS only, domain allowlist, DNS resolution with private IP blocking, no redirects.
 
 ### updateAlbum — Field Allowlist
-`supabaseService.updateAlbum` uses an explicit `UPDATABLE_FIELDS` allowlist. The `...rest` spread pattern was removed. Protected fields (`id`, `created_at`) are silently dropped.
+`supabaseService.updateAlbum` uses an explicit `UPDATABLE_FIELDS` allowlist. Protected fields (`id`, `created_at`) are silently dropped.
+
+### Blog Route Ordering
+Admin routes (`/admin/*`), `/categories`, `/tags`, and `/generate-image` must be registered BEFORE the `/:slug` catch-all parameter, otherwise they get interpreted as slugs.
 
 ---
 
@@ -263,6 +404,8 @@ Other accessibility:
 - Viewport allows pinch-to-zoom (no `user-scalable=no`)
 - Delete button accessible on mobile (44px touch target)
 - Album images have descriptive alt text: `"Album cover for {title} by {artist}"`
+- Blog filter bar: `role="radiogroup"` + `aria-pressed` on category/tag chips
+- All interactive elements require ARIA labels
 
 ---
 
@@ -288,11 +431,16 @@ Don't just say "done." Show:
 
 ### Batch Task Workflow
 Tasks are worked in batches of 5. For each batch:
-1. Claude provides Cursor prompts for all tasks
+1. Claude provides Cursor prompts for all tasks (delivered as .md artifacts in chat canvas)
 2. Developer implements in Cursor
 3. Developer reports results one at a time
 4. Claude reviews and logs as complete
 5. Next batch begins
+
+### Cursor Prompt Format
+- Deliver each prompt as a standalone `.md` file rendered in the Claude chat canvas
+- Do NOT put Cursor prompts in inline code blocks
+- User copies the full prompt from the canvas view
 
 ### Control Scope Creep
 If you notice adjacent improvements, log them as future tasks. Don't fix them now unless explicitly asked.
@@ -313,56 +461,34 @@ A task is complete when:
 
 ---
 
-## Deployment Notes — Nginx
-
-When deploying new client-side routes, add a `location` block to the nginx config so the SPA fallback serves `index.html`:
-
-```nginx
-# Sellr — client-side route, pass to SPA
-location /sellr {
-  try_files $uri /index.html;
-}
-```
-
----
-
 ## Sellr — Stripe Setup
 
 Step-by-step checklist for creating Stripe products before Sellr launch:
 
 1. **Create 3 Products in Stripe Dashboard**
-   Sellr uses `PaymentIntent` (one-time payments), not `Price` objects. Products are for dashboard organization only:
+   Sellr uses `PaymentIntent` (one-time payments), not `Price` objects:
    - "Sellr Starter Appraisal" — $4.99
    - "Sellr Standard Appraisal" — $14.99
    - "Sellr Full Collection Appraisal" — $29.99
 
-2. **Create a Webhook endpoint** in Stripe pointing to:
+2. **Create a Webhook endpoint** pointing to:
    ```
    https://rekkrd.com/api/sellr/checkout/webhook
    ```
-   Events to subscribe:
-   - `payment_intent.succeeded`
-   - `payment_intent.payment_failed`
+   Events: `payment_intent.succeeded`, `payment_intent.payment_failed`
 
-3. **Copy the webhook signing secret** to `STRIPE_SELLR_WEBHOOK_SECRET` in your env.
+3. **Copy webhook signing secret** to `STRIPE_SELLR_WEBHOOK_SECRET`
 
-4. **Important:** Sellr uses a **separate** webhook secret from the Rekkrd subscription webhook. Do not mix `STRIPE_WEBHOOK_SECRET` (subscriptions) with `STRIPE_SELLR_WEBHOOK_SECRET` (Sellr payments).
+4. **Important:** Sellr uses a **separate** webhook secret from subscriptions. Do not mix.
 
 ---
 
 ## Sellr — Resend Setup
 
-1. **Verify `rekkrd.com` domain** in [Resend](https://resend.com) (likely already done for onboarding emails).
-
-2. **Confirm sending address** — Sellr emails send from `appraisals@rekkrd.com`. Verify that the existing domain verification covers all `@rekkrd.com` addresses, or add `appraisals@rekkrd.com` as a specific sending address.
-
-3. **Test all 5 email templates** before launch by triggering them via the admin Tools panel:
-   - Welcome / onboarding
-   - Order confirmation (payment received)
-   - Report ready (appraisal complete)
-   - Admin new-order alert
-   - Report share link
+1. Verify `rekkrd.com` domain in Resend
+2. Confirm `appraisals@rekkrd.com` sending address
+3. Test all 5 email templates via admin Tools panel
 
 ---
 
-*Last updated: 2026-02-23*
+*Last updated: 2026-02-27*
