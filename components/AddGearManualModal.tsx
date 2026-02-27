@@ -26,14 +26,15 @@ const LABEL_CLS = 'block text-th-text3/70 text-[10px] uppercase tracking-widest 
 const CATEGORY_COLORS: Record<string, string> = {
   turntable: '#f59e0b',
   cartridge: '#3b82f6',
-  tonearm: '#8b5cf6',
+  phono_preamp: '#8b5cf6',
+  preamp: '#a78bfa',
   amplifier: '#ef4444',
   receiver: '#22c55e',
-  speaker: '#14b8a6',
-  headphone: '#ec4899',
-  'cassette deck': '#eab308',
-  'cd player': '#6366f1',
-  tuner: '#06b6d4',
+  speakers: '#14b8a6',
+  headphones: '#ec4899',
+  dac: '#6366f1',
+  subwoofer: '#f97316',
+  cables_other: '#06b6d4',
 };
 
 const getCategoryColor = (cat: string | null) =>

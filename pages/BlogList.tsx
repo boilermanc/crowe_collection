@@ -208,8 +208,58 @@ const BlogList: React.FC = () => {
           </div>
         ) : (
           <>
+            {/* Featured latest post — only on page 1 with no filters */}
+            {page === 1 && !hasActiveFilters && posts.length > 0 && (() => {
+              const featured = posts[0];
+              return (
+                <Link to={`/blog/${featured.slug}`} className="blog-featured">
+                  {featured.featured_image ? (
+                    <img
+                      className="blog-featured-image"
+                      src={featured.featured_image.replace(/^=+/, '')}
+                      alt={`Hero image for ${featured.title}`}
+                    />
+                  ) : (
+                    <div className="blog-featured-image blog-card-image-placeholder">
+                      <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="256" cy="256" r="250" fill="#f0a882"/>
+                        <circle cx="256" cy="256" r="250" fill="none" stroke="#dd6e42" strokeWidth="4" opacity="0.3"/>
+                        <circle cx="256" cy="256" r="225" fill="none" stroke="#d48a6a" strokeWidth="2" opacity="0.35"/>
+                        <circle cx="256" cy="256" r="200" fill="none" stroke="#d48a6a" strokeWidth="1.5" opacity="0.3"/>
+                        <circle cx="256" cy="256" r="175" fill="none" stroke="#d48a6a" strokeWidth="1.5" opacity="0.3"/>
+                        <circle cx="256" cy="256" r="150" fill="none" stroke="#d48a6a" strokeWidth="1.5" opacity="0.25"/>
+                        <circle cx="256" cy="256" r="120" fill="#c45a30"/>
+                        <circle cx="256" cy="256" r="105" fill="none" stroke="#a8481f" strokeWidth="1" opacity="0.3"/>
+                        <text x="256" y="264" textAnchor="middle" dominantBaseline="central" fontFamily="Georgia,'Times New Roman',serif" fontWeight="bold" fontSize="140" fill="#f0a882">R</text>
+                        <circle cx="256" cy="256" r="12" fill="#f0a882" opacity="0.4"/>
+                      </svg>
+                    </div>
+                  )}
+                  <div className="blog-featured-body">
+                    <span className="blog-featured-label">Latest</span>
+                    <h2>{featured.title}</h2>
+                    {featured.excerpt && (
+                      <p className="blog-featured-excerpt">{truncate(featured.excerpt, 280)}</p>
+                    )}
+                    <div className="blog-card-meta">
+                      <span className="blog-card-author">{featured.author}</span>
+                      <span className="blog-card-date">{formatDate(featured.published_at)}</span>
+                    </div>
+                    {featured.tags.length > 0 && (
+                      <div className="blog-card-tags">
+                        {featured.tags.map(tag => (
+                          <span key={tag} className="blog-tag">{tag}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </Link>
+              );
+            })()}
+
+            {/* Remaining posts grid */}
             <div className="blog-grid">
-              {posts.map(post => (
+              {(page === 1 && !hasActiveFilters ? posts.slice(1) : posts).map(post => (
                 <Link key={post.id} to={`/blog/${post.slug}`} className="blog-card">
                   {post.featured_image ? (
                     <img
