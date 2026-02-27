@@ -133,7 +133,6 @@ export function buildSetupGuidePdfHtml(guide: SetupGuide, gearName: string): str
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -169,7 +168,7 @@ export function buildSetupGuidePdfHtml(guide: SetupGuide, gearName: string): str
       border-radius: 50%;
       background: #dd6e42;
       color: #0f0f1a;
-      font-family: 'Playfair Display', serif;
+      font-family: 'Playfair Display', Georgia, serif;
       font-weight: 700;
       font-size: 24px;
       margin-bottom: 8px;
@@ -185,7 +184,7 @@ export function buildSetupGuidePdfHtml(guide: SetupGuide, gearName: string): str
     }
 
     .header h1 {
-      font-family: 'Playfair Display', serif;
+      font-family: 'Playfair Display', Georgia, serif;
       font-size: 28px;
       font-weight: 700;
       color: #e8e8f0;
