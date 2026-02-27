@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Gear, NewGear, GEAR_CATEGORIES, GearCategory, ManualSearchResult } from '../types';
 import { gearService } from '../services/gearService';
 import { geminiService } from '../services/geminiService';
@@ -131,7 +131,9 @@ const GearDetailModal: React.FC<GearDetailModalProps> = ({
   const [manualSearching, setManualSearching] = useState(false);
   const [manualResult, setManualResult] = useState<ManualSearchResult | null>(null);
   const [uploadingManual, setUploadingManual] = useState(false);
+  const [manualSaved, setManualSaved] = useState(false);
   const manualInputRef = useRef<HTMLInputElement>(null);
+  const manualResultRef = useRef<HTMLDivElement>(null);
 
   if (!isOpen || !gear) return null;
 
@@ -222,14 +224,18 @@ const GearDetailModal: React.FC<GearDetailModalProps> = ({
         const updated = await gearService.updateGear(gear.id, { manual_url: result.manual_url });
         showToast('Manual found! Saved to your gear.', 'success');
         onUpdate(updated);
+        setManualSaved(true);
+        setManualResult(result);
       } else {
         // Show alternatives for user to pick from
+        setManualSaved(false);
         setManualResult(result);
       }
     } catch (err) {
       console.error('Find manual failed:', err);
       showToast('Failed to search for manual.', 'error');
       // Show fallback search link
+      setManualSaved(false);
       setManualResult({
         manual_url: null,
         source: '',
@@ -253,6 +259,14 @@ const GearDetailModal: React.FC<GearDetailModalProps> = ({
       showToast('Failed to save manual link.', 'error');
     }
   };
+
+  useEffect(() => {
+    if (manualResult) {
+      requestAnimationFrame(() => {
+        manualResultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
+  }, [manualResult]);
 
   const handleManualUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -647,20 +661,38 @@ const GearDetailModal: React.FC<GearDetailModalProps> = ({
               </button>
             </div>
 
-            {/* Low-confidence results — alternatives for user to pick */}
+            {/* Manual search results */}
             {manualResult && (
-              <div className="mt-4 glass-morphism rounded-xl border border-th-surface/[0.06] p-4 space-y-3">
+              <div ref={manualResultRef} className="mt-4 glass-morphism rounded-xl border border-th-surface/[0.06] p-4 space-y-3">
                 {manualResult.manual_url ? (
                   <div>
-                    <p className="text-th-text3/60 text-[10px] uppercase tracking-widest mb-2">
-                      Best match ({manualResult.confidence} confidence)
-                    </p>
-                    <button
-                      onClick={() => handlePickAlternative(manualResult.manual_url!)}
-                      className="text-[#f0a882] text-sm hover:text-[#dd6e42] transition-colors underline underline-offset-2 break-all text-left"
-                    >
-                      {manualResult.source || manualResult.manual_url}
-                    </button>
+                    <div className="flex items-center gap-2 mb-2">
+                      <p className="text-th-text3/60 text-[10px] uppercase tracking-widest">
+                        Best match ({manualResult.confidence} confidence)
+                      </p>
+                      {manualSaved && (
+                        <span className="text-green-400 text-[10px] uppercase tracking-widest font-bold">
+                          Saved!
+                        </span>
+                      )}
+                    </div>
+                    {manualSaved ? (
+                      <a
+                        href={manualResult.manual_url!}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[#f0a882] text-sm hover:text-[#dd6e42] transition-colors underline underline-offset-2 break-all text-left"
+                      >
+                        {manualResult.source || manualResult.manual_url}
+                      </a>
+                    ) : (
+                      <button
+                        onClick={() => handlePickAlternative(manualResult.manual_url!)}
+                        className="text-[#f0a882] text-sm hover:text-[#dd6e42] transition-colors underline underline-offset-2 break-all text-left"
+                      >
+                        {manualResult.source || manualResult.manual_url}
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <p className="text-th-text3/50 text-sm">No confident match found</p>
@@ -684,17 +716,25 @@ const GearDetailModal: React.FC<GearDetailModalProps> = ({
                   </div>
                 )}
 
-                <a
-                  href={manualResult.search_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-th-text3/60 text-[10px] uppercase tracking-widest hover:text-[#dd6e42] transition-colors mt-1"
-                >
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-                  </svg>
-                  Search Google for manual
-                </a>
+                <div className="flex flex-wrap items-center gap-2 mt-1">
+                  <a
+                    href={manualResult.search_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 bg-th-surface/[0.04] border border-th-surface/[0.10] rounded-xl px-4 py-2.5 text-sm text-th-text hover:bg-th-surface/[0.08] transition-all"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                    </svg>
+                    Search Google for Manual
+                  </a>
+                  <button
+                    onClick={() => { setManualResult(null); setManualSaved(false); }}
+                    className="inline-flex items-center gap-2 bg-th-surface/[0.04] border border-th-surface/[0.10] rounded-xl px-4 py-2.5 text-sm text-th-text hover:bg-th-surface/[0.08] transition-all"
+                  >
+                    Dismiss
+                  </button>
+                </div>
               </div>
             )}
           </section>
