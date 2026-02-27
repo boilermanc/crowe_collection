@@ -691,7 +691,7 @@ const StakkdPage: React.FC<StakkdPageProps> = ({ onUpgradeRequired }) => {
                 <button
                   onClick={() => handleOpenSavedGuide(g.id)}
                   disabled={loadingSavedGuideId === g.id}
-                  className="flex-1 flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-th-surface/[0.12] transition-all text-left disabled:opacity-50"
+                  className="flex-1 flex items-center gap-3 rounded-lg px-3 py-2.5 bg-th-surface/[0.08] border border-th-surface/[0.15] hover:bg-th-surface/[0.18] hover:border-[#dd6e42]/30 transition-all text-left disabled:opacity-50"
                 >
                   {loadingSavedGuideId === g.id ? (
                     <svg className="w-3.5 h-3.5 text-[#dd6e42] animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
