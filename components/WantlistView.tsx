@@ -107,31 +107,62 @@ const WantlistView: React.FC<WantlistViewProps> = ({ userId, onMarkAsOwned, onRe
     }
   }
 
-  // Fire-and-forget: search Discogs for a manual add, link the release, then backfill pricing.
-  async function backfillManualAdd(itemId: string, artist: string, title: string) {
+  // Fire-and-forget: enrich a manual add via /api/metadata (Gemini + iTunes), then backfill pricing.
+  async function backfillManualAdd(itemId: string, artist: string, title: string, existingYear: string | null, existingGenre: string | null) {
     try {
-      const params = new URLSearchParams({
-        q: `${artist} ${title}`,
-        type: 'release',
-        format: 'Vinyl',
-        per_page: '1',
-      });
+      const session = await supabase?.auth.getSession();
+      const token = session?.data?.session?.access_token;
+      const sessionUserId = session?.data?.session?.user?.id;
+      if (!token || !sessionUserId) return;
 
-      const res = await fetch(`/api/discogs/search?${params}`);
+      const res = await fetch('/api/metadata', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ artist, title }),
+      });
       if (!res.ok) return;
 
-      const data = await res.json() as { results?: { id: number; cover_image?: string; uri?: string }[] };
-      const match = data.results?.[0];
-      if (!match) return;
+      const data = await res.json() as {
+        cover_url?: string;
+        year?: string;
+        genre?: string;
+        discogs_url?: string;
+      };
 
-      await wantlistService.linkDiscogsRelease(itemId, {
-        discogs_release_id: match.id,
-        discogs_url: `https://www.discogs.com/release/${match.id}`,
-        cover_url: match.cover_image || null,
-      });
+      // Parse discogs_release_id from discogs_url (e.g. /release/12345-...)
+      let discogsReleaseId: number | null = null;
+      if (data.discogs_url) {
+        const match = data.discogs_url.match(/\/release\/(\d+)/);
+        if (match) discogsReleaseId = parseInt(match[1], 10);
+      }
 
-      // Now fetch pricing for the linked release
-      await backfillPricing([match.id]);
+      // Build update with only fields that add new information
+      const update: Record<string, unknown> = {};
+      if (data.cover_url) update.cover_url = data.cover_url;
+      if (!existingYear && data.year) update.year = data.year;
+      if (!existingGenre && data.genre) update.genre = data.genre;
+      if (data.discogs_url) update.discogs_url = data.discogs_url;
+      if (discogsReleaseId) update.discogs_release_id = discogsReleaseId;
+
+      if (Object.keys(update).length > 0) {
+        await supabase!
+          .from('wantlist')
+          .update(update)
+          .eq('id', itemId)
+          .eq('user_id', sessionUserId);
+      }
+
+      // If we got a discogs_release_id, fetch pricing (which also re-fetches the list)
+      if (discogsReleaseId) {
+        await backfillPricing([discogsReleaseId]);
+      } else {
+        // Re-fetch to show cover/year/genre updates
+        const updated = await wantlistService.getWantlist();
+        setWantlist(updated);
+      }
     } catch {
       // Non-fatal — item stays as manual entry
     }
@@ -267,8 +298,8 @@ const WantlistView: React.FC<WantlistViewProps> = ({ userId, onMarkAsOwned, onRe
       setWantlist(updated);
       onRefreshCount();
 
-      // Background: search Discogs, link release, fetch pricing + cover art
-      backfillManualAdd(newItem.id, artist, title);
+      // Background: enrich with metadata, cover art, and pricing
+      backfillManualAdd(newItem.id, artist, title, addForm.year.trim() || null, addForm.genre.trim() || null);
     } catch {
       showToast('Failed to add to wantlist', 'error');
     } finally {
