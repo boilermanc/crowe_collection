@@ -107,6 +107,36 @@ const WantlistView: React.FC<WantlistViewProps> = ({ userId, onMarkAsOwned, onRe
     }
   }
 
+  // Fire-and-forget: search Discogs for a manual add, link the release, then backfill pricing.
+  async function backfillManualAdd(itemId: string, artist: string, title: string) {
+    try {
+      const params = new URLSearchParams({
+        q: `${artist} ${title}`,
+        type: 'release',
+        format: 'Vinyl',
+        per_page: '1',
+      });
+
+      const res = await fetch(`/api/discogs/search?${params}`);
+      if (!res.ok) return;
+
+      const data = await res.json() as { results?: { id: number; cover_image?: string; uri?: string }[] };
+      const match = data.results?.[0];
+      if (!match) return;
+
+      await wantlistService.linkDiscogsRelease(itemId, {
+        discogs_release_id: match.id,
+        discogs_url: `https://www.discogs.com/release/${match.id}`,
+        cover_url: match.cover_image || null,
+      });
+
+      // Now fetch pricing for the linked release
+      await backfillPricing([match.id]);
+    } catch {
+      // Non-fatal — item stays as manual entry
+    }
+  }
+
   async function handleRemove(id: string) {
     const previous = wantlist;
     setWantlist((prev) => prev.filter((item) => item.id !== id));
@@ -218,7 +248,7 @@ const WantlistView: React.FC<WantlistViewProps> = ({ userId, onMarkAsOwned, onRe
 
     setAddSubmitting(true);
     try {
-      await wantlistService.addToWantlist({
+      const newItem = await wantlistService.addToWantlist({
         artist,
         title,
         year: addForm.year.trim() || null,
@@ -236,6 +266,9 @@ const WantlistView: React.FC<WantlistViewProps> = ({ userId, onMarkAsOwned, onRe
       const updated = await wantlistService.getWantlist();
       setWantlist(updated);
       onRefreshCount();
+
+      // Background: search Discogs, link release, fetch pricing + cover art
+      backfillManualAdd(newItem.id, artist, title);
     } catch {
       showToast('Failed to add to wantlist', 'error');
     } finally {

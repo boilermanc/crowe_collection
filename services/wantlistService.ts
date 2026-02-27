@@ -105,6 +105,34 @@ export const wantlistService = {
     return data;
   },
 
+  async linkDiscogsRelease(id: string, fields: {
+    discogs_release_id: number;
+    discogs_url: string;
+    cover_url?: string | null;
+  }): Promise<void> {
+    assertClient();
+    const userId = await requireUserId();
+
+    const update: Record<string, unknown> = {
+      discogs_release_id: fields.discogs_release_id,
+      discogs_url: fields.discogs_url,
+    };
+    if (fields.cover_url) {
+      update.cover_url = fields.cover_url;
+    }
+
+    const { error } = await supabase!
+      .from('wantlist')
+      .update(update)
+      .eq('id', id)
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('Error linking Discogs release:', error);
+      throw error;
+    }
+  },
+
   async updateWantlistPrices(id: string, prices: {
     price_low: number | null;
     price_median: number | null;
