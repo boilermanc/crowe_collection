@@ -162,7 +162,7 @@ router.post('/api/blog/generate-image', requireAuthWithUser, async (req, res) =>
 
     // Step 2: Generate image via Gemini image model
     const imageResp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${geminiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${geminiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
