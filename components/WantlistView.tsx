@@ -138,6 +138,9 @@ const WantlistView: React.FC<WantlistViewProps> = ({ userId, onMarkAsOwned, onRe
         year?: string;
         genre?: string;
         discogs_url?: string;
+        price_low?: number;
+        price_median?: number;
+        price_high?: number;
       };
       console.log('[wantlist-backfill] metadata response:', { cover_url: !!data.cover_url, year: data.year, genre: data.genre, discogs_url: data.discogs_url });
 
@@ -145,19 +148,41 @@ const WantlistView: React.FC<WantlistViewProps> = ({ userId, onMarkAsOwned, onRe
 
       // Parse discogs_release_id from discogs_url — handles both /release/ and /master/ URLs
       let discogsReleaseId: number | null = null;
+      let masterId: number | null = null;
       if (data.discogs_url) {
         const urlMatch = data.discogs_url.match(/\/(release|master)\/(\d+)/);
         if (urlMatch && urlMatch[1] === 'release') {
           discogsReleaseId = parseInt(urlMatch[2], 10);
         } else if (urlMatch && urlMatch[1] === 'master') {
-          console.log('[wantlist-backfill] detected master URL, using search fallback for release ID');
+          masterId = parseInt(urlMatch[2], 10);
         }
       }
-      console.log('[wantlist-backfill] parsed release_id:', discogsReleaseId, 'from url:', data.discogs_url);
+      console.log('[wantlist-backfill] parsed release_id:', discogsReleaseId, 'master_id:', masterId, 'from url:', data.discogs_url);
 
-      // Fallback: if no release ID (master URL, no URL, or unparseable), try Discogs search
-      if (!discogsReleaseId) {
-        console.log('[wantlist-backfill] no release_id, trying Discogs search fallback');
+      // Resolve master → main_release via Discogs API
+      if (!discogsReleaseId && masterId) {
+        console.log('[wantlist-backfill] resolving master', masterId, 'to main release');
+        try {
+          const masterRes = await fetch(`/api/discogs/masters/${masterId}`, { signal: AbortSignal.timeout(10_000) });
+          if (masterRes.ok) {
+            const masterData = await masterRes.json() as { main_release?: number; images?: { uri?: string }[] };
+            if (masterData.main_release) {
+              discogsReleaseId = masterData.main_release;
+              console.log('[wantlist-backfill] master resolved to release_id:', discogsReleaseId);
+              // Use master cover art if we don't have one yet
+              if (!data.cover_url && masterData.images?.[0]?.uri) {
+                data.cover_url = masterData.images[0].uri;
+              }
+            }
+          }
+        } catch {
+          console.warn('[wantlist-backfill] master resolution timed out or failed');
+        }
+      }
+
+      // Last resort: Discogs search when no URL was returned at all
+      if (!discogsReleaseId && !masterId) {
+        console.log('[wantlist-backfill] no URL from metadata, trying Discogs search');
         try {
           const params = new URLSearchParams({ q: `${artist} ${title}`, type: 'release', format: 'Vinyl', per_page: '1' });
           const searchRes = await fetch(`/api/discogs/search?${params}`, { signal: AbortSignal.timeout(10_000) });
@@ -169,11 +194,11 @@ const WantlistView: React.FC<WantlistViewProps> = ({ userId, onMarkAsOwned, onRe
               if (!data.cover_url && searchMatch.cover_image) {
                 data.cover_url = searchMatch.cover_image;
               }
-              console.log('[wantlist-backfill] Discogs fallback found release_id:', discogsReleaseId);
+              console.log('[wantlist-backfill] Discogs search found release_id:', discogsReleaseId);
             }
           }
         } catch {
-          console.warn('[wantlist-backfill] Discogs search fallback timed out or failed');
+          console.warn('[wantlist-backfill] Discogs search timed out or failed');
         }
       }
 
@@ -186,6 +211,14 @@ const WantlistView: React.FC<WantlistViewProps> = ({ userId, onMarkAsOwned, onRe
       if (discogsReleaseId) {
         update.discogs_release_id = discogsReleaseId;
         if (!data.discogs_url) update.discogs_url = `https://www.discogs.com/release/${discogsReleaseId}`;
+      }
+
+      // Save Gemini pricing as initial estimates (Discogs overwrites later if available)
+      if (data.price_low && data.price_low > 0) update.price_low = data.price_low;
+      if (data.price_median && data.price_median > 0) update.price_median = data.price_median;
+      if (data.price_high && data.price_high > 0) update.price_high = data.price_high;
+      if (data.price_low || data.price_median || data.price_high) {
+        update.prices_updated_at = new Date().toISOString();
       }
 
       if (Object.keys(update).length > 0) {
