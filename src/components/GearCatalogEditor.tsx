@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../services/supabaseService';
 
 // ── Types ─────────────────────────────────────────────────────────────
@@ -103,6 +103,9 @@ const GearCatalogEditor: React.FC<GearCatalogEditorProps> = ({ entry, isOpen, on
   const [saving, setSaving] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ text: string; isError: boolean } | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{ brand?: string; model?: string }>({});
+  const [isEnriching, setIsEnriching] = useState(false);
+  const [enrichMsg, setEnrichMsg] = useState<{ text: string; color: 'green' | 'amber' | 'red' } | null>(null);
+  const enrichTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
   // Populate / reset on open
   useEffect(() => {
@@ -147,6 +150,43 @@ const GearCatalogEditor: React.FC<GearCatalogEditorProps> = ({ entry, isOpen, on
   const removeSpecRow = (idx: number) => setSpecRows(prev => prev.filter((_, i) => i !== idx));
   const updateSpecRow = (idx: number, field: 'key' | 'value', val: string) => {
     setSpecRows(prev => prev.map((r, i) => i === idx ? { ...r, [field]: val } : r));
+  };
+
+  // Enrich with AI
+  const handleEnrich = async () => {
+    setIsEnriching(true);
+    setEnrichMsg(null);
+    clearTimeout(enrichTimerRef.current);
+
+    try {
+      const headers = await getAuthHeaders();
+      const resp = await fetch('/api/admin/gear-catalog/enrich', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ brand: brand.trim(), model: model.trim(), category: category || undefined }),
+      });
+
+      if (resp.status === 422) {
+        setEnrichMsg({ text: 'Gear not recognized — fill in manually', color: 'amber' });
+      } else if (!resp.ok) {
+        setEnrichMsg({ text: 'Enrichment failed', color: 'red' });
+      } else {
+        const data = await resp.json();
+        if (data.category && !category) setCategory(data.category);
+        if (data.year && !year) setYear(data.year);
+        if (data.description && !description) setDescription(data.description);
+        if (data.specs && typeof data.specs === 'object' && specRows.length === 0) {
+          setSpecRows(specsToRows(data.specs));
+        }
+        if (data.confidence != null && !aiConfidence) setAiConfidence(String(data.confidence));
+        setEnrichMsg({ text: 'Fields populated from AI — review before saving', color: 'green' });
+      }
+    } catch {
+      setEnrichMsg({ text: 'Enrichment failed', color: 'red' });
+    } finally {
+      setIsEnriching(false);
+      enrichTimerRef.current = setTimeout(() => setEnrichMsg(null), 3000);
+    }
   };
 
   // Submit
@@ -283,6 +323,45 @@ const GearCatalogEditor: React.FC<GearCatalogEditorProps> = ({ entry, isOpen, on
               <p className="text-xs mt-1" style={{ color: 'rgb(239,68,68)' }}>{fieldErrors.model}</p>
             )}
           </div>
+
+          {/* Enrich with AI */}
+          {brand.trim() && model.trim() && (
+            <div>
+              <button
+                type="button"
+                onClick={handleEnrich}
+                disabled={isEnriching || saving}
+                className="text-sm font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+                style={{ backgroundColor: 'rgb(238,242,255)', color: 'rgb(99,102,241)' }}
+              >
+                {isEnriching ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-[rgb(99,102,241)] border-t-transparent rounded-full animate-spin" />
+                    Fetching gear data...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
+                    </svg>
+                    Enrich with AI
+                  </>
+                )}
+              </button>
+              {enrichMsg && (
+                <p
+                  className="text-xs mt-1.5"
+                  style={{
+                    color: enrichMsg.color === 'green' ? 'rgb(22,163,74)'
+                      : enrichMsg.color === 'amber' ? 'rgb(217,119,6)'
+                      : 'rgb(239,68,68)',
+                  }}
+                >
+                  {enrichMsg.text}
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Category + Year row */}
           <div className="grid grid-cols-2 gap-4">

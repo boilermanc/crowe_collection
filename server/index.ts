@@ -57,6 +57,7 @@ import sellrImportRouter from './routes/sellrImport.js';
 import sellrLotRouter from './routes/sellrLot.js';
 import adminGearCatalogRouter from './routes/adminGearCatalog.js';
 import adminGearIdentifyRouter from './routes/adminGearIdentify.js';
+import adminGearEnrichRouter from './routes/adminGearEnrich.js';
 import crawlerMeta from './middleware/crawlerMeta.js';
 import { validateDiscogsConfig } from './lib/discogs.js';
 import { startSellrCron } from './sellrCron.js';
@@ -74,7 +75,7 @@ const _routerMap: Record<string, unknown> = {
   collectionValueRouter, accountRouter, priceAlertsRouter, alertsCheckRouter,
   sellrSessionsRouter, sellrRecordsRouter, sellrScanRouter, sellrCheckoutRouter, sellrReportRouter,
   sellrAdminRouter, sellrAccountRouter, sellrDashboardRouter, sellrImportRouter, sellrLotRouter, integrationsRouter,
-  adminGearCatalogRouter, adminGearIdentifyRouter,
+  adminGearCatalogRouter, adminGearIdentifyRouter, adminGearEnrichRouter,
 };
 for (const [name, r] of Object.entries(_routerMap)) {
   if (typeof r !== 'function') {
@@ -192,6 +193,8 @@ mountRouter('sellrDashboardRouter', sellrDashboardRouter);
 mountRouter('sellrImportRouter', sellrImportRouter);
 mountRouter('sellrLotRouter', sellrLotRouter);
 mountRouter('integrationsRouter', integrationsRouter);
+// Admin gear enrich endpoint
+mountRouter('adminGearEnrichRouter', adminGearEnrichRouter);
 // Admin gear identify endpoint
 mountRouter('adminGearIdentifyRouter', adminGearIdentifyRouter);
 // Admin gear catalog routes
