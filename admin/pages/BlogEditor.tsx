@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Markdown from 'react-markdown';
 import { Sparkles } from 'lucide-react';
 import { adminService, BlogPostAdmin } from '../../services/adminService';
+import { supabase } from '../../services/supabaseService';
 import '../../pages/Blog.css';
 
 const CATEGORIES = [
@@ -128,9 +129,21 @@ const BlogEditor: React.FC<BlogEditorProps> = ({ post, onSave, onCancel }) => {
     setStatusMsg(null);
     setImagePrompt(null);
     try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          headers['Authorization'] = `Bearer ${session.access_token}`;
+        }
+      }
+      if (!headers['Authorization']) {
+        const secret = import.meta.env.VITE_API_SECRET;
+        if (secret) headers['Authorization'] = `Bearer ${secret}`;
+      }
+
       const resp = await fetch('/api/blog/generate-image', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           post_id: post.id,
           title: title,
