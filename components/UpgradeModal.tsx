@@ -85,6 +85,7 @@ const FEATURE_LABELS: Record<string, string> = {
   manual_finder: 'Manual Finder',
   shelf_organizer: 'Shelf Organizer',
   room_planner: 'Room Planner',
+  bulk_import: 'Bulk Import',
   plan_upgrade: 'Premium Features',
 };
 
@@ -564,6 +565,23 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, feature, d
                   <p className="text-sm font-semibold text-th-text mb-0.5">Shelf Organizer</p>
                   <p className="text-xs text-th-text3">
                     Never thumb through the stack again. Define your shelves, pick a sort order, and Rekkrd tells you exactly where every record goes&nbsp;&mdash; and where to slot new arrivals.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Bulk Import feature callout (contextual) */}
+            {feature === 'bulk_import' && (
+              <div className="rounded-xl border border-[#dd6e42]/15 bg-[#dd6e42]/[0.04] p-4 mb-6 flex items-start gap-3">
+                <div className="shrink-0 mt-0.5">
+                  <svg className="w-5 h-5 text-[#dd6e42]" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-th-text mb-0.5">Bulk Import</p>
+                  <p className="text-xs text-th-text3">
+                    Drop a CSV or Discogs export and import your entire collection in seconds. Smart column mapping, duplicate detection, and batch insert&nbsp;&mdash; no manual entry required.
                   </p>
                 </div>
               </div>

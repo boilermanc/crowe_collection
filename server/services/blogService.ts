@@ -101,7 +101,7 @@ export async function getPublishedPosts(options?: {
 
   if (error) throw error;
 
-  return { posts: (data || []) as BlogPost[], total: count ?? 0 };
+  return { posts: (data || []) as unknown as BlogPost[], total: count ?? 0 };
 }
 
 export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
@@ -119,7 +119,7 @@ export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
     throw error;
   }
 
-  return data as BlogPost;
+  return data as unknown as BlogPost;
 }
 
 export async function getCategories(): Promise<{ category: string; count: number }[]> {
@@ -158,7 +158,7 @@ export async function getPostBySlugAdmin(slug: string): Promise<BlogPost | null>
     throw error;
   }
 
-  return data as BlogPost;
+  return data as unknown as BlogPost;
 }
 
 export async function getAllPostsAdmin(): Promise<BlogPost[]> {
@@ -171,7 +171,7 @@ export async function getAllPostsAdmin(): Promise<BlogPost[]> {
 
   if (error) throw error;
 
-  return (data || []) as BlogPost[];
+  return (data || []) as unknown as BlogPost[];
 }
 
 // ── Mutations ──────────────────────────────────────────────────────
@@ -203,7 +203,7 @@ export async function createPost(input: CreatePostInput): Promise<BlogPost> {
     throw error;
   }
 
-  return data as BlogPost;
+  return data as unknown as BlogPost;
 }
 
 export async function updatePost(id: string, input: UpdatePostInput): Promise<BlogPost> {
@@ -255,7 +255,7 @@ export async function updatePost(id: string, input: UpdatePostInput): Promise<Bl
     }
   }
 
-  return data as BlogPost;
+  return data as unknown as BlogPost;
 }
 
 export async function deletePost(id: string): Promise<boolean> {
@@ -326,7 +326,7 @@ export async function createIdea(input: CreateIdeaInput): Promise<BlogIdea> {
     throw error;
   }
 
-  return data as BlogIdea;
+  return data as unknown as BlogIdea;
 }
 
 export async function getAllIdeas(): Promise<BlogIdea[]> {
@@ -339,7 +339,7 @@ export async function getAllIdeas(): Promise<BlogIdea[]> {
 
   if (error) throw error;
 
-  return (data || []) as BlogIdea[];
+  return (data || []) as unknown as BlogIdea[];
 }
 
 export async function getIdeaById(id: string): Promise<BlogIdea | null> {
@@ -356,7 +356,7 @@ export async function getIdeaById(id: string): Promise<BlogIdea | null> {
     throw error;
   }
 
-  return data as BlogIdea;
+  return data as unknown as BlogIdea;
 }
 
 export async function updateIdea(id: string, input: UpdateIdeaInput): Promise<BlogIdea> {
@@ -377,5 +377,5 @@ export async function updateIdea(id: string, input: UpdateIdeaInput): Promise<Bl
 
   if (error) throw error;
 
-  return data as BlogIdea;
+  return data as unknown as BlogIdea;
 }

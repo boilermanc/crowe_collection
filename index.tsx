@@ -53,8 +53,8 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
+    <HelmetProvider>
     <ErrorBoundary>
-      <HelmetProvider>
       <BrowserRouter>
         <ThemeProvider>
           <ToastProvider>
@@ -102,7 +102,7 @@ root.render(
           </ToastProvider>
         </ThemeProvider>
       </BrowserRouter>
-      </HelmetProvider>
     </ErrorBoundary>
+    </HelmetProvider>
   </React.StrictMode>
 );

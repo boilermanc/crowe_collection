@@ -13,7 +13,45 @@ interface BulkImportProps {
   onNavigate: (view: string) => void;
 }
 
+interface ImportHistoryEntry {
+  date: string; // ISO string
+  fileName: string;
+  count: number;
+}
+
 const ACCEPTED_EXTENSIONS = '.csv,.tsv,.txt';
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+const IMPORT_HISTORY_KEY = 'rekkrd_import_history';
+const MAX_HISTORY = 3;
+
+function loadImportHistory(): ImportHistoryEntry[] {
+  try {
+    const raw = localStorage.getItem(IMPORT_HISTORY_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.slice(0, MAX_HISTORY) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveImportHistory(entry: ImportHistoryEntry): void {
+  try {
+    const history = loadImportHistory();
+    history.unshift(entry);
+    localStorage.setItem(IMPORT_HISTORY_KEY, JSON.stringify(history.slice(0, MAX_HISTORY)));
+  } catch {
+    // localStorage unavailable — silently ignore
+  }
+}
+
+function clearImportHistory(): void {
+  try {
+    localStorage.removeItem(IMPORT_HISTORY_KEY);
+  } catch {
+    // silently ignore
+  }
+}
 
 const BulkImport: React.FC<BulkImportProps> = ({ onUpgradeRequired, albums, onImportComplete, onNavigate }) => {
   const { albumLimitReached, albumLimit } = useSubscription();
@@ -23,6 +61,8 @@ const BulkImport: React.FC<BulkImportProps> = ({ onUpgradeRequired, albums, onIm
   const [parsing, setParsing] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [fileName, setFileName] = useState('');
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [importHistory, setImportHistory] = useState<ImportHistoryEntry[]>(loadImportHistory);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Step 3 — Review state
@@ -64,11 +104,29 @@ const BulkImport: React.FC<BulkImportProps> = ({ onUpgradeRequired, albums, onIm
   const canProceed = artistMapped && titleMapped;
 
   const handleFile = useCallback(async (file: File) => {
-    setParsing(true);
+    setFileError(null);
     setParseResult(null);
     setFileName(file.name);
 
+    // File size gate
+    if (file.size > MAX_FILE_SIZE) {
+      setFileError(`File is too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Maximum size is 5 MB.`);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    setParsing(true);
+
     const result = await parseCSVFile(file);
+
+    // Empty file gate
+    if (result.rows.length === 0) {
+      setFileError('No data rows found. Make sure your file has a header row and at least one data row.');
+      setParsing(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
     const detected = autoDetectMapping(result.headers);
 
     setParseResult(result);
@@ -222,6 +280,13 @@ const BulkImport: React.FC<BulkImportProps> = ({ onUpgradeRequired, albums, onIm
       });
       setImportResult(result);
       if (result.totalInserted > 0) {
+        const entry: ImportHistoryEntry = {
+          date: new Date().toISOString(),
+          fileName,
+          count: result.totalInserted,
+        };
+        saveImportHistory(entry);
+        setImportHistory(loadImportHistory());
         onImportComplete(); // Refresh album list in parent
       }
     } catch (err) {
@@ -244,13 +309,16 @@ const BulkImport: React.FC<BulkImportProps> = ({ onUpgradeRequired, albums, onIm
     setMapping(new Map());
     setDefaultMapping(new Map());
     setFileName('');
+    setFileError(null);
     setStep('mapping');
     setReviewCandidates([]);
     setSkippedRows([]);
     setReviewWarnings([]);
     setSelectedRows(new Set());
+    setReviewFilter('all');
     setImportResult(null);
     setImportProgress({ inserted: 0, total: 0 });
+    setShowErrors(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
   }, []);
 
@@ -273,6 +341,11 @@ const BulkImport: React.FC<BulkImportProps> = ({ onUpgradeRequired, albums, onIm
         {/* Step 1 — File Upload */}
         {!parseResult && !parsing && (
           <section className="glass-morphism rounded-2xl border border-th-surface/[0.10] p-6 md:p-8">
+            {fileError && (
+              <div className="rounded-xl bg-red-500/[0.12] border border-red-400/30 px-5 py-4 mb-5" role="alert">
+                <p className="text-red-300 text-sm">{fileError}</p>
+              </div>
+            )}
             <div
               role="button"
               tabIndex={0}
@@ -297,7 +370,9 @@ const BulkImport: React.FC<BulkImportProps> = ({ onUpgradeRequired, albums, onIm
                 <p className="text-th-text font-medium">
                   Drop your file here, or <span className="text-[#dd6e42] underline underline-offset-2">browse</span>
                 </p>
-                <p className="text-th-text3/50 text-xs mt-1">CSV, TSV, or TXT — up to 5,000 records</p>
+                <p className="text-th-text3/50 text-xs mt-1">
+                  Supports CSV, TSV, and TXT files — up to 5,000 records (5 MB max)
+                </p>
               </div>
               <input
                 ref={fileInputRef}
@@ -308,6 +383,31 @@ const BulkImport: React.FC<BulkImportProps> = ({ onUpgradeRequired, albums, onIm
                 aria-label="Select CSV file"
               />
             </div>
+
+            {/* Recent imports */}
+            {importHistory.length > 0 && (
+              <div className="mt-5 pt-4 border-t border-th-surface/[0.08]">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-[10px] uppercase tracking-widest text-th-text3/50 font-label">Recent Imports</p>
+                  <button
+                    onClick={() => { clearImportHistory(); setImportHistory([]); }}
+                    className="text-[10px] text-th-text3/40 hover:text-th-text3 transition-colors underline underline-offset-2"
+                  >
+                    Clear history
+                  </button>
+                </div>
+                <div className="space-y-1.5">
+                  {importHistory.map((entry, i) => (
+                    <div key={i} className="flex items-center justify-between text-xs text-th-text3">
+                      <span className="truncate mr-3">{entry.fileName}</span>
+                      <span className="shrink-0 text-th-text3/50">
+                        {entry.count} {entry.count === 1 ? 'record' : 'records'} &middot; {new Date(entry.date).toLocaleDateString()}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </section>
         )}
 
@@ -350,7 +450,7 @@ const BulkImport: React.FC<BulkImportProps> = ({ onUpgradeRequired, albums, onIm
                 with <strong className="text-th-text">{parseResult.headers.length}</strong> columns
               </span>
               <button
-                onClick={() => { setParseResult(null); setMapping(new Map()); setFileName(''); if (fileInputRef.current) fileInputRef.current.value = ''; }}
+                onClick={handleImportMore}
                 className="ml-auto text-xs text-th-text3/60 hover:text-th-text transition-colors underline underline-offset-2"
                 aria-label="Choose a different file"
               >
@@ -515,7 +615,30 @@ const BulkImport: React.FC<BulkImportProps> = ({ onUpgradeRequired, albums, onIm
         )}
 
         {/* Step 3 — Review & Confirm */}
-        {parseResult && !parsing && step === 'review' && (
+        {parseResult && !parsing && step === 'review' && reviewCandidates.length === 0 && (
+          <section className="glass-morphism rounded-2xl border border-th-surface/[0.10] p-8 md:p-12 flex flex-col items-center gap-5">
+            <div className="w-16 h-16 rounded-full bg-red-500/15 flex items-center justify-center">
+              <svg className="w-8 h-8 text-red-400" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" />
+              </svg>
+            </div>
+            <div className="text-center">
+              <p className="text-th-text font-bold text-lg">No importable records found</p>
+              <p className="text-th-text3 text-sm mt-1 max-w-md mx-auto">
+                All {skippedRows.length} {skippedRows.length === 1 ? 'row was' : 'rows were'} skipped — most likely because Artist or Title is missing.
+                Check your column mapping and try again.
+              </p>
+            </div>
+            <button
+              onClick={handleBackToMapping}
+              className="px-6 py-3 rounded-xl bg-[#dd6e42] text-white font-semibold text-sm hover:brightness-110 active:scale-[0.98] transition-all shadow-lg"
+            >
+              Back to Mapping
+            </button>
+          </section>
+        )}
+
+        {parseResult && !parsing && step === 'review' && reviewCandidates.length > 0 && (
           <>
             {/* Warnings banner */}
             {reviewWarnings.length > 0 && (
