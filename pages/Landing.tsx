@@ -955,7 +955,7 @@ const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
                 <li><Check />Shelf Organizer</li>
                 <li><Check />Bulk import &amp; export</li>
                 <li><Check />API access</li>
-                <li><Check />Advanced analytics</li>
+                <li><Check />Collection Analytics &mdash; genre, decade &amp; growth charts</li>
                 <li><Check />PDF collection catalogs</li>
                 <li><Check />Early beta access</li>
                 <li><Check />Priority support</li>

@@ -86,6 +86,8 @@ const FEATURE_LABELS: Record<string, string> = {
   shelf_organizer: 'Shelf Organizer',
   room_planner: 'Room Planner',
   bulk_import: 'Bulk Import',
+  export: 'Collection Export',
+  analytics: 'Collection Analytics',
   plan_upgrade: 'Premium Features',
 };
 
@@ -98,6 +100,7 @@ const CURATOR_FEATURES = [
   'Stakkd \u2014 unlimited gear',
   'AI gear identification',
   'Manual finder & setup guides',
+  'Collection Export \u2014 CSV & PDF',
 ];
 
 const ENTHUSIAST_FEATURES = [
@@ -106,7 +109,7 @@ const ENTHUSIAST_FEATURES = [
   'Shelf Organizer \u2014 know exactly where every record goes',
   'Bulk import & export',
   'API access',
-  'Advanced analytics',
+  'Collection Analytics \u2014 genre, decade & growth charts',
   'PDF collection catalogs',
   'Early beta access',
   'Priority support',
@@ -587,6 +590,23 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, feature, d
               </div>
             )}
 
+            {/* Collection Export feature callout (contextual) */}
+            {feature === 'export' && (
+              <div className="rounded-xl border border-[#dd6e42]/15 bg-[#dd6e42]/[0.04] p-4 mb-6 flex items-start gap-3">
+                <div className="shrink-0 mt-0.5">
+                  <svg className="w-5 h-5 text-[#dd6e42]" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-th-text mb-0.5">Collection Export</p>
+                  <p className="text-xs text-th-text3">
+                    Your collection, your data. Download as CSV for spreadsheets or a styled PDF catalog for sharing.
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Room Planner feature callout (contextual) */}
             {feature === 'room_planner' && (
               <div className="rounded-xl border border-[#dd6e42]/15 bg-[#dd6e42]/[0.04] p-4 mb-6 flex items-start gap-3">
@@ -599,6 +619,23 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, feature, d
                   <p className="text-sm font-semibold text-th-text mb-0.5">Design your perfect listening room</p>
                   <p className="text-xs text-th-text3">
                     Tell us your room, we&rsquo;ll tell you where to put your gear. AI analyzes your space and equipment for optimal speaker placement, stereo imaging, and vibration isolation.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Collection Analytics feature callout (contextual) */}
+            {feature === 'analytics' && (
+              <div className="rounded-xl border border-[#dd6e42]/15 bg-[#dd6e42]/[0.04] p-4 mb-6 flex items-start gap-3">
+                <div className="shrink-0 mt-0.5">
+                  <svg className="w-5 h-5 text-[#dd6e42]" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-th-text mb-0.5">Collection Analytics</p>
+                  <p className="text-xs text-th-text3">
+                    Genre breakdowns, decade distribution, collection growth &mdash; see your vinyl habit in charts and numbers.
                   </p>
                 </div>
               </div>

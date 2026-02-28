@@ -22,6 +22,7 @@ import {
   assignAlbumToUnit,
   unpinAlbum,
   batchClearPins,
+  generateShelfCatalogCSV,
 } from '../helpers/shelfHelpers';
 import type { RebalancePlan } from '../helpers/shelfHelpers';
 import type { Album } from '../../types';
@@ -458,7 +459,7 @@ const ShelfView: React.FC<ShelfViewProps> = ({
       for (const [albumId, unit] of manualMoves) {
         merged.set(albumId, unit);
       }
-      await batchSaveAssignments(merged);
+      await batchSaveAssignments(merged, shelfConfig.id);
       showToast(`Assigned ${merged.size} records to ${shelfConfig.name}`, 'success');
       setManualMoves(new Map());
       setLocalPins(new Map());
@@ -491,7 +492,7 @@ const ShelfView: React.FC<ShelfViewProps> = ({
       for (const move of rebalancePlan.moves) {
         moveMap.set(move.albumId, move.toUnit);
       }
-      await batchSaveAssignments(moveMap);
+      await batchSaveAssignments(moveMap, shelfConfig.id);
       showToast(`Rebalanced! Moved ${rebalancePlan.moves.length} album${rebalancePlan.moves.length !== 1 ? 's' : ''}`, 'success');
       setShowRebalancePanel(false);
       setRebalancePlan(null);
@@ -588,14 +589,14 @@ const ShelfView: React.FC<ShelfViewProps> = ({
 
     // Persist to DB
     setDragSaving(true);
-    assignAlbumToUnit(album.id, targetUnit, true)
+    assignAlbumToUnit(album.id, targetUnit, true, shelfConfig.id)
       .catch(() => {
         showToast('Failed to save move', 'error');
       })
       .finally(() => {
         setDragSaving(false);
       });
-  }, [units, showToast, shelfConfig.capacity_per_unit]);
+  }, [units, showToast, shelfConfig.capacity_per_unit, shelfConfig.id]);
 
   const handleDragCancel = useCallback(() => {
     setActiveAlbum(null);
@@ -783,6 +784,22 @@ const ShelfView: React.FC<ShelfViewProps> = ({
                 Rebalance
               </button>
             )}
+            <button
+              onClick={() => {
+                const result = generateShelfCatalogCSV(albums, [shelfConfig], sortScheme);
+                showToast(`Downloaded ${result.albumCount} records`, 'success');
+              }}
+              disabled={albums.length === 0}
+              className="px-3 py-2 rounded-lg text-th-text3/60 font-label text-sm tracking-wide hover:text-th-text2 hover:bg-th-surface/[0.08] transition-colors flex items-center gap-1.5 disabled:opacity-40"
+              aria-label="Download this shelf's catalog as CSV"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Export
+            </button>
             <button
               onClick={handleSave}
               disabled={saving}

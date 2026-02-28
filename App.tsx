@@ -43,7 +43,7 @@ import ProfilePage from './src/components/ProfilePage';
 import MobileBottomNav from './src/components/MobileBottomNav';
 import SpinsPage from './src/components/SpinsPage';
 import ShelfSetup from './src/components/ShelfSetup';
-import BulkImport from './src/components/BulkImport';
+import ImportExportPage from './src/components/ImportExportPage';
 import { getAlbumPlacementInfo } from './src/helpers/shelfHelpers';
 import { BarChart3, Bell, TrendingUp, User } from 'lucide-react';
 import CollectionAnalytics from './src/components/CollectionAnalytics';
@@ -1047,11 +1047,25 @@ const App: React.FC = () => {
               <TrendingUp className="w-5 h-5" />
             </button>
             <button
-              onClick={() => setCurrentView('analytics')}
-              className={`hidden md:flex p-3 rounded-full border transition-all flex-shrink-0 ${currentView === 'analytics' ? 'bg-[#dd6e42] border-[#dd6e42] text-th-text shadow-lg' : 'bg-th-surface/[0.04] border-th-surface/[0.10] text-th-text2 hover:text-th-text'}`}
+              onClick={() => {
+                if (!canUse('analytics')) {
+                  setUpgradeFeature('analytics');
+                  return;
+                }
+                setCurrentView('analytics');
+              }}
+              className={`hidden md:flex p-3 rounded-full border transition-all flex-shrink-0 relative ${currentView === 'analytics' ? 'bg-[#dd6e42] border-[#dd6e42] text-th-text shadow-lg' : 'bg-th-surface/[0.04] border-th-surface/[0.10] text-th-text2 hover:text-th-text'}`}
               title="Collection Analytics"
             >
               <BarChart3 className="w-5 h-5" />
+              {!canUse('analytics') && (
+                <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-th-accent/80 flex items-center justify-center">
+                  <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                </span>
+              )}
             </button>
             <button
               onClick={() => setCurrentView('price-alerts')}
@@ -1110,7 +1124,7 @@ const App: React.FC = () => {
                 setCurrentView('bulk-import');
               }}
               className={`hidden md:flex p-3 rounded-full border transition-all flex-shrink-0 relative ${currentView === 'bulk-import' ? 'bg-[#dd6e42] border-[#dd6e42] text-th-text shadow-lg' : 'bg-th-surface/[0.04] border-th-surface/[0.10] text-th-text2 hover:text-th-text'}`}
-              title="Bulk Import — CSV import"
+              title="Import & Export"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -1126,14 +1140,16 @@ const App: React.FC = () => {
                 </span>
               )}
             </button>
-            <button
-              onClick={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
-              className={`hidden md:flex p-3 rounded-full border transition-all flex-shrink-0 ${isFilterPanelOpen ? 'bg-[#dd6e42] border-[#dd6e42] text-th-text shadow-lg' : 'bg-th-surface/[0.04] border-th-surface/[0.10] text-th-text2 hover:text-th-text'}`}
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-              </svg>
-            </button>
+            {(currentView === 'grid' || currentView === 'list') && (
+              <button
+                onClick={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
+                className={`hidden md:flex p-3 rounded-full border transition-all flex-shrink-0 ${isFilterPanelOpen ? 'bg-[#dd6e42] border-[#dd6e42] text-th-text shadow-lg' : 'bg-th-surface/[0.04] border-th-surface/[0.10] text-th-text2 hover:text-th-text'}`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+              </button>
+            )}
           </div>}
 
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -1220,7 +1236,7 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {isFilterPanelOpen && (
+      {isFilterPanelOpen && (currentView === 'grid' || currentView === 'list') && (
         <div className="max-w-7xl mx-auto px-4 md:px-6 mt-4">
           <div className="glass-morphism rounded-3xl p-6 border border-th-surface/[0.10] animate-in slide-in-from-top duration-300">
              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
@@ -1699,9 +1715,10 @@ const App: React.FC = () => {
       ) : currentView === 'shelves' ? (
         <ShelfSetup userId={user.id} albums={albums} onUpgradeRequired={(feature: string) => setUpgradeFeature(feature)} />
       ) : currentView === 'bulk-import' ? (
-        <BulkImport
-          onUpgradeRequired={(feature: string) => setUpgradeFeature(feature)}
+        <ImportExportPage
           albums={albums}
+          userEmail={user.email ?? ''}
+          onUpgradeRequired={(feature: string) => setUpgradeFeature(feature)}
           onImportComplete={async () => {
             try {
               const data = await supabaseService.getAlbums();
@@ -1713,7 +1730,7 @@ const App: React.FC = () => {
           onNavigate={(view: string) => setCurrentView(view as ViewMode)}
         />
       ) : currentView === 'analytics' ? (
-        <CollectionAnalytics albums={albums} onScanPress={() => setIsCameraOpen(true)} />
+        <CollectionAnalytics albums={albums} onScanPress={() => setIsCameraOpen(true)} onUpgradeRequired={(feature: string) => setUpgradeFeature(feature)} />
       ) : currentView === 'value-dashboard' ? (
         <CollectionValueDashboard />
       ) : currentView === 'profile' ? (

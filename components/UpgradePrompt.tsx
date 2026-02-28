@@ -50,6 +50,15 @@ const FEATURE_INFO: Record<string, { title: string; description: string; cta?: s
     title: 'Bulk CSV Import',
     description: 'Import your entire collection from a CSV file with smart column mapping.',
   },
+  export: {
+    title: 'Collection Export',
+    description: 'Download your vinyl collection as a CSV spreadsheet or a beautifully styled PDF catalog.',
+  },
+  analytics: {
+    title: 'Collection Analytics',
+    description: 'See your vinyl collection like never before — genre breakdowns, decade distribution, growth timeline, and collection stats.',
+    cta: 'Upgrade to Enthusiast',
+  },
 };
 
 const UpgradePrompt: React.FC<UpgradePromptProps> = ({ feature, onClose, onUpgrade }) => {

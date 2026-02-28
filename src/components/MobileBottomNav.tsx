@@ -166,7 +166,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             <span className={`text-sm font-label tracking-wide ${currentView === 'shelves' ? 'text-[#dd6e42]' : 'text-th-nav-text'}`}>Shelves</span>
           </button>
 
-          {/* Bulk Import */}
+          {/* Import & Export */}
           <button
             onClick={() => { onNavigate('bulk-import'); setIsMoreOpen(false); }}
             className={`flex items-center gap-4 w-full px-5 py-3.5 text-left active:bg-th-nav-text/[0.10] transition-colors border-t border-th-nav-text/[0.08] ${
@@ -178,7 +178,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
               <polyline points="17 8 12 3 7 8" />
               <line x1="12" y1="3" x2="12" y2="15" />
             </svg>
-            <span className={`text-sm font-label tracking-wide ${currentView === 'bulk-import' ? 'text-[#dd6e42]' : 'text-th-nav-text'}`}>Bulk Import</span>
+            <span className={`text-sm font-label tracking-wide ${currentView === 'bulk-import' ? 'text-[#dd6e42]' : 'text-th-nav-text'}`}>Import & Export</span>
           </button>
 
           {/* Magic Mix Studio */}
@@ -203,19 +203,21 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             <span className="text-sm font-label tracking-wide text-th-nav-text">Upload Cover</span>
           </button>
 
-          {/* Filters */}
-          <button
-            onClick={() => { onToggleFilters(); setIsMoreOpen(false); }}
-            className="flex items-center gap-4 w-full px-5 py-3.5 text-left active:bg-th-nav-text/[0.10] transition-colors border-t border-th-nav-text/[0.08]"
-          >
-            <svg className="w-5 h-5 text-th-nav-text/80 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-            </svg>
-            <span className={`text-sm font-label tracking-wide ${isFilterPanelOpen ? 'text-[#dd6e42]' : 'text-th-nav-text'}`}>Filters</span>
-            {isFilterPanelOpen && (
-              <span className="ml-auto w-2 h-2 rounded-full bg-[#dd6e42]" />
-            )}
-          </button>
+          {/* Filters — only on collection views */}
+          {(currentView === 'grid' || currentView === 'list') && (
+            <button
+              onClick={() => { onToggleFilters(); setIsMoreOpen(false); }}
+              className="flex items-center gap-4 w-full px-5 py-3.5 text-left active:bg-th-nav-text/[0.10] transition-colors border-t border-th-nav-text/[0.08]"
+            >
+              <svg className="w-5 h-5 text-th-nav-text/80 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+              <span className={`text-sm font-label tracking-wide ${isFilterPanelOpen ? 'text-[#dd6e42]' : 'text-th-nav-text'}`}>Filters</span>
+              {isFilterPanelOpen && (
+                <span className="ml-auto w-2 h-2 rounded-full bg-[#dd6e42]" />
+              )}
+            </button>
+          )}
         </div>
       </div>
 

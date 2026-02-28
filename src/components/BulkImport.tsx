@@ -11,6 +11,7 @@ interface BulkImportProps {
   albums: { artist: string; title: string }[];
   onImportComplete: () => void;
   onNavigate: (view: string) => void;
+  embedded?: boolean;
 }
 
 interface ImportHistoryEntry {
@@ -53,7 +54,7 @@ function clearImportHistory(): void {
   }
 }
 
-const BulkImport: React.FC<BulkImportProps> = ({ onUpgradeRequired, albums, onImportComplete, onNavigate }) => {
+const BulkImport: React.FC<BulkImportProps> = ({ onUpgradeRequired, albums, onImportComplete, onNavigate, embedded }) => {
   const { albumLimitReached, albumLimit } = useSubscription();
   const [parseResult, setParseResult] = useState<CSVParseResult | null>(null);
   const [mapping, setMapping] = useState<ColumnMapping>(new Map());
@@ -325,10 +326,10 @@ const BulkImport: React.FC<BulkImportProps> = ({ onUpgradeRequired, albums, onIm
   // Elapsed time during import
   const elapsedSeconds = step === 'importing' ? Math.floor((Date.now() - importStartTime) / 1000) : 0;
 
-  return (
-    <div className="min-h-screen pb-24 md:pb-8">
-      <div className="max-w-5xl mx-auto px-4 md:px-6 pt-6 space-y-6">
-        {/* Page header */}
+  const content = (
+    <div className={embedded ? 'space-y-6' : 'max-w-5xl mx-auto px-4 md:px-6 pt-6 space-y-6'}>
+      {/* Page header — hidden when embedded inside ImportExportPage */}
+      {!embedded && (
         <div>
           <h1 className="font-label text-lg md:text-xl tracking-widest uppercase font-bold text-th-text">
             Bulk Import
@@ -337,6 +338,7 @@ const BulkImport: React.FC<BulkImportProps> = ({ onUpgradeRequired, albums, onIm
             Import your collection from a CSV, TSV, or text file
           </p>
         </div>
+      )}
 
         {/* Step 1 — File Upload */}
         {!parseResult && !parsing && (
@@ -927,7 +929,14 @@ const BulkImport: React.FC<BulkImportProps> = ({ onUpgradeRequired, albums, onIm
             </section>
           </>
         )}
-      </div>
+    </div>
+  );
+
+  if (embedded) return content;
+
+  return (
+    <div className="min-h-screen pb-24 md:pb-8">
+      {content}
     </div>
   );
 };

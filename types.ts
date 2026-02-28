@@ -32,6 +32,7 @@ export interface Album extends NewAlbum {
   created_at: string;
   shelf_unit?: number | null;
   shelf_manual_override?: boolean;
+  shelf_config_id?: string | null;
 }
 
 /** Unvalidated playlist item from Gemini / API response (before enrichment) */

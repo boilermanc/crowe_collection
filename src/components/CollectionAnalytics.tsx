@@ -15,11 +15,16 @@ import type {
   GrowthData,
 } from '../types/analytics';
 import { Disc3, Music, Tag, Calendar, Clock, BarChart3 } from 'lucide-react';
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useSubscription } from '../../contexts/SubscriptionContext';
+import {
+  PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
+  BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid,
+} from 'recharts';
 
 interface CollectionAnalyticsProps {
   albums: Album[];
   onScanPress?: () => void;
+  onUpgradeRequired?: (feature: string) => void;
 }
 
 // ── Skeleton Card ───────────────────────────────────────────────────
@@ -59,34 +64,6 @@ function StatCard({ icon, label, value, subtitle, ariaLabel }: StatCardProps) {
   );
 }
 
-// ── Bar Row (horizontal bar chart item) ─────────────────────────────
-
-interface BarRowProps {
-  label: string;
-  count: number;
-  percentage: number;
-  maxPercentage: number;
-  color: string;
-}
-
-const BarRow: React.FC<BarRowProps> = ({ label, count, percentage, maxPercentage, color }) => {
-  const width = maxPercentage > 0 ? (percentage / maxPercentage) * 100 : 0;
-  return (
-    <div className="flex items-center gap-3">
-      <span className="text-sm text-th-text2 w-28 truncate flex-shrink-0" title={label}>{label}</span>
-      <div className="flex-1 h-5 rounded-full bg-th-surface/[0.06] overflow-hidden">
-        <div
-          className="h-full rounded-full transition-all duration-500"
-          style={{ width: `${width}%`, backgroundColor: color }}
-        />
-      </div>
-      <span className="text-xs text-th-text3 w-16 text-right flex-shrink-0 tabular-nums">
-        {count} ({percentage}%)
-      </span>
-    </div>
-  );
-};
-
 // ── Section Header ──────────────────────────────────────────────────
 
 function SectionHeader({ title }: { title: string }) {
@@ -95,78 +72,99 @@ function SectionHeader({ title }: { title: string }) {
   );
 }
 
-// ── Growth Chart (simple SVG line) ──────────────────────────────────
+// ── Shared Tooltip Shell ────────────────────────────────────────────
 
-function GrowthChart({ data }: { data: GrowthData[] }) {
-  if (data.length < 2) {
+function GlassTooltipShell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="glass-morphism rounded-lg border border-th-surface/[0.15] px-3 py-2 text-sm shadow-lg">
+      {children}
+    </div>
+  );
+}
+
+// ── Shared axis tick style ──────────────────────────────────────────
+
+const AXIS_TICK_STYLE = { fontSize: 11, fill: 'rgb(var(--color-text3))' };
+const GRID_STROKE = 'rgb(var(--color-surface) / 0.08)';
+
+// ── Decade Bar Chart ────────────────────────────────────────────────
+
+function DecadeTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number }>; label?: string }) {
+  if (!active || !payload || payload.length === 0) return null;
+  const count = payload[0].value;
+  return (
+    <GlassTooltipShell>
+      <p className="font-bold text-th-text">{label}</p>
+      <p className="text-th-text3">{count} album{count !== 1 ? 's' : ''}</p>
+    </GlassTooltipShell>
+  );
+}
+
+function DecadeBarChart({ data }: { data: DecadeData[] }) {
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <BarChart data={data} margin={{ top: 8, right: 8, bottom: 4, left: -8 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
+        <XAxis dataKey="decade" tick={AXIS_TICK_STYLE} axisLine={false} tickLine={false} />
+        <YAxis allowDecimals={false} tick={AXIS_TICK_STYLE} axisLine={false} tickLine={false} />
+        <Tooltip content={<DecadeTooltip />} cursor={{ fill: 'rgb(var(--color-surface) / 0.06)' }} />
+        <Bar dataKey="count" fill="#dd6e42" radius={[4, 4, 0, 0]} maxBarSize={48} />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+// ── Growth Area Chart ───────────────────────────────────────────────
+
+function GrowthTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number }>; label?: string }) {
+  if (!active || !payload || payload.length === 0) return null;
+  const total = payload[0].value;
+  return (
+    <GlassTooltipShell>
+      <p className="font-bold text-th-text">{label}</p>
+      <p className="text-th-text3">{total} album{total !== 1 ? 's' : ''}</p>
+    </GlassTooltipShell>
+  );
+}
+
+function GrowthAreaChart({ data }: { data: GrowthData[] }) {
+  if (data.length === 0) {
     return <p className="text-sm text-th-text3">Not enough data to show growth trend yet.</p>;
   }
 
-  const maxAlbums = Math.max(...data.map(d => d.totalAlbums));
-  const padding = 40;
-  const width = 600;
-  const height = 200;
-  const chartW = width - padding * 2;
-  const chartH = height - padding * 2;
-
-  const points = data.map((d, i) => {
-    const x = padding + (i / (data.length - 1)) * chartW;
-    const y = padding + chartH - (d.totalAlbums / maxAlbums) * chartH;
-    return { x, y, ...d };
-  });
-
-  const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
-  const areaPath = `${linePath} L${points[points.length - 1].x},${padding + chartH} L${points[0].x},${padding + chartH} Z`;
-
-  // Y-axis ticks
-  const yTicks = [0, Math.round(maxAlbums / 2), maxAlbums];
+  if (data.length === 1) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <p className="text-3xl font-bold text-[#4f6d7a]">{data[0].totalAlbums}</p>
+        <p className="text-xs text-th-text3 mt-1">album{data[0].totalAlbums !== 1 ? 's' : ''} as of {data[0].date}</p>
+      </div>
+    );
+  }
 
   return (
-    <svg
-      viewBox={`0 0 ${width} ${height}`}
-      className="w-full h-auto"
-      role="img"
-      aria-label={`Collection growth chart showing ${data[0].totalAlbums} to ${data[data.length - 1].totalAlbums} albums`}
-    >
-      {/* Grid lines */}
-      {yTicks.map(tick => {
-        const y = padding + chartH - (tick / maxAlbums) * chartH;
-        return (
-          <g key={tick}>
-            <line x1={padding} y1={y} x2={width - padding} y2={y} stroke="rgb(var(--color-surface) / 0.08)" strokeWidth={1} />
-            <text x={padding - 8} y={y + 4} textAnchor="end" className="fill-th-text3 text-[10px]">{tick}</text>
-          </g>
-        );
-      })}
-
-      {/* Area fill */}
-      <path d={areaPath} fill="url(#growthGradient)" />
-
-      {/* Line */}
-      <path d={linePath} fill="none" stroke="#dd6e42" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-
-      {/* Dots */}
-      {points.map((p, i) => (
-        <circle key={i} cx={p.x} cy={p.y} r={3} fill="#dd6e42" stroke="rgb(var(--color-bg))" strokeWidth={2} />
-      ))}
-
-      {/* X-axis labels (first, middle, last) */}
-      {[0, Math.floor(data.length / 2), data.length - 1].map(i => {
-        const p = points[i];
-        return (
-          <text key={i} x={p.x} y={height - 8} textAnchor="middle" className="fill-th-text3 text-[10px]">
-            {data[i].date}
-          </text>
-        );
-      })}
-
-      <defs>
-        <linearGradient id="growthGradient" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#dd6e42" stopOpacity={0.3} />
-          <stop offset="100%" stopColor="#dd6e42" stopOpacity={0} />
-        </linearGradient>
-      </defs>
-    </svg>
+    <ResponsiveContainer width="100%" height={300}>
+      <AreaChart data={data} margin={{ top: 8, right: 8, bottom: 4, left: -8 }}>
+        <defs>
+          <linearGradient id="growthGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#4f6d7a" stopOpacity={0.3} />
+            <stop offset="100%" stopColor="#4f6d7a" stopOpacity={0} />
+          </linearGradient>
+        </defs>
+        <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
+        <XAxis dataKey="date" tick={AXIS_TICK_STYLE} axisLine={false} tickLine={false} />
+        <YAxis allowDecimals={false} tick={AXIS_TICK_STYLE} axisLine={false} tickLine={false} />
+        <Tooltip content={<GrowthTooltip />} />
+        <Area
+          type="monotone"
+          dataKey="totalAlbums"
+          stroke="#4f6d7a"
+          strokeWidth={2}
+          fill="url(#growthGradient)"
+          dot={{ r: 3, fill: '#4f6d7a', strokeWidth: 0 }}
+          activeDot={{ r: 5, fill: '#4f6d7a', stroke: 'rgb(var(--color-bg))', strokeWidth: 2 }}
+        />
+      </AreaChart>
+    </ResponsiveContainer>
   );
 }
 
@@ -247,7 +245,8 @@ function DonutChart({ data, height = 250 }: DonutChartProps) {
 
 // ── Main Component ──────────────────────────────────────────────────
 
-const CollectionAnalytics: React.FC<CollectionAnalyticsProps> = ({ albums, onScanPress }) => {
+const CollectionAnalytics: React.FC<CollectionAnalyticsProps> = ({ albums, onScanPress, onUpgradeRequired }) => {
+  const { canUse } = useSubscription();
   const [ready, setReady] = useState(false);
 
   // Brief delay so skeleton flashes for loading UX
@@ -261,6 +260,33 @@ const CollectionAnalytics: React.FC<CollectionAnalyticsProps> = ({ albums, onSca
   const decades = useMemo<DecadeData[]>(() => computeDecadeDistribution(albums), [albums]);
   const formats = useMemo<FormatData[]>(() => computeFormatBreakdown(albums), [albums]);
   const growth = useMemo<GrowthData[]>(() => computeCollectionGrowth(albums), [albums]);
+
+  // ── Gate: Enthusiast-only feature ─────────────────────────────────
+
+  if (!canUse('analytics')) {
+    return (
+      <main className="max-w-7xl mx-auto px-4 md:px-6 mt-8 pb-8">
+        <div className="flex flex-col items-center justify-center py-32">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-th-accent/10">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-th-accent">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+          </div>
+          <h2 className="mb-2 text-xl font-bold text-th-text">Collection Analytics</h2>
+          <p className="mb-6 text-sm text-th-muted text-center max-w-md">
+            Genre breakdowns, decade distribution, collection growth, and more. See your vinyl collection like never before.
+          </p>
+          <button
+            onClick={() => onUpgradeRequired?.('analytics')}
+            className="rounded-xl bg-th-accent px-6 py-3 font-semibold text-white transition-all hover:brightness-110 active:scale-[0.98]"
+          >
+            Upgrade to Enthusiast
+          </button>
+        </div>
+      </main>
+    );
+  }
 
   // ── Empty state ───────────────────────────────────────────────────
 
@@ -301,8 +327,6 @@ const CollectionAnalytics: React.FC<CollectionAnalyticsProps> = ({ albums, onSca
   }
 
   // ── Derived chart data ────────────────────────────────────────────
-
-  const maxDecadeCount = decades.length > 0 ? Math.max(...decades.map(d => d.count)) : 0;
 
   const genreDonut: DonutEntry[] = genres.map(g => ({ name: g.genre, value: g.count, percentage: g.percentage }));
   const formatDonut: DonutEntry[] = formats.map(f => ({ name: f.format, value: f.count, percentage: f.percentage }));
@@ -382,18 +406,7 @@ const CollectionAnalytics: React.FC<CollectionAnalyticsProps> = ({ albums, onSca
         <section className="glass-morphism rounded-2xl border border-th-surface/[0.10] p-5 md:p-6" aria-label="Decade distribution">
           <SectionHeader title="Decade Distribution" />
           {decades.length > 0 ? (
-            <div className="space-y-2.5">
-              {decades.map(d => (
-                <BarRow
-                  key={d.decade}
-                  label={d.decade}
-                  count={d.count}
-                  percentage={maxDecadeCount > 0 ? Math.round((d.count / maxDecadeCount) * 100) : 0}
-                  maxPercentage={100}
-                  color="#4f6d7a"
-                />
-              ))}
-            </div>
+            <DecadeBarChart data={decades} />
           ) : (
             <p className="text-sm text-th-text3">No year data available.</p>
           )}
@@ -414,7 +427,7 @@ const CollectionAnalytics: React.FC<CollectionAnalyticsProps> = ({ albums, onSca
         {/* Collection Growth */}
         <section className="glass-morphism rounded-2xl border border-th-surface/[0.10] p-5 md:p-6" aria-label="Collection growth over time">
           <SectionHeader title="Collection Growth" />
-          <GrowthChart data={growth} />
+          <GrowthAreaChart data={growth} />
         </section>
       </div>
     </main>

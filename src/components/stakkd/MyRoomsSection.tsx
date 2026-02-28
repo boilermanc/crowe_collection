@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
+import { HelpCircle } from 'lucide-react';
 import { useRooms } from '../../../hooks/useRooms';
 import { useToast } from '../../../contexts/ToastContext';
 import { useSubscription } from '../../../contexts/SubscriptionContext';
@@ -6,6 +7,8 @@ import { useFocusTrap } from '../../../hooks/useFocusTrap';
 import RoomForm from './RoomForm';
 import RoomFeaturesEditor from './RoomFeaturesEditor';
 import RoomPlacementView from './RoomPlacementView';
+import RoomOnboarding from './RoomOnboarding';
+import RoomGuideModal from './RoomGuideModal';
 import UpgradePrompt from '../../../components/UpgradePrompt';
 import type { StakkdRoom, CreateRoomPayload } from '../../../types/room';
 import { supabase } from '../../../services/supabaseService';
@@ -212,6 +215,10 @@ const MyRoomsSection: React.FC = () => {
   const [layoutRoom, setLayoutRoom] = useState<StakkdRoom | null>(null);
   const [layoutLoading, setLayoutLoading] = useState(false);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    return !localStorage.getItem('rekkrd_room_onboarding_seen');
+  });
+  const [showGuide, setShowGuide] = useState(false);
 
   const handleAddRoom = () => {
     if (!hasAccess) { setShowUpgradePrompt(true); return; }
@@ -298,17 +305,32 @@ const MyRoomsSection: React.FC = () => {
     }
   };
 
+  const handleOnboardingComplete = () => {
+    localStorage.setItem('rekkrd_room_onboarding_seen', '1');
+    setShowOnboarding(false);
+  };
+
   return (
     <section aria-labelledby="my-rooms-heading" className="mt-10 pt-8 border-t border-th-surface/[0.10]">
       {/* Section header */}
       <div className="flex items-center justify-between mb-4">
-        <div>
-          <h3 id="my-rooms-heading" className="font-label text-sm md:text-base font-bold tracking-tight text-th-text">
-            My Rooms
-          </h3>
-          <p className="text-th-text3 text-[10px] uppercase tracking-widest mt-0.5">
-            {rooms.length} {rooms.length === 1 ? 'room' : 'rooms'}
-          </p>
+        <div className="flex items-center gap-2">
+          <div>
+            <h3 id="my-rooms-heading" className="font-label text-sm md:text-base font-bold tracking-tight text-th-text">
+              My Rooms
+            </h3>
+            <p className="text-th-text3 text-[10px] uppercase tracking-widest mt-0.5">
+              {rooms.length} {rooms.length === 1 ? 'room' : 'rooms'}
+            </p>
+          </div>
+          <button
+            onClick={() => setShowGuide(true)}
+            className="p-1.5 rounded-lg text-th-text3/50 hover:text-th-text hover:bg-th-surface/[0.06] transition-colors"
+            aria-label="Open room planner guide"
+            title="Room Planner Guide"
+          >
+            <HelpCircle size={18} />
+          </button>
         </div>
         <button
           onClick={handleAddRoom}
@@ -439,6 +461,14 @@ const MyRoomsSection: React.FC = () => {
           onUpgrade={() => setShowUpgradePrompt(false)}
         />
       )}
+
+      {/* Onboarding overlay (first visit only, Enthusiast users) */}
+      {showOnboarding && hasAccess && (
+        <RoomOnboarding onComplete={handleOnboardingComplete} />
+      )}
+
+      {/* User guide modal (always accessible) */}
+      <RoomGuideModal isOpen={showGuide} onClose={() => setShowGuide(false)} />
     </section>
   );
 };

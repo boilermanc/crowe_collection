@@ -18,7 +18,9 @@ import { sortBySignalFlow } from '../src/config/signalChainOrder';
 import SignalChainDiagram from '../src/components/stakkd/SignalChainDiagram';
 import MyRoomsSection from '../src/components/stakkd/MyRoomsSection';
 import ChainInsightsPanel from '../src/components/stakkd/ChainInsightsPanel';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, HelpCircle } from 'lucide-react';
+import StakkdOnboarding from '../src/components/StakkdOnboarding';
+import StakkdGuideModal from '../src/components/StakkdGuideModal';
 
 interface SavedGuide {
   id: string;
@@ -154,6 +156,12 @@ const StakkdPage: React.FC<StakkdPageProps> = ({ onUpgradeRequired }) => {
   const [signalChainGuideOpen, setSignalChainGuideOpen] = useState(false);
   const [isCustomOrder, setIsCustomOrder] = useState(false);
   const [chainView, setChainView] = useState<ChainView>('diagram');
+
+  // Onboarding + Guide state
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    return !localStorage.getItem('rekkrd_stakkd_onboarding_seen');
+  });
+  const [showGuide, setShowGuide] = useState(false);
 
   // Chain analysis state
   const [chainAnalysis, setChainAnalysis] = useState<ChainAnalysisResult | null>(null);
@@ -442,6 +450,11 @@ const StakkdPage: React.FC<StakkdPageProps> = ({ onUpgradeRequired }) => {
     setManualModalOpen(true);
   }, []);
 
+  const handleOnboardingComplete = () => {
+    localStorage.setItem('rekkrd_stakkd_onboarding_seen', '1');
+    setShowOnboarding(false);
+  };
+
   // ── Setup Guide ─────────────────────────────────────────────────
 
   const handleGenerateGuide = useCallback(async () => {
@@ -691,6 +704,11 @@ const StakkdPage: React.FC<StakkdPageProps> = ({ onUpgradeRequired }) => {
           onUpgradeRequired={onUpgradeRequired}
           onScanWithAI={() => { setManualModalOpen(false); setAddFlowOpen(true); }}
         />
+
+        {/* Onboarding overlay (first visit only) */}
+        {showOnboarding && (
+          <StakkdOnboarding onComplete={handleOnboardingComplete} />
+        )}
       </div>
     );
   }
@@ -727,6 +745,14 @@ const StakkdPage: React.FC<StakkdPageProps> = ({ onUpgradeRequired }) => {
           )}
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => setShowGuide(true)}
+            className="p-2 rounded-lg text-th-text3/50 hover:text-th-text hover:bg-th-surface/[0.06] transition-colors"
+            aria-label="Open Stakkd guide"
+            title="Stakkd Guide"
+          >
+            <HelpCircle size={20} />
+          </button>
           <button
             onClick={() => setSignalChainGuideOpen(true)}
             className="border border-th-surface/[0.3] text-th-text2 font-bold py-2.5 px-5 rounded-xl hover:bg-th-surface/[0.1] hover:text-th-text transition-all uppercase tracking-[0.2em] text-[10px] flex items-center gap-2"
@@ -1124,6 +1150,14 @@ const StakkdPage: React.FC<StakkdPageProps> = ({ onUpgradeRequired }) => {
           </div>
         </div>
       )}
+
+      {/* Onboarding overlay (first visit only) */}
+      {showOnboarding && (
+        <StakkdOnboarding onComplete={handleOnboardingComplete} />
+      )}
+
+      {/* User guide modal (always accessible) */}
+      <StakkdGuideModal isOpen={showGuide} onClose={() => setShowGuide(false)} />
     </div>
   );
 };

@@ -9,6 +9,9 @@ import {
   deleteShelfConfig,
   getSortPreference,
   upsertSortPreference,
+  distributeAcrossAllShelves,
+  batchSaveGlobalDistribution,
+  generateShelfCatalogCSV,
 } from '../helpers/shelfHelpers';
 import ShelfView from './ShelfView';
 import ShelfOnboarding from './ShelfOnboarding';
@@ -62,6 +65,9 @@ const ShelfSetup: React.FC<ShelfSetupProps> = ({ userId, albums, onUpgradeRequir
   // Delete confirmation
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
+  // Distribute All state
+  const [distributing, setDistributing] = useState(false);
+
   // ── Sort preference ───────────────────────────────────────────
   const [sortScheme, setSortScheme] = useState<SortScheme>('artist_alpha');
 
@@ -89,15 +95,15 @@ const ShelfSetup: React.FC<ShelfSetupProps> = ({ userId, albums, onUpgradeRequir
     try {
       const { data, error } = await supabase
         .from('albums')
-        .select('shelf_unit')
+        .select('shelf_config_id')
         .eq('user_id', userId)
-        .not('shelf_unit', 'is', null);
+        .not('shelf_config_id', 'is', null);
       if (error) throw error;
-      // Count albums per shelf_unit value
-      const counts: Record<number, number> = {};
+      // Count albums per shelf_config_id
+      const counts: Record<string, number> = {};
       for (const row of data ?? []) {
-        const u = row.shelf_unit as number;
-        counts[u] = (counts[u] || 0) + 1;
+        const configId = row.shelf_config_id as string;
+        counts[configId] = (counts[configId] || 0) + 1;
       }
       setAlbumCounts(counts);
     } catch {
@@ -123,14 +129,11 @@ const ShelfSetup: React.FC<ShelfSetupProps> = ({ userId, albums, onUpgradeRequir
     load();
   }, [fetchShelves, fetchAlbumCounts, fetchSortPref]);
 
-  // ── Count albums assigned to a specific shelf config ──────────
-  // A shelf config owns units 1..unit_count. But since shelf_unit is
-  // a global integer, we need a convention. For now, count ALL albums
-  // that have any non-null shelf_unit, grouped per config by matching
-  // unit ranges. With a single shelf this is units 1..N. With multiple
-  // shelves the ranges stack: shelf1 = 1..N1, shelf2 = N1+1..N1+N2, etc.
-  // For simplicity we'll just show total assigned vs total capacity.
-  function getAssignedCount(): number {
+  function getShelfAssignedCount(shelfId: string): number {
+    return albumCounts[shelfId] ?? 0;
+  }
+
+  function getTotalAssigned(): number {
     let total = 0;
     for (const key in albumCounts) total += albumCounts[key];
     return total;
@@ -217,6 +220,32 @@ const ShelfSetup: React.FC<ShelfSetupProps> = ({ userId, albums, onUpgradeRequir
     }
   };
 
+  const handleDistributeAll = async () => {
+    setDistributing(true);
+    try {
+      const distribution = distributeAcrossAllShelves(albums, shelves, sortScheme);
+      await batchSaveGlobalDistribution(distribution.assignments);
+      const msg = distribution.overflow
+        ? `Distributed ${distribution.assignments.size} records (${distribution.unassigned.length} unassigned — not enough shelf space)`
+        : `Distributed ${distribution.assignments.size} records across ${shelves.length} shelf${shelves.length !== 1 ? 'es' : ''}`;
+      showToast(msg, distribution.overflow ? 'warning' : 'success');
+      await fetchAlbumCounts();
+    } catch {
+      showToast('Failed to distribute albums', 'error');
+    } finally {
+      setDistributing(false);
+    }
+  };
+
+  const handleDownloadCatalog = () => {
+    try {
+      const result = generateShelfCatalogCSV(albums, shelves, sortScheme);
+      showToast(`Downloaded ${result.albumCount} records as ${result.filename}`, 'success');
+    } catch {
+      showToast('Failed to generate catalog', 'error');
+    }
+  };
+
   const handleOnboardingComplete = () => {
     localStorage.setItem('rekkrd_shelf_onboarding_seen', '1');
     setShowOnboarding(false);
@@ -262,7 +291,8 @@ const ShelfSetup: React.FC<ShelfSetupProps> = ({ userId, albums, onUpgradeRequir
   }
 
   const totalCapacity = shelves.reduce((sum, s) => sum + s.unit_count * s.capacity_per_unit, 0);
-  const totalAssigned = getAssignedCount();
+  const totalAssigned = getTotalAssigned();
+  const unassignedCount = albums.filter(a => !a.shelf_config_id).length;
 
   const activeShelf = shelves.find(s => s.id === viewShelfId) ?? shelves[0] ?? null;
 
@@ -363,11 +393,25 @@ const ShelfSetup: React.FC<ShelfSetupProps> = ({ userId, albums, onUpgradeRequir
 
               {activeShelf && (
                 <ShelfView
-                  albums={albums}
+                  albums={albums.filter(a => a.shelf_config_id === activeShelf.id)}
                   shelfConfig={activeShelf}
                   sortScheme={sortScheme}
                   onAssignmentsSaved={fetchAlbumCounts}
                 />
+              )}
+
+              {/* Unassigned count hint */}
+              {unassignedCount > 0 && (
+                <p className="text-xs text-th-text3/40 text-center mt-2">
+                  {unassignedCount} record{unassignedCount !== 1 ? 's' : ''} not yet assigned to a shelf.{' '}
+                  <button
+                    onClick={() => setActiveTab('setup')}
+                    className="text-[#dd6e42] hover:underline"
+                  >
+                    Distribute All
+                  </button>{' '}
+                  from the Setup tab.
+                </p>
               )}
             </>
           )}
@@ -469,15 +513,46 @@ const ShelfSetup: React.FC<ShelfSetupProps> = ({ userId, albums, onUpgradeRequir
       {/* Existing Shelves */}
       {shelves.length > 0 && (
         <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="font-label text-xs tracking-widest uppercase font-bold text-th-text2">
-              Your Shelves
-            </h3>
-            {totalCapacity > 0 && (
-              <span className="text-xs text-th-text3/50">
-                {totalAssigned} / {totalCapacity.toLocaleString()} total capacity
-              </span>
-            )}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <h3 className="font-label text-xs tracking-widest uppercase font-bold text-th-text2">
+                Your Shelves
+              </h3>
+              {totalCapacity > 0 && (
+                <span className="text-xs text-th-text3/50">
+                  {totalAssigned} / {totalCapacity.toLocaleString()} total capacity
+                  {unassignedCount > 0 && (
+                    <span className="ml-2 text-yellow-400">{unassignedCount} unassigned</span>
+                  )}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2 self-start sm:self-auto">
+              <button
+                onClick={handleDownloadCatalog}
+                disabled={albums.length === 0}
+                className="px-3 py-2 rounded-lg bg-th-surface/[0.12] text-th-text2 font-label text-sm tracking-wide hover:bg-th-surface/[0.2] transition-colors border border-th-surface/[0.08] flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label="Download shelf catalog as CSV"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Download Catalog
+              </button>
+              <button
+                onClick={handleDistributeAll}
+                disabled={distributing || shelves.length === 0 || albums.length === 0}
+                className="px-3 py-2 rounded-lg bg-[#dd6e42] text-white font-label text-sm tracking-wide hover:bg-[#c45a30] transition-colors flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label="Distribute all albums across all shelves"
+              >
+                {distributing && (
+                  <div className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                )}
+                {distributing ? 'Distributing...' : 'Distribute All'}
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -599,22 +674,19 @@ const ShelfSetup: React.FC<ShelfSetupProps> = ({ userId, albums, onUpgradeRequir
                     {/* Capacity bar */}
                     <div>
                       <div className="flex items-center justify-between text-xs text-th-text3/50 mb-1">
-                        <span>Total capacity</span>
+                        <span>Assigned / Capacity</span>
                         <span className="font-label tracking-wide">
-                          {(shelf.unit_count * shelf.capacity_per_unit).toLocaleString()} records
+                          {getShelfAssignedCount(shelf.id)} / {(shelf.unit_count * shelf.capacity_per_unit).toLocaleString()} records
                         </span>
                       </div>
                       <div className="h-2 bg-th-surface/[0.08] rounded-full overflow-hidden">
                         <div
                           className="h-full bg-[#dd6e42] rounded-full transition-all duration-500"
                           style={{
-                            width: `${Math.min(100, (totalAssigned / (shelf.unit_count * shelf.capacity_per_unit)) * 100)}%`,
+                            width: `${Math.min(100, (getShelfAssignedCount(shelf.id) / (shelf.unit_count * shelf.capacity_per_unit)) * 100)}%`,
                           }}
                         />
                       </div>
-                      <p className="text-xs text-th-text3/40 mt-1">
-                        {totalAssigned} record{totalAssigned !== 1 ? 's' : ''} assigned across all shelves
-                      </p>
                     </div>
                   </>
                 )}

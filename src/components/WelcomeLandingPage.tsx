@@ -176,7 +176,7 @@ const tiers = [
     price: '$4.99',
     period: '/mo',
     badge: 'Most Popular',
-    perks: ['Unlimited albums', 'Unlimited scans', 'Unlimited gear', 'Playlist generation'],
+    perks: ['Unlimited albums', 'Unlimited scans', 'Unlimited gear', 'Playlist generation', 'Collection Export \u2014 CSV & PDF'],
     cta: 'Start Curating',
     tier: 'curator',
     highlighted: true,

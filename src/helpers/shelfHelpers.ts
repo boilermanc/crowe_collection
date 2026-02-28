@@ -1,4 +1,6 @@
+import * as Papa from 'papaparse';
 import { supabase } from '../../services/supabaseService';
+import { triggerDownload } from './exportHelpers';
 import type { Album } from '../../types';
 import type { ShelfConfig, ShelfSortPreference, SortScheme } from '../../types/shelf';
 
@@ -48,6 +50,12 @@ export async function upsertShelfConfig(
 
 export async function deleteShelfConfig(configId: string): Promise<void> {
   assertClient();
+
+  // Clear shelf assignments for albums on this shelf before deleting
+  await supabase!
+    .from('albums')
+    .update({ shelf_unit: null, shelf_manual_override: false })
+    .eq('shelf_config_id', configId);
 
   const { error } = await supabase!
     .from('shelf_config')
@@ -249,6 +257,7 @@ export function calculateShelfAssignments(
 
 export async function batchSaveAssignments(
   assignments: Map<string, number>,
+  shelfConfigId: string,
 ): Promise<void> {
   assertClient();
 
@@ -263,7 +272,7 @@ export async function batchSaveAssignments(
       chunk.map(([albumId, unit]) =>
         supabase!
           .from('albums')
-          .update({ shelf_unit: unit })
+          .update({ shelf_unit: unit, shelf_config_id: shelfConfigId })
           .eq('id', albumId)
       ),
     );
@@ -276,12 +285,16 @@ export async function assignAlbumToUnit(
   albumId: string,
   unit: number | null,
   manualOverride?: boolean,
+  shelfConfigId?: string,
 ): Promise<void> {
   assertClient();
 
   const updateData: Record<string, unknown> = { shelf_unit: unit };
   if (manualOverride !== undefined) {
     updateData.shelf_manual_override = manualOverride;
+  }
+  if (shelfConfigId !== undefined) {
+    updateData.shelf_config_id = shelfConfigId;
   }
 
   const { error } = await supabase!
@@ -490,4 +503,128 @@ export function generateRebalancePlan(
   }
 
   return { moves, newDistribution };
+}
+
+// ── Global Multi-Shelf Distribution ──────────────────────────────────
+
+export interface GlobalDistribution {
+  assignments: Map<string, { shelfConfigId: string; unit: number }>;
+  unassigned: Album[];
+  overflow: boolean;
+}
+
+/**
+ * Distribute all albums across multiple shelves sequentially.
+ * Fills shelf 1's sections first, then shelf 2's, etc.
+ */
+export function distributeAcrossAllShelves(
+  albums: Album[],
+  shelves: ShelfConfig[],
+  scheme: SortScheme,
+): GlobalDistribution {
+  const sorted = sortCollectionForShelf(albums, scheme);
+  const assignments = new Map<string, { shelfConfigId: string; unit: number }>();
+  let albumIdx = 0;
+
+  for (const shelf of shelves) {
+    for (let u = 1; u <= shelf.unit_count; u++) {
+      for (let slot = 0; slot < shelf.capacity_per_unit && albumIdx < sorted.length; slot++) {
+        const album = sorted[albumIdx];
+        assignments.set(album.id, { shelfConfigId: shelf.id, unit: u });
+        albumIdx++;
+      }
+    }
+  }
+
+  const unassigned = sorted.slice(albumIdx);
+  return {
+    assignments,
+    unassigned,
+    overflow: unassigned.length > 0,
+  };
+}
+
+/** Persist a global multi-shelf distribution (sets both shelf_config_id and shelf_unit). */
+export async function batchSaveGlobalDistribution(
+  assignments: Map<string, { shelfConfigId: string; unit: number }>,
+): Promise<void> {
+  assertClient();
+  const entries = Array.from(assignments.entries());
+  const CHUNK_SIZE = 50;
+
+  for (let i = 0; i < entries.length; i += CHUNK_SIZE) {
+    const chunk = entries.slice(i, i + CHUNK_SIZE);
+    await Promise.all(
+      chunk.map(([albumId, { shelfConfigId, unit }]) =>
+        supabase!
+          .from('albums')
+          .update({ shelf_unit: unit, shelf_config_id: shelfConfigId })
+          .eq('id', albumId)
+      ),
+    );
+  }
+}
+
+// ── Shelf Catalog CSV Export ─────────────────────────────────────────
+
+export interface ShelfCatalogExportResult {
+  success: boolean;
+  albumCount: number;
+  filename: string;
+}
+
+/**
+ * Generate and download a CSV of the shelf catalog,
+ * grouped by shelf name and section number.
+ */
+export function generateShelfCatalogCSV(
+  albums: Album[],
+  shelves: ShelfConfig[],
+  scheme: SortScheme,
+): ShelfCatalogExportResult {
+  const rows: Record<string, string>[] = [];
+
+  for (const shelf of shelves) {
+    const shelfAlbums = albums.filter(a => a.shelf_config_id === shelf.id);
+    const sorted = sortCollectionForShelf(shelfAlbums, scheme);
+
+    for (const album of sorted) {
+      rows.push({
+        'Shelf': shelf.name,
+        'Section': String(album.shelf_unit ?? ''),
+        'Artist': album.artist,
+        'Title': album.title,
+        'Year': album.year ?? '',
+        'Genre': album.genre ?? '',
+        'Format': album.format ?? '',
+        'Condition': album.condition ?? '',
+      });
+    }
+  }
+
+  // Append unassigned albums at the end
+  const unassigned = albums.filter(a => !a.shelf_config_id);
+  if (unassigned.length > 0) {
+    const sorted = sortCollectionForShelf(unassigned, scheme);
+    for (const album of sorted) {
+      rows.push({
+        'Shelf': '(Unassigned)',
+        'Section': '',
+        'Artist': album.artist,
+        'Title': album.title,
+        'Year': album.year ?? '',
+        'Genre': album.genre ?? '',
+        'Format': album.format ?? '',
+        'Condition': album.condition ?? '',
+      });
+    }
+  }
+
+  const csv = Papa.unparse(rows);
+  const today = new Date().toISOString().slice(0, 10);
+  const filename = `rekkrd-shelf-catalog-${today}.csv`;
+
+  triggerDownload(csv, filename, 'text/csv;charset=utf-8;');
+
+  return { success: true, albumCount: rows.length, filename };
 }
