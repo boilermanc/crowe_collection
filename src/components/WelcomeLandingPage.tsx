@@ -186,7 +186,7 @@ const tiers = [
     price: '$9.99',
     period: '/mo',
     badge: '',
-    perks: ['Everything in Curator', 'Priority AI', 'CSV / JSON export', 'Advanced analytics'],
+    perks: ['Everything in Curator', 'Room Planner \u2014 AI gear placement', 'Priority AI', 'CSV / JSON export', 'Advanced analytics'],
     cta: 'Go Enthusiast',
     tier: 'enthusiast',
     highlighted: false,

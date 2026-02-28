@@ -7,7 +7,7 @@ interface UpgradePromptProps {
   onUpgrade: () => void;
 }
 
-const FEATURE_INFO: Record<string, { title: string; description: string }> = {
+const FEATURE_INFO: Record<string, { title: string; description: string; cta?: string }> = {
   playlist: {
     title: 'AI Playlist Generation',
     description: 'Generate mood-based playlists from your vinyl collection with AI.',
@@ -35,6 +35,20 @@ const FEATURE_INFO: Record<string, { title: string; description: string }> = {
   setup_guide: {
     title: 'Setup Guide',
     description: 'Get custom wiring and setup instructions for your exact gear combination. Available on Curator and above.',
+  },
+  shelf_organizer: {
+    title: 'Shelf Organizer',
+    description: 'Map your digital collection to your physical shelves with smart sorting, drag-and-drop, and rebalance suggestions. Know exactly where every record goes.',
+    cta: 'Upgrade to Enthusiast',
+  },
+  room_planner: {
+    title: 'Room Planner',
+    description: 'Design your listening rooms and get AI-powered gear placement recommendations. Available on the Enthusiast plan.',
+    cta: 'Upgrade to Enthusiast',
+  },
+  bulk_import: {
+    title: 'Bulk CSV Import',
+    description: 'Import your entire collection from a CSV file with smart column mapping.',
   },
 };
 
@@ -72,7 +86,7 @@ const UpgradePrompt: React.FC<UpgradePromptProps> = ({ feature, onClose, onUpgra
             onClick={onUpgrade}
             className="w-full rounded-xl bg-th-accent px-6 py-3 font-semibold text-white transition-all hover:brightness-110 active:scale-[0.98]"
           >
-            Upgrade to Curator
+            {info.cta || 'Upgrade to Curator'}
           </button>
           <button
             onClick={onClose}

@@ -42,6 +42,9 @@ import CollectionInsightsCard from './src/components/CollectionInsightsCard';
 import ProfilePage from './src/components/ProfilePage';
 import MobileBottomNav from './src/components/MobileBottomNav';
 import SpinsPage from './src/components/SpinsPage';
+import ShelfSetup from './src/components/ShelfSetup';
+import BulkImport from './src/components/BulkImport';
+import { getAlbumPlacementInfo } from './src/helpers/shelfHelpers';
 import { Bell, TrendingUp, User } from 'lucide-react';
 import { wantlistService } from './services/wantlistService';
 import { engagementService } from './services/engagementService';
@@ -51,7 +54,7 @@ import { MEDIA_FORMATS, FORMAT_COLORS, type MediaFormat } from './constants/form
 const PAGE_SIZE = 40;
 
 type SortOption = 'recent' | 'year' | 'artist' | 'title' | 'value' | 'format';
-type ViewMode = 'public-landing' | 'landing' | 'grid' | 'list' | 'stakkd' | 'discogs' | 'wantlist' | 'value-dashboard' | 'profile' | 'price-alerts' | 'spins';
+type ViewMode = 'public-landing' | 'landing' | 'grid' | 'list' | 'stakkd' | 'discogs' | 'wantlist' | 'value-dashboard' | 'profile' | 'price-alerts' | 'spins' | 'shelves' | 'bulk-import';
 
 interface DuplicatePendingData {
   identity: { artist: string; title: string; barcode?: string; discogsMatches?: DiscogsMatch[]; scanMode?: ScanMode };
@@ -310,6 +313,13 @@ const App: React.FC = () => {
       setSelectedAlbum(saved);
       if (saved.cover_url) setHeroBg(saved.cover_url);
 
+      // Fire-and-forget: shelf placement toast
+      if (user) {
+        getAlbumPlacementInfo(saved, albums, user.id).then(p => {
+          if (p) showToast(`Section ${p.unit}, position ~${p.position} on ${p.shelfName}`, 'info');
+        });
+      }
+
       // Clean up wantlist — use item from closure since state hasn't committed yet
       try {
         await wantlistService.removeFromWantlist(item.id);
@@ -488,6 +498,13 @@ const App: React.FC = () => {
       setAlbums(prev => [saved, ...prev]);
       setSelectedAlbum(saved);
       if (saved.cover_url) setHeroBg(saved.cover_url);
+
+      // Fire-and-forget: shelf placement toast
+      if (user) {
+        getAlbumPlacementInfo(saved, albums, user.id).then(p => {
+          if (p) showToast(`Section ${p.unit}, position ~${p.position} on ${p.shelfName}`, 'info');
+        });
+      }
 
       // Fire-and-forget: milestone email check
       (async () => {
@@ -930,7 +947,7 @@ const App: React.FC = () => {
             )}
           </div>
 
-          {currentView !== 'landing' && currentView !== 'stakkd' && currentView !== 'discogs' && currentView !== 'profile' && currentView !== 'price-alerts' && currentView !== 'spins' && <div className="flex-1 max-w-xl flex items-center gap-2">
+          {currentView !== 'landing' && currentView !== 'stakkd' && currentView !== 'discogs' && currentView !== 'profile' && currentView !== 'price-alerts' && currentView !== 'spins' && currentView !== 'shelves' && <div className="flex-1 max-w-xl flex items-center gap-2">
             <button
               onClick={() => setShowStats(!showStats)}
               className={`hidden md:flex p-3 rounded-full border transition-all flex-shrink-0 ${showStats ? 'bg-[#dd6e42] border-[#dd6e42] text-th-text shadow-lg' : 'bg-th-surface/[0.04] border-th-surface/[0.10] text-th-text2 hover:text-th-text'}`}
@@ -1049,6 +1066,57 @@ const App: React.FC = () => {
                 <path d="M6 8.5a6 6 0 0 1 12 0c0 3-2 4.5-2 7a2 2 0 0 1-2 2h-1a1 1 0 0 1-1-1v-1" />
                 <path d="M10.5 8.5a1.5 1.5 0 0 1 3 0c0 1.5-1.5 2-1.5 3.5" />
               </svg>
+            </button>
+            <button
+              onClick={() => {
+                if (!canUse('shelf_organizer')) {
+                  setUpgradeFeature('shelf_organizer');
+                  return;
+                }
+                setCurrentView('shelves');
+              }}
+              className={`hidden md:flex p-3 rounded-full border transition-all flex-shrink-0 relative ${currentView === 'shelves' ? 'bg-[#dd6e42] border-[#dd6e42] text-th-text shadow-lg' : 'bg-th-surface/[0.04] border-th-surface/[0.10] text-th-text2 hover:text-th-text'}`}
+              title="Shelves — organize your storage"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="7" height="7" />
+                <rect x="14" y="3" width="7" height="7" />
+                <rect x="3" y="14" width="7" height="7" />
+                <rect x="14" y="14" width="7" height="7" />
+              </svg>
+              {!canUse('shelf_organizer') && (
+                <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-th-accent/80 flex items-center justify-center">
+                  <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => {
+                if (!canUse('bulk_import')) {
+                  setUpgradeFeature('bulk_import');
+                  return;
+                }
+                setCurrentView('bulk-import');
+              }}
+              className={`hidden md:flex p-3 rounded-full border transition-all flex-shrink-0 relative ${currentView === 'bulk-import' ? 'bg-[#dd6e42] border-[#dd6e42] text-th-text shadow-lg' : 'bg-th-surface/[0.04] border-th-surface/[0.10] text-th-text2 hover:text-th-text'}`}
+              title="Bulk Import — CSV import"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+              {!canUse('bulk_import') && (
+                <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-th-accent/80 flex items-center justify-center">
+                  <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                </span>
+              )}
             </button>
             <button
               onClick={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
@@ -1620,6 +1688,10 @@ const App: React.FC = () => {
         <main className="max-w-7xl mx-auto px-4 md:px-6 mt-8 pb-8">
           <SpinsPage allAlbums={albums} onSelectAlbum={setSelectedAlbum} />
         </main>
+      ) : currentView === 'shelves' ? (
+        <ShelfSetup userId={user.id} albums={albums} onUpgradeRequired={(feature: string) => setUpgradeFeature(feature)} />
+      ) : currentView === 'bulk-import' ? (
+        <BulkImport onUpgradeRequired={(feature: string) => setUpgradeFeature(feature)} />
       ) : currentView === 'value-dashboard' ? (
         <CollectionValueDashboard />
       ) : currentView === 'profile' ? (
@@ -1771,7 +1843,13 @@ const App: React.FC = () => {
       {currentView !== 'public-landing' && currentView !== 'landing' && (
         <MobileBottomNav
           currentView={currentView}
-          onNavigate={setCurrentView}
+          onNavigate={(view) => {
+            if (view === 'shelves' && !canUse('shelf_organizer')) {
+              setUpgradeFeature('shelf_organizer');
+              return;
+            }
+            setCurrentView(view);
+          }}
           onScanPress={() => {
             if (!canUse('scan')) {
               setUpgradeFeature('scan');

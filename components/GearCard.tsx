@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Gear, GearCategory } from '../types';
+import { getSignalChainIcon } from '../src/config/signalChainIcons';
 
 const CATEGORY_LABELS: Record<GearCategory, string> = {
   turntable: 'Turntable',
@@ -86,6 +87,7 @@ interface GearCardProps {
 const GearCard: React.FC<GearCardProps> = ({ gear, onClick }) => {
   const imageUrl = gear.image_url || gear.original_photo_url;
   const label = CATEGORY_LABELS[gear.category] || gear.category;
+  const CategoryBadgeIcon = getSignalChainIcon(gear.category);
   const truncatedDesc = gear.description
     ? gear.description.length > 80
       ? gear.description.slice(0, 80) + '...'
@@ -123,7 +125,8 @@ const GearCard: React.FC<GearCardProps> = ({ gear, onClick }) => {
       {/* Content */}
       <div className="flex-1 min-w-0 p-3 md:p-4 flex flex-col justify-center">
         <div className="flex items-center gap-2 mb-0.5">
-          <span className="inline-block bg-[#dd6e42]/15 border border-[#dd6e42]/25 text-[#f0a882] text-[9px] font-label font-bold uppercase tracking-[0.15em] px-2 py-0.5 rounded-full">
+          <span className="inline-flex items-center gap-1 bg-[#dd6e42]/15 border border-[#dd6e42]/25 text-[#f0a882] text-[9px] font-label font-bold uppercase tracking-[0.15em] px-2 py-0.5 rounded-full">
+            <CategoryBadgeIcon className="w-3 h-3" aria-hidden="true" />
             {label}
           </span>
           {gear.year && (

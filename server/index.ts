@@ -58,6 +58,11 @@ import sellrLotRouter from './routes/sellrLot.js';
 import adminGearCatalogRouter from './routes/adminGearCatalog.js';
 import adminGearIdentifyRouter from './routes/adminGearIdentify.js';
 import adminGearEnrichRouter from './routes/adminGearEnrich.js';
+import stakkdRoomsRouter from './routes/stakkdRooms.js';
+import stakkdRoomFeaturesRouter from './routes/stakkdRoomFeatures.js';
+import stakkdRoomPlacementRouter from './routes/stakkdRoomPlacement.js';
+import stakkdRoomLayoutsRouter from './routes/stakkdRoomLayouts.js';
+import analyzeChainRouter from './routes/analyzeChain.js';
 import crawlerMeta from './middleware/crawlerMeta.js';
 import { validateDiscogsConfig } from './lib/discogs.js';
 import { startSellrCron } from './sellrCron.js';
@@ -76,6 +81,7 @@ const _routerMap: Record<string, unknown> = {
   sellrSessionsRouter, sellrRecordsRouter, sellrScanRouter, sellrCheckoutRouter, sellrReportRouter,
   sellrAdminRouter, sellrAccountRouter, sellrDashboardRouter, sellrImportRouter, sellrLotRouter, integrationsRouter,
   adminGearCatalogRouter, adminGearIdentifyRouter, adminGearEnrichRouter,
+  stakkdRoomsRouter, stakkdRoomFeaturesRouter, stakkdRoomLayoutsRouter, analyzeChainRouter,
 };
 for (const [name, r] of Object.entries(_routerMap)) {
   if (typeof r !== 'function') {
@@ -199,6 +205,13 @@ mountRouter('adminGearEnrichRouter', adminGearEnrichRouter);
 mountRouter('adminGearIdentifyRouter', adminGearIdentifyRouter);
 // Admin gear catalog routes
 mountRouter('adminGearCatalogRouter', adminGearCatalogRouter);
+// Stakkd Room Planner
+mountRouter('stakkdRoomsRouter', stakkdRoomsRouter);
+mountRouter('stakkdRoomFeaturesRouter', stakkdRoomFeaturesRouter);
+mountRouter('stakkdRoomPlacementRouter', stakkdRoomPlacementRouter);
+mountRouter('stakkdRoomLayoutsRouter', stakkdRoomLayoutsRouter);
+// Signal chain analysis
+mountRouter('analyzeChainRouter', analyzeChainRouter);
 console.log('[boot] All routes registered');
 
 // Start Sellr cron jobs

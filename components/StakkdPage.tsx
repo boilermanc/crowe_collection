@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Gear, SetupGuide, GearCategory } from '../types';
 import { gearService } from '../services/gearService';
 import { geminiService, UpgradeRequiredError } from '../services/geminiService';
@@ -14,6 +14,11 @@ import GearDetailModal from './GearDetailModal';
 import SetupGuideModal from './SetupGuideModal';
 import SignalChainGuideModal from './SignalChainGuideModal';
 import SpinningRecord from './SpinningRecord';
+import { sortBySignalFlow } from '../src/config/signalChainOrder';
+import SignalChainDiagram from '../src/components/stakkd/SignalChainDiagram';
+import MyRoomsSection from '../src/components/stakkd/MyRoomsSection';
+import ChainInsightsPanel from '../src/components/stakkd/ChainInsightsPanel';
+import { Sparkles } from 'lucide-react';
 
 interface SavedGuide {
   id: string;
@@ -52,6 +57,7 @@ function formatTimeAgo(dateStr: string): string {
 }
 
 type SortMode = 'position' | 'brand' | 'newest' | 'category';
+type ChainView = 'diagram' | 'list';
 
 const SORT_OPTIONS: { value: SortMode; label: string }[] = [
   { value: 'position', label: 'Signal Chain' },
@@ -73,6 +79,51 @@ const CATEGORY_LABELS: Record<GearCategory, string> = {
   subwoofer: 'Subwoofer',
   cables_other: 'Cables / Other',
 };
+
+// ── Chain Analysis types ──────────────────────────────────────────
+
+interface ChainAnalysisNote {
+  severity: 'info' | 'warning' | 'issue';
+  title: string;
+  description: string;
+  affected_gear: string[];
+}
+
+interface ChainAnalysisGap {
+  category: string;
+  reason: string;
+  insert_after: string;
+  priority: 'required' | 'recommended' | 'nice_to_have';
+}
+
+interface ChainAnalysisTip {
+  title: string;
+  description: string;
+}
+
+export interface ChainAnalysisResult {
+  overall_rating: 'excellent' | 'good' | 'needs_attention' | 'incomplete';
+  summary: string;
+  compatibility_notes: ChainAnalysisNote[];
+  gaps: ChainAnalysisGap[];
+  tips: ChainAnalysisTip[];
+}
+
+interface AnalysisCache {
+  gearHash: string;
+  analysis: ChainAnalysisResult;
+  timestamp: number;
+}
+
+const ANALYSIS_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+
+/** Simple fingerprint of gear IDs + categories for cache invalidation. */
+function hashGear(gear: Gear[]): string {
+  return gear
+    .map(g => `${g.id}:${g.category}`)
+    .sort()
+    .join('|');
+}
 
 interface StakkdPageProps {
   onUpgradeRequired?: (feature: string) => void;
@@ -101,6 +152,13 @@ const StakkdPage: React.FC<StakkdPageProps> = ({ onUpgradeRequired }) => {
   const [activeCategory, setActiveCategory] = useState<GearCategory | null>(null);
   const [sortMode, setSortMode] = useState<SortMode>('position');
   const [signalChainGuideOpen, setSignalChainGuideOpen] = useState(false);
+  const [isCustomOrder, setIsCustomOrder] = useState(false);
+  const [chainView, setChainView] = useState<ChainView>('diagram');
+
+  // Chain analysis state
+  const [chainAnalysis, setChainAnalysis] = useState<ChainAnalysisResult | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const analysisCacheRef = useRef<AnalysisCache | null>(null);
 
   // Saved guides state
   const [savedGuides, setSavedGuides] = useState<SavedGuide[]>([]);
@@ -142,11 +200,15 @@ const StakkdPage: React.FC<StakkdPageProps> = ({ onUpgradeRequired }) => {
       case 'category':
         filtered = [...filtered].sort((a, b) => a.category.localeCompare(b.category));
         break;
-      // 'position' — use array order as-is (already in position order)
+      case 'position':
+        if (!isCustomOrder) {
+          filtered = sortBySignalFlow(filtered);
+        }
+        break;
     }
 
     return filtered;
-  }, [gear, activeCategory, sortMode]);
+  }, [gear, activeCategory, sortMode, isCustomOrder]);
 
   const fetchGear = useCallback(async () => {
     setLoading(true);
@@ -329,6 +391,7 @@ const StakkdPage: React.FC<StakkdPageProps> = ({ onUpgradeRequired }) => {
     const [moved] = newGear.splice(dragIndex, 1);
     newGear.splice(targetIndex, 0, moved);
 
+    setIsCustomOrder(true);
     persistReorder(newGear, moved.id);
     setDragIndex(null);
     setDragOverIndex(null);
@@ -344,6 +407,7 @@ const StakkdPage: React.FC<StakkdPageProps> = ({ onUpgradeRequired }) => {
     const newGear = [...gear];
     const movedId = newGear[index].id;
     [newGear[index - 1], newGear[index]] = [newGear[index], newGear[index - 1]];
+    setIsCustomOrder(true);
     persistReorder(newGear, movedId);
   }, [gear, persistReorder]);
 
@@ -352,6 +416,7 @@ const StakkdPage: React.FC<StakkdPageProps> = ({ onUpgradeRequired }) => {
     const newGear = [...gear];
     const movedId = newGear[index].id;
     [newGear[index], newGear[index + 1]] = [newGear[index + 1], newGear[index]];
+    setIsCustomOrder(true);
     persistReorder(newGear, movedId);
   }, [gear, persistReorder]);
 
@@ -413,6 +478,67 @@ const StakkdPage: React.FC<StakkdPageProps> = ({ onUpgradeRequired }) => {
       setIsGuideLoading(false);
     }
   }, [gear, canUse, onUpgradeRequired, showToast]);
+
+  // ── Chain Analysis ──────────────────────────────────────────────
+
+  const handleAnalyzeChain = useCallback(async () => {
+    // Check client-side cache
+    const currentHash = hashGear(gear);
+    const cached = analysisCacheRef.current;
+    if (cached && cached.gearHash === currentHash && Date.now() - cached.timestamp < ANALYSIS_CACHE_TTL) {
+      setChainAnalysis(cached.analysis);
+      showToast('Analysis loaded from cache.', 'success');
+      return;
+    }
+
+    setIsAnalyzing(true);
+    setChainAnalysis(null);
+
+    try {
+      const headers = await getAuthHeaders();
+      const payload = gear.map(g => ({
+        id: g.id,
+        name: `${g.brand} ${g.model}`,
+        brand: g.brand,
+        category: g.category,
+        notes: g.notes,
+      }));
+
+      const resp = await fetch('/api/analyze-chain', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ gear: payload }),
+      });
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({ error: `HTTP ${resp.status}` }));
+        throw new Error(err.error || `HTTP ${resp.status}`);
+      }
+
+      const analysis: ChainAnalysisResult = await resp.json();
+      setChainAnalysis(analysis);
+
+      // Update cache
+      analysisCacheRef.current = { gearHash: currentHash, analysis, timestamp: Date.now() };
+
+      showToast('Analysis complete.', 'success');
+    } catch (err) {
+      console.error('[analyze-chain] Error:', err);
+      const message = err instanceof Error ? err.message : 'Failed to analyze chain';
+      showToast(message, 'error');
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }, [gear, showToast]);
+
+  // Invalidate cache when gear changes
+  useEffect(() => {
+    const cached = analysisCacheRef.current;
+    if (cached && cached.gearHash !== hashGear(gear)) {
+      analysisCacheRef.current = null;
+      setChainAnalysis(null);
+    }
+  }, [gear]);
 
   // Loading state
   if (loading) {
@@ -675,17 +801,28 @@ const StakkdPage: React.FC<StakkdPageProps> = ({ onUpgradeRequired }) => {
             ))}
           </div>
 
-          {/* Sort dropdown */}
-          <select
-            value={sortMode}
-            onChange={(e) => setSortMode(e.target.value as SortMode)}
-            aria-label="Sort gear by"
-            className="shrink-0 bg-th-surface/[0.04] border border-th-surface/[0.10] rounded-xl px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-th-text2 focus:outline-none focus:ring-1 focus:ring-[#dd6e42]/50 sm:w-auto"
-          >
-            {SORT_OPTIONS.map(opt => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
+          {/* Sort dropdown + reset */}
+          <div className="flex items-center gap-2 shrink-0">
+            <select
+              value={sortMode}
+              onChange={(e) => setSortMode(e.target.value as SortMode)}
+              aria-label="Sort gear by"
+              className="bg-th-surface/[0.04] border border-th-surface/[0.10] rounded-xl px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-th-text2 focus:outline-none focus:ring-1 focus:ring-[#dd6e42]/50 sm:w-auto"
+            >
+              {SORT_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+            {sortMode === 'position' && isCustomOrder && (
+              <button
+                onClick={() => setIsCustomOrder(false)}
+                aria-label="Reset to automatic signal flow order"
+                className="text-[#dd6e42]/80 hover:text-[#dd6e42] text-[10px] font-semibold tracking-wide transition-colors whitespace-nowrap"
+              >
+                Reset flow
+              </button>
+            )}
+          </div>
         </div>
       )}
 
@@ -753,84 +890,149 @@ const StakkdPage: React.FC<StakkdPageProps> = ({ onUpgradeRequired }) => {
         </div>
       )}
 
-      {/* Gear list */}
-      <div
-        className="space-y-0"
-        {...(canReorder ? { 'aria-roledescription': 'sortable' } : {})}
-        aria-label="Gear list"
-      >
-        {displayedGear.map((item, index) => (
-          <div key={item.id}>
-            {/* Drop indicator — shown above the hovered card */}
-            {canReorder && dragOverIndex === index && dragIndex !== null && dragIndex !== index && (
-              <div className="h-0.5 bg-[#dd6e42] rounded-full mx-4 my-1 shadow-[0_0_6px_rgba(221,110,66,0.5)]" />
-            )}
+      {/* View toggle — only in Signal Chain sort mode */}
+      {sortMode === 'position' && displayedGear.length > 0 && (
+        <div className="flex items-center gap-1 mb-4" role="tablist" aria-label="Signal chain view">
+          <button
+            role="tab"
+            aria-selected={chainView === 'diagram'}
+            onClick={() => setChainView('diagram')}
+            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${
+              chainView === 'diagram'
+                ? 'bg-th-surface/[0.12] text-th-text'
+                : 'text-th-text3 hover:text-th-text2'
+            }`}
+          >
+            Diagram
+          </button>
+          <button
+            role="tab"
+            aria-selected={chainView === 'list'}
+            onClick={() => setChainView('list')}
+            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${
+              chainView === 'list'
+                ? 'bg-th-surface/[0.12] text-th-text'
+                : 'text-th-text3 hover:text-th-text2'
+            }`}
+          >
+            List
+          </button>
 
-            <div
-              draggable={canReorder}
-              onDragStart={(e) => {
-                if (!canReorder) { e.preventDefault(); showToast('Switch to Signal Chain view to reorder', 'error'); return; }
-                handleDragStart(e, index);
-              }}
-              onDragOver={(e) => canReorder ? handleDragOver(e, index) : undefined}
-              onDrop={(e) => canReorder ? handleDrop(e, index) : undefined}
-              onDragEnd={canReorder ? handleDragEnd : undefined}
-              className={`relative transition-all duration-300 ${
-                canReorder && dragIndex === index ? 'opacity-50 scale-[0.98]' : ''
-              } ${
-                justMovedId === item.id ? 'ring-2 ring-[#dd6e42]/60 rounded-xl' : ''
-              }`}
-              aria-label={canReorder
-                ? `Drag to reorder. Currently position ${index + 1} of ${displayedGear.length}`
-                : `${item.brand} ${item.model}`
-              }
+          {/* Analyze button — only with 2+ gear */}
+          {gear.length >= 2 && (
+            <button
+              onClick={handleAnalyzeChain}
+              disabled={isAnalyzing}
+              aria-label="Analyze your signal chain for compatibility and recommendations"
+              aria-busy={isAnalyzing}
+              className="ml-auto border border-th-surface/[0.3] text-th-text2 font-bold py-1.5 px-4 rounded-xl hover:bg-th-surface/[0.1] hover:text-th-text transition-all uppercase tracking-[0.2em] text-[10px] flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-th-text2"
             >
-              <GearCard gear={item} onClick={setSelectedGear} />
+              {isAnalyzing ? (
+                <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+              ) : (
+                <Sparkles className="w-3.5 h-3.5" />
+              )}
+              {isAnalyzing ? 'Analyzing...' : 'Analyze My Chain'}
+            </button>
+          )}
+        </div>
+      )}
 
-              {/* Mobile move buttons — only in signal chain order */}
-              {canReorder && (
-                <div className="flex md:hidden absolute right-2 top-1/2 -translate-y-1/2 flex-col gap-1 z-10">
-                  {index > 0 && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleMoveUp(index); }}
-                      className="bg-th-surface/[0.2] backdrop-blur-sm border border-th-surface/[0.15] p-1.5 rounded-full active:bg-[#dd6e42]/30 transition-colors"
-                      aria-label={`Move ${item.brand} ${item.model} up in signal chain`}
-                    >
-                      <svg className="w-3.5 h-3.5 text-th-text" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18" />
-                      </svg>
-                    </button>
-                  )}
-                  {index < displayedGear.length - 1 && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleMoveDown(index); }}
-                      className="bg-th-surface/[0.2] backdrop-blur-sm border border-th-surface/[0.15] p-1.5 rounded-full active:bg-[#dd6e42]/30 transition-colors"
-                      aria-label={`Move ${item.brand} ${item.model} down in signal chain`}
-                    >
-                      <svg className="w-3.5 h-3.5 text-th-text" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
-                      </svg>
-                    </button>
-                  )}
+      {/* Signal chain diagram view — pass gaps={chainAnalysis?.gaps} when analysis is wired up */}
+      {sortMode === 'position' && chainView === 'diagram' ? (
+        <SignalChainDiagram gear={displayedGear} onClickGear={setSelectedGear} onAddGear={handleOpenMethodModal} />
+      ) : (
+        /* Gear list view */
+        <div
+          className="space-y-0"
+          {...(canReorder ? { 'aria-roledescription': 'sortable' } : {})}
+          aria-label="Gear list"
+        >
+          {displayedGear.map((item, index) => (
+            <div key={item.id}>
+              {/* Drop indicator — shown above the hovered card */}
+              {canReorder && dragOverIndex === index && dragIndex !== null && dragIndex !== index && (
+                <div className="h-0.5 bg-[#dd6e42] rounded-full mx-4 my-1 shadow-[0_0_6px_rgba(221,110,66,0.5)]" />
+              )}
+
+              <div
+                draggable={canReorder}
+                onDragStart={(e) => {
+                  if (!canReorder) { e.preventDefault(); showToast('Switch to Signal Chain view to reorder', 'error'); return; }
+                  handleDragStart(e, index);
+                }}
+                onDragOver={(e) => canReorder ? handleDragOver(e, index) : undefined}
+                onDrop={(e) => canReorder ? handleDrop(e, index) : undefined}
+                onDragEnd={canReorder ? handleDragEnd : undefined}
+                className={`relative transition-all duration-300 ${
+                  canReorder && dragIndex === index ? 'opacity-50 scale-[0.98]' : ''
+                } ${
+                  justMovedId === item.id ? 'ring-2 ring-[#dd6e42]/60 rounded-xl' : ''
+                }`}
+                aria-label={canReorder
+                  ? `Drag to reorder. Currently position ${index + 1} of ${displayedGear.length}`
+                  : `${item.brand} ${item.model}`
+                }
+              >
+                <GearCard gear={item} onClick={setSelectedGear} />
+
+                {/* Mobile move buttons — only in signal chain order */}
+                {canReorder && (
+                  <div className="flex md:hidden absolute right-2 top-1/2 -translate-y-1/2 flex-col gap-1 z-10">
+                    {index > 0 && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleMoveUp(index); }}
+                        className="bg-th-surface/[0.2] backdrop-blur-sm border border-th-surface/[0.15] p-1.5 rounded-full active:bg-[#dd6e42]/30 transition-colors"
+                        aria-label={`Move ${item.brand} ${item.model} up in signal chain`}
+                      >
+                        <svg className="w-3.5 h-3.5 text-th-text" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18" />
+                        </svg>
+                      </button>
+                    )}
+                    {index < displayedGear.length - 1 && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleMoveDown(index); }}
+                        className="bg-th-surface/[0.2] backdrop-blur-sm border border-th-surface/[0.15] p-1.5 rounded-full active:bg-[#dd6e42]/30 transition-colors"
+                        aria-label={`Move ${item.brand} ${item.model} down in signal chain`}
+                      >
+                        <svg className="w-3.5 h-3.5 text-th-text" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Signal chain connector line — only in position sort with no filter */}
+              {canReorder && index < displayedGear.length - 1 && (
+                <div className="flex justify-center py-1">
+                  <div className="flex flex-col items-center">
+                    <div className="w-px h-3 bg-th-surface/[0.15]" />
+                    <svg className="w-3 h-3 text-th-surface/[0.25]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
+                    </svg>
+                    <div className="w-px h-3 bg-th-surface/[0.15]" />
+                  </div>
                 </div>
               )}
             </div>
+          ))}
+        </div>
+      )}
 
-            {/* Signal chain connector line — only in position sort with no filter */}
-            {canReorder && index < displayedGear.length - 1 && (
-              <div className="flex justify-center py-1">
-                <div className="flex flex-col items-center">
-                  <div className="w-px h-3 bg-th-surface/[0.15]" />
-                  <svg className="w-3 h-3 text-th-surface/[0.25]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
-                  </svg>
-                  <div className="w-px h-3 bg-th-surface/[0.15]" />
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
+      {/* Chain analysis results panel */}
+      {chainAnalysis && sortMode === 'position' && (
+        <ChainInsightsPanel
+          analysis={chainAnalysis}
+          onClose={() => setChainAnalysis(null)}
+          onAddGear={handleOpenMethodModal}
+        />
+      )}
 
       {/* Empty filter result */}
       {displayedGear.length === 0 && gear.length > 0 && (
@@ -838,6 +1040,9 @@ const StakkdPage: React.FC<StakkdPageProps> = ({ onUpgradeRequired }) => {
           <p className="text-th-text3 text-sm">No gear in this category</p>
         </div>
       )}
+
+      {/* My Rooms section */}
+      <MyRoomsSection />
 
       <AddGearMethodModal
         isOpen={methodModalOpen}

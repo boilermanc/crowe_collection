@@ -951,6 +951,8 @@ const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
               <ul className="price-features">
                 <li><Check />Everything in Curator</li>
                 <li><Check />Full Stakkd with signal chain</li>
+                <li><Check />Room Planner &mdash; AI gear placement</li>
+                <li><Check />Shelf Organizer</li>
                 <li><Check />Bulk import &amp; export</li>
                 <li><Check />API access</li>
                 <li><Check />Advanced analytics</li>

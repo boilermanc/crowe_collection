@@ -83,6 +83,8 @@ const FEATURE_LABELS: Record<string, string> = {
   gear_limit: 'Unlimited Gear',
   setup_guide: 'Setup Guides',
   manual_finder: 'Manual Finder',
+  shelf_organizer: 'Shelf Organizer',
+  room_planner: 'Room Planner',
   plan_upgrade: 'Premium Features',
 };
 
@@ -99,6 +101,8 @@ const CURATOR_FEATURES = [
 
 const ENTHUSIAST_FEATURES = [
   'Everything in Curator',
+  'Room Planner \u2014 AI gear placement',
+  'Shelf Organizer \u2014 know exactly where every record goes',
   'Bulk import & export',
   'API access',
   'Advanced analytics',
@@ -108,7 +112,7 @@ const ENTHUSIAST_FEATURES = [
 ];
 
 const CheckIcon: React.FC = () => (
-  <svg className="w-4 h-4 text-[#4f6d7a] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+  <svg className="w-4 h-4 text-[#4f6d7a] shrink-0" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
   </svg>
 );
@@ -547,6 +551,40 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, feature, d
                 </button>
               </div>
             </div>
+
+            {/* Shelf Organizer feature callout (contextual) */}
+            {feature === 'shelf_organizer' && (
+              <div className="rounded-xl border border-[#dd6e42]/15 bg-[#dd6e42]/[0.04] p-4 mb-6 flex items-start gap-3">
+                <div className="shrink-0 mt-0.5">
+                  <svg className="w-5 h-5 text-[#dd6e42]" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-th-text mb-0.5">Shelf Organizer</p>
+                  <p className="text-xs text-th-text3">
+                    Never thumb through the stack again. Define your shelves, pick a sort order, and Rekkrd tells you exactly where every record goes&nbsp;&mdash; and where to slot new arrivals.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Room Planner feature callout (contextual) */}
+            {feature === 'room_planner' && (
+              <div className="rounded-xl border border-[#dd6e42]/15 bg-[#dd6e42]/[0.04] p-4 mb-6 flex items-start gap-3">
+                <div className="shrink-0 mt-0.5">
+                  <svg className="w-5 h-5 text-[#dd6e42]" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-th-text mb-0.5">Design your perfect listening room</p>
+                  <p className="text-xs text-th-text3">
+                    Tell us your room, we&rsquo;ll tell you where to put your gear. AI analyzes your space and equipment for optimal speaker placement, stereo imaging, and vibration isolation.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Dismiss */}
             <div className="text-center">

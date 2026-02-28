@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Bell, TrendingUp } from 'lucide-react';
 
 type ViewMode = 'public-landing' | 'landing' | 'grid' | 'list' | 'stakkd'
-  | 'discogs' | 'wantlist' | 'value-dashboard' | 'profile' | 'price-alerts' | 'spins';
+  | 'discogs' | 'wantlist' | 'value-dashboard' | 'profile' | 'price-alerts' | 'spins' | 'shelves' | 'bulk-import';
 
 interface MobileBottomNavProps {
   currentView: ViewMode;
@@ -36,7 +36,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
     setIsMoreOpen(false);
   }, [currentView]);
 
-  const isMoreActive = isMoreOpen || currentView === 'discogs' || currentView === 'wantlist' || currentView === 'price-alerts' || currentView === 'value-dashboard';
+  const isMoreActive = isMoreOpen || currentView === 'discogs' || currentView === 'wantlist' || currentView === 'price-alerts' || currentView === 'value-dashboard' || currentView === 'shelves' || currentView === 'bulk-import';
 
   return (
     <>
@@ -137,6 +137,37 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                 {priceAlertCount}
               </span>
             )}
+          </button>
+
+          {/* Shelves */}
+          <button
+            onClick={() => { onNavigate('shelves'); setIsMoreOpen(false); }}
+            className={`flex items-center gap-4 w-full px-5 py-3.5 text-left active:bg-th-nav-text/[0.10] transition-colors border-t border-th-nav-text/[0.08] ${
+              currentView === 'shelves' ? 'bg-th-nav-text/[0.08]' : ''
+            }`}
+          >
+            <svg className="w-5 h-5 text-th-nav-text/80 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="7" height="7" />
+              <rect x="14" y="3" width="7" height="7" />
+              <rect x="3" y="14" width="7" height="7" />
+              <rect x="14" y="14" width="7" height="7" />
+            </svg>
+            <span className={`text-sm font-label tracking-wide ${currentView === 'shelves' ? 'text-[#dd6e42]' : 'text-th-nav-text'}`}>Shelves</span>
+          </button>
+
+          {/* Bulk Import */}
+          <button
+            onClick={() => { onNavigate('bulk-import'); setIsMoreOpen(false); }}
+            className={`flex items-center gap-4 w-full px-5 py-3.5 text-left active:bg-th-nav-text/[0.10] transition-colors border-t border-th-nav-text/[0.08] ${
+              currentView === 'bulk-import' ? 'bg-th-nav-text/[0.08]' : ''
+            }`}
+          >
+            <svg className="w-5 h-5 text-th-nav-text/80 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            <span className={`text-sm font-label tracking-wide ${currentView === 'bulk-import' ? 'text-[#dd6e42]' : 'text-th-nav-text'}`}>Bulk Import</span>
           </button>
 
           {/* Magic Mix Studio */}

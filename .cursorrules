@@ -1,0 +1,21 @@
+```json
+{
+  "rules": [
+    {
+      "rule": "include",
+      "glob": "signal-chain-guide.html",
+      "description": "The final, production-ready HTML file for the signal chain guide, styled to match the Rekkrd blog."
+    },
+    {
+      "rule": "include",
+      "glob": "*.md",
+      "description": "The original raw Markdown content for each section of the guide."
+    },
+    {
+      "rule": "file-content",
+      "glob": "signal-chain-guide.html",
+      "description": "The primary file to be integrated. This contains the full HTML, CSS, and JavaScript for the new blog post."
+    }
+  ]
+}
+```

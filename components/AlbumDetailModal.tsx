@@ -3,7 +3,7 @@ import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { Album } from '../types';
 import { proxyImageUrl } from '../services/imageProxy';
 import { geminiService } from '../services/geminiService';
-import { supabase } from '../services/supabaseService';
+import { supabase, getCurrentUserId } from '../services/supabaseService';
 import { compressImage } from '../src/utils/imageCompressor';
 import SpinningRecord from './SpinningRecord';
 import CoverPicker from './CoverPicker';
@@ -11,6 +11,7 @@ import FormatBadge from './FormatBadge';
 import { useToast } from '../contexts/ToastContext';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { engagementService } from '../services/engagementService';
+import { getAlbumPlacementInfo, type PlacementResult } from '../src/helpers/shelfHelpers';
 import { MEDIA_FORMATS, FORMAT_COLORS, type MediaFormat } from '../constants/formatTypes';
 
 interface AlbumDetailModalProps {
@@ -57,12 +58,33 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
   const hasLoggedTracklistExpand = useRef(false);
   const [isSpinning, setIsSpinning] = useState(false);
   const [spinRecorded, setSpinRecorded] = useState(false);
+  const [shelfPlacement, setShelfPlacement] = useState<PlacementResult | null>(null);
+  const [hasShelfConfig, setHasShelfConfig] = useState(false);
 
   useEffect(() => {
     if (album?.id) {
       void engagementService.logEvent(album.id, 'album_open');
     }
   }, [album?.id]);
+
+  // Fetch shelf placement info
+  useEffect(() => {
+    const userId = getCurrentUserId();
+    if (!userId || !album?.id) return;
+    let cancelled = false;
+    getAlbumPlacementInfo(album, allAlbums, userId).then(result => {
+      if (cancelled) return;
+      if (result) {
+        setShelfPlacement(result);
+        setHasShelfConfig(true);
+      } else if (album.shelf_unit) {
+        // No config but album has saved assignment
+        setShelfPlacement(null);
+        setHasShelfConfig(false);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [album?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     hasLoggedTracklistExpand.current = false;
@@ -360,6 +382,27 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
               )}
               <span className="text-th-text3/50">•</span>
               <span className="text-th-text3 font-label text-[9px] tracking-[0.2em] uppercase">{album.year}</span>
+              {album.shelf_unit ? (
+                <>
+                  <span className="text-th-text3/50">•</span>
+                  <span
+                    className="text-[#4f6d7a] font-label text-[9px] tracking-[0.2em] font-bold uppercase"
+                    aria-label={`Shelved in section ${album.shelf_unit}`}
+                  >
+                    Section {album.shelf_unit}
+                  </span>
+                </>
+              ) : hasShelfConfig && shelfPlacement ? (
+                <>
+                  <span className="text-th-text3/50">•</span>
+                  <span
+                    className="text-th-text3/40 font-label text-[9px] tracking-[0.2em] uppercase"
+                    aria-label="Not yet assigned to a shelf section"
+                  >
+                    Not shelved
+                  </span>
+                </>
+              ) : null}
             </div>
             <h2 className="text-3xl md:text-5xl font-bold text-th-text mb-2 leading-tight">{album.title}</h2>
             <h3 className="text-xl text-th-text2 font-medium">{album.artist}</h3>

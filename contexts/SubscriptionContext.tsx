@@ -3,7 +3,7 @@ import { useAuthContext } from './AuthContext';
 import { getSubscription, getGearCount, Plan, SubscriptionStatus, Subscription } from '../services/subscriptionService';
 import { useSubscriptionApi } from '../hooks/useSubscription';
 
-type GatedFeature = 'playlist' | 'lyrics' | 'covers' | 'scan' | 'manual_finder' | 'setup_guide';
+type GatedFeature = 'playlist' | 'lyrics' | 'covers' | 'scan' | 'manual_finder' | 'setup_guide' | 'room_planner' | 'shelf_organizer' | 'bulk_import';
 
 const SCAN_LIMIT_FREE = 10;
 const ALBUM_LIMIT_FREE = 100;
@@ -88,9 +88,11 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       if (isPaidTier) return true;
       return (subscription?.ai_scans_used ?? 0) < SCAN_LIMIT_FREE;
     }
+    // room_planner and shelf_organizer require Enthusiast
+    if (feature === 'room_planner' || feature === 'shelf_organizer') return plan === 'enthusiast';
     // playlist, lyrics, covers, manual_finder, setup_guide require Curator+
     return isPaidTier;
-  }, [isActive, isPaidTier, subscription?.ai_scans_used]);
+  }, [isActive, isPaidTier, plan, subscription?.ai_scans_used]);
 
   const scansRemaining = isPaidTier
     ? null
