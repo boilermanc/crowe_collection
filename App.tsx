@@ -1691,7 +1691,19 @@ const App: React.FC = () => {
       ) : currentView === 'shelves' ? (
         <ShelfSetup userId={user.id} albums={albums} onUpgradeRequired={(feature: string) => setUpgradeFeature(feature)} />
       ) : currentView === 'bulk-import' ? (
-        <BulkImport onUpgradeRequired={(feature: string) => setUpgradeFeature(feature)} />
+        <BulkImport
+          onUpgradeRequired={(feature: string) => setUpgradeFeature(feature)}
+          albums={albums}
+          onImportComplete={async () => {
+            try {
+              const data = await supabaseService.getAlbums();
+              setAlbums(data);
+            } catch (err) {
+              console.error('Failed to refresh albums after import:', err);
+            }
+          }}
+          onNavigate={(view: string) => setCurrentView(view as ViewMode)}
+        />
       ) : currentView === 'value-dashboard' ? (
         <CollectionValueDashboard />
       ) : currentView === 'profile' ? (
