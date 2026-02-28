@@ -62,6 +62,9 @@ const ShelfSetup: React.FC<ShelfSetupProps> = ({ userId, albums, onUpgradeRequir
   // ── Sort preference ───────────────────────────────────────────
   const [sortScheme, setSortScheme] = useState<SortScheme>('artist_alpha');
 
+  // Selected shelf for the Shelf View tab
+  const [viewShelfId, setViewShelfId] = useState<string | null>(null);
+
   // ── Fetch data ────────────────────────────────────────────────
   const fetchShelves = useCallback(async () => {
     try {
@@ -247,8 +250,6 @@ const ShelfSetup: React.FC<ShelfSetupProps> = ({ userId, albums, onUpgradeRequir
   const totalCapacity = shelves.reduce((sum, s) => sum + s.unit_count * s.capacity_per_unit, 0);
   const totalAssigned = getAssignedCount();
 
-  // Selected shelf for the Shelf View tab
-  const [viewShelfId, setViewShelfId] = useState<string | null>(null);
   const activeShelf = shelves.find(s => s.id === viewShelfId) ?? shelves[0] ?? null;
 
   return (
