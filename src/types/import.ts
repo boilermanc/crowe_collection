@@ -30,3 +30,43 @@ export interface CSVParseResult {
   errors: string[];
   isDiscogs: boolean;
 }
+
+export interface ImportCandidate {
+  artist: string;
+  title: string;
+  year?: string;
+  genre?: string;
+  format?: string;
+  condition?: string;
+  notes?: string;
+  label?: string;
+  catalog_number?: string;
+  csvRowNumber: number;
+  duplicateStatus?: 'new' | 'likely_duplicate' | 'exact_duplicate';
+  matchedAlbum?: { artist: string; title: string };
+}
+
+export interface SkippedRow {
+  rowNumber: number;
+  reason: string;
+  rawData: Record<string, string>;
+}
+
+export interface ValidationResult {
+  valid: ImportCandidate[];
+  skipped: SkippedRow[];
+  warnings: string[];
+}
+
+export interface ImportError {
+  rowNumber: number;
+  error: string;
+}
+
+export interface ImportResult {
+  totalAttempted: number;
+  totalInserted: number;
+  totalFailed: number;
+  errors: ImportError[];
+  durationMs: number;
+}
