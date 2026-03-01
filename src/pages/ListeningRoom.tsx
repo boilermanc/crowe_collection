@@ -3,11 +3,9 @@ import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { Moon, Sun } from 'lucide-react';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
-import { useSubscription } from '../../contexts/SubscriptionContext';
 import { Album } from '../../types';
 import { supabaseService } from '../../services/supabaseService';
 import { playlistService } from '../../services/playlistService';
-import UpgradePrompt from '../../components/UpgradePrompt';
 import ListeningRoomBrowse from '../components/listening-room/ListeningRoomBrowse';
 import ListeningRoomAlbumDetail from '../components/listening-room/ListeningRoomAlbumDetail';
 import ListeningRoomSession from '../components/listening-room/ListeningRoomSession';
@@ -18,9 +16,6 @@ type Tab = (typeof TABS)[number];
 const ListeningRoom: React.FC = () => {
   const { user, loading } = useAuthContext();
   const { showToast } = useToast();
-  const { canUse, loading: subLoading } = useSubscription();
-  const hasAccess = canUse('listening_room');
-  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('Browse');
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
   const [sessionAlbums, setSessionAlbums] = useState<Album[]>([]);
@@ -181,7 +176,7 @@ const ListeningRoom: React.FC = () => {
     [sessionAlbums, showToast]
   );
 
-  if (loading || subLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-th-bg flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#dd6e42] border-t-transparent" />
@@ -191,63 +186,6 @@ const ListeningRoom: React.FC = () => {
 
   if (!user) {
     return <Navigate to="/" replace />;
-  }
-
-  if (!hasAccess) {
-    return (
-      <div className="min-h-screen bg-th-bg flex flex-col">
-        {/* Minimal header */}
-        <header className="sticky top-0 z-40 border-b glass-morphism border-th-surface/[0.10] px-4 md:px-6 py-4">
-          <div className="max-w-7xl mx-auto flex items-center gap-3">
-            <Link
-              to="/"
-              aria-label="Back to collection"
-              className="w-10 h-10 bg-gradient-to-tr from-[#dd6e42] to-[#4f6d7a] rounded-lg flex items-center justify-center shadow-lg cursor-pointer active:scale-90 transition-transform flex-shrink-0"
-            >
-              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="11" fill="#f0a882" />
-                <circle cx="12" cy="12" r="9.5" fill="none" stroke="#d48a6a" strokeWidth="0.4" opacity="0.5" />
-                <circle cx="12" cy="12" r="8" fill="none" stroke="#d48a6a" strokeWidth="0.3" opacity="0.4" />
-                <circle cx="12" cy="12" r="6.5" fill="none" stroke="#d48a6a" strokeWidth="0.3" opacity="0.3" />
-                <circle cx="12" cy="12" r="5.2" fill="#c45a30" />
-                <text x="12" y="12.5" textAnchor="middle" dominantBaseline="central" fontFamily="Georgia,serif" fontWeight="bold" fontSize="7" fill="#f0a882">R</text>
-              </svg>
-            </Link>
-            <h1 className="font-label text-lg md:text-2xl font-bold tracking-tighter truncate text-th-text">
-              Listening Room
-            </h1>
-          </div>
-        </header>
-
-        {/* Upgrade CTA */}
-        <div className="flex-1 flex flex-col items-center justify-center p-8 gap-4 text-center">
-          <div className="w-16 h-16 rounded-full bg-[#dd6e42]/10 flex items-center justify-center">
-            <svg className="w-8 h-8 text-[#dd6e42]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
-            </svg>
-          </div>
-          <h2 className="font-display text-xl font-bold text-th-text">Listening Room</h2>
-          <p className="text-sm text-th-text2 max-w-md">
-            Curate listening sessions from your collection — browse, queue, reorder, and save as playlists. Available on the Enthusiast plan.
-          </p>
-          <button
-            type="button"
-            onClick={() => setShowUpgradePrompt(true)}
-            className="mt-2 px-6 py-3 rounded-xl bg-[#dd6e42] text-white font-label text-sm font-bold tracking-wide hover:bg-[#c45a30] active:scale-[0.98] transition-all"
-          >
-            Upgrade to Enthusiast
-          </button>
-        </div>
-
-        {showUpgradePrompt && (
-          <UpgradePrompt
-            feature="listening_room"
-            onClose={() => setShowUpgradePrompt(false)}
-            onUpgrade={() => setShowUpgradePrompt(false)}
-          />
-        )}
-      </div>
-    );
   }
 
   return (

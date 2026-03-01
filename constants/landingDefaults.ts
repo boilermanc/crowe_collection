@@ -38,15 +38,18 @@ export const DEFAULT_FEATURES_HEADER: CmsSectionHeader = {
 };
 
 export const DEFAULT_FEATURES: CmsFeature[] = [
-  { icon: '\uD83D\uDCF7', cls: 'fi-1', title: 'AI Camera Scan', desc: 'Photograph any vinyl, cassette, or 8-track \u2014 or scan the barcode. Rekkrd cross-references Discogs\u2019 40M+ release database to identify the exact pressing, pull the tracklist, and price it in seconds.' },
-  { icon: '\u26A1', cls: 'fi-2', title: 'Auto Enrichment', desc: 'Every album gets filled in automatically: tracklist, genre, year, cover art, market pricing, AI description, and streaming links.' },
-  { icon: '\uD83D\uDCB0', cls: 'fi-3', title: 'Collection Valuation', desc: 'See low, median, and high market prices pulled from Discogs. Know what your crate is worth at a glance with portfolio stats.' },
-  { icon: '\uD83C\uDFB5', cls: 'fi-4', title: 'Playlist Studio', desc: 'Type a mood. Get a curated playlist from your own collection. Choose albums, sides, or individual songs. Print to PDF.' },
-  { icon: '\uD83D\uDD0D', cls: 'fi-5', title: 'Smart Search & Filter', desc: 'Real-time search across title, artist, and genre. Sort by year, value, or date added. Filter by decade, condition, format, or favorites.' },
-  { icon: '\uD83C\uDFB6', cls: 'fi-6', title: 'Lyrics & Liner Notes', desc: 'Look up lyrics for any track in your collection. Add personal notes, tags, and condition grades to every album.' },
-  { icon: '\uD83D\uDD27', cls: 'fi-stakkd', title: 'Stakkd Gear Catalog', desc: 'Document your audio equipment with AI. Get instant identification, specs, history, manuals, and custom setup guides for your entire signal chain.' },
-  { icon: '\uD83D\uDCC8', cls: 'fi-analytics', title: 'Collection Analytics', desc: 'Track your collection\u2019s value over time, see genre breakdowns, and discover insights about your listening habits.' },
-  { icon: '\uD83D\uDCBF', cls: 'fi-format', title: 'Vinyl, Cassette & 8-Track', desc: 'Your whole collection, not just vinyl. AI detects the physical format automatically and color-codes everything \u2014 orange for vinyl, mint for cassette, plum for 8-track.' },
+  { icon: '\uD83D\uDCF7', cls: 'fi-1', title: 'AI Camera Scan', tier: 'all', desc: 'Photograph any vinyl, cassette, or 8-track \u2014 or scan the barcode. Rekkrd cross-references Discogs\u2019 40M+ release database to identify the exact pressing, pull the tracklist, and price it in seconds.' },
+  { icon: '\u26A1', cls: 'fi-2', title: 'Auto Enrichment', tier: 'all', desc: 'Every album gets filled in automatically: tracklist, genre, year, cover art, market pricing, AI description, and streaming links.' },
+  { icon: '\uD83D\uDCB0', cls: 'fi-3', title: 'Collection Valuation', tier: 'all', desc: 'See low, median, and high market prices pulled from Discogs. Know what your crate is worth at a glance with portfolio stats.' },
+  { icon: '\uD83C\uDFB5', cls: 'fi-4', title: 'Playlist Studio', tier: 'curator', desc: 'Type a mood. Get a curated playlist from your own collection. Choose albums, sides, or individual songs. Print to PDF.' },
+  { icon: '\uD83D\uDD0D', cls: 'fi-5', title: 'Smart Search & Filter', tier: 'all', desc: 'Real-time search across title, artist, and genre. Sort by year, value, or date added. Filter by decade, condition, format, or favorites.' },
+  { icon: '\uD83C\uDFB6', cls: 'fi-6', title: 'Lyrics & Liner Notes', tier: 'curator', desc: 'Look up lyrics for any track in your collection. Add personal notes, tags, and condition grades to every album.' },
+  { icon: '\uD83D\uDD27', cls: 'fi-stakkd', title: 'Stakkd Gear Catalog', tier: 'curator', desc: 'Document your audio equipment with AI. Get instant identification, specs, history, manuals, and custom setup guides for your entire signal chain.' },
+  { icon: '\uD83D\uDCC8', cls: 'fi-analytics', title: 'Collection Analytics', tier: 'enthusiast', desc: 'Track your collection\u2019s value over time, see genre breakdowns, and discover insights about your listening habits.' },
+  { icon: '\uD83D\uDCBF', cls: 'fi-format', title: 'Vinyl, Cassette & 8-Track', tier: 'all', desc: 'Your whole collection, not just vinyl. AI detects the physical format automatically and color-codes everything \u2014 orange for vinyl, mint for cassette, plum for 8-track.' },
+  { icon: '\uD83C\uDFA7', cls: 'fi-listening', title: 'Listening Room', tier: 'all', desc: 'Build ambient listening sessions from your collection. Queue albums, toggle ambient mode for a distraction-free dark interface, and save sessions as playlists.' },
+  { icon: '\uD83D\uDD01', cls: 'fi-spins', title: 'Spins & Play History', tier: 'all', desc: 'Log every record you spin. Track play counts, see your most-played leaderboard, browse recent spins grouped by date, and discover patterns in your listening.' },
+  { icon: '\uD83D\uDCCB', cls: 'fi-wantlist', title: 'Wantlist & Price Tracking', tier: 'all', desc: 'Track records you\u2019re hunting with live Discogs pricing. Import your Discogs wantlist, set price alerts, and mark as owned when you find them.' },
 ];
 
 export const DEFAULT_HOW_IT_WORKS_HEADER: CmsSectionHeader = {
@@ -92,6 +95,7 @@ export const DEFAULT_PLAYLIST_HEADER: CmsPlaylistHeader = {
     'Player and manifest views',
     'Print-ready PDF playlist cards',
     'Only picks albums that match from your crate',
+    'Launch any playlist into the Listening Room',
   ],
 };
 
@@ -117,10 +121,39 @@ export const DEFAULT_STAKKD: CmsShowcase = {
   checklist: [
     'AI-powered gear identification from photos',
     'Equipment history, specs & background',
-    'Automatic manual finder with PDF links',
-    'Custom setup & connection guides',
-    'Signal chain visualization',
-    'Drag-to-reorder your audio path',
+    'Signal chain visualization & drag-to-reorder',
+    'Automatic manual finder with PDF links (Curator)',
+    'Custom setup & connection guides (Curator)',
+    'Room Planner \u2014 room layout, dimensions & gear placement (Enthusiast)',
+  ],
+};
+
+export const DEFAULT_LISTENING_ROOM: CmsShowcase = {
+  label: 'Listening Room',
+  title: 'Set the Mood,',
+  title_em: 'Not Just a Track',
+  subtitle: 'Browse your collection, build a session queue, and let ambient mode set the tone. Save your sessions as playlists and pick up right where you left off.',
+  checklist: [
+    'Browse and queue albums for your session',
+    'Now Spinning display with fullscreen art mode',
+    'Ambient dark mode for immersive listening',
+    'Drag-and-drop reorder your session queue',
+    'Save sessions as playlists with one click',
+    'Deep-link from Playlist Studio to start listening',
+  ],
+};
+
+export const DEFAULT_SPINS: CmsShowcase = {
+  label: 'Spins',
+  title: 'Every Spin,',
+  title_em: 'Remembered',
+  subtitle: 'Log what you play and discover patterns in your listening. See your most-played records, browse recent spins, and track how your habits evolve.',
+  checklist: [
+    'One-tap "Now Spinning" logging from any album',
+    'Most-played leaderboard with play counts',
+    'Recent spins timeline grouped by date',
+    'Spin stats at a glance',
+    'Available on all plans \u2014 no upgrade required',
   ],
 };
 
@@ -152,7 +185,9 @@ export const DEFAULT_FAQS: CmsFaq[] = [
   { q: "What if a scan doesn't recognize my record?", a: 'If the AI can\'t identify a cover, you can always search and add the album manually. Rekkrd pulls from iTunes and MusicBrainz databases with millions of releases.' },
   { q: 'What is Stakkd?', a: 'Stakkd is your personal audio gear catalog built into Rekkrd. Snap a photo of your turntable, amp, speakers, or any audio equipment \u2014 AI identifies it instantly and pulls up specs, history, and background. Think of it as Shazam for your gear.' },
   { q: 'Can Stakkd help me set up my equipment?', a: 'Yes! Once you\u2019ve added your gear, Stakkd generates a custom setup guide with wiring instructions, recommended settings, and tips specific to your exact equipment combination. It also finds PDF manuals for each piece of gear.' },
-  { q: 'Is Stakkd included in the free plan?', a: 'Free Collector accounts can add up to 3 gear items manually. AI gear identification, the manual finder, and setup guide generation are available on the Curator plan and above. All plans include the signal chain visualization.' },
+  { q: 'Is Stakkd included in the free plan?', a: 'Free Collector accounts can add up to 3 gear items with signal chain visualization. AI gear identification, the manual finder, and setup guides unlock on the Curator plan. The Room Planner \u2014 with room layout, dimensions, acoustics, and gear placement \u2014 is available on the Enthusiast plan.' },
+  { q: 'What is the Listening Room?', a: 'The Listening Room is an ambient listening experience built into Rekkrd. Browse your collection, build a session queue with drag-and-drop, set what\u2019s "Now Spinning," and toggle ambient mode for a distraction-free dark interface. You can save any session as a playlist. Available on all plans.' },
+  { q: 'What is Spins?', a: 'Spins tracks every record you play. Tap "Now Spinning" on any album to log it. You\u2019ll see play counts, a most-played leaderboard, and a timeline of recent spins grouped by date. Spins is included on all plans \u2014 no upgrade needed.' },
 ];
 
 export const DEFAULT_FINAL_CTA: CmsFinalCta = {
@@ -181,6 +216,8 @@ export const LANDING_DEFAULTS: CmsLandingContent = {
   playlist_moods: DEFAULT_PLAYLIST_MOODS,
   playlist_tracks: DEFAULT_PLAYLIST_TRACKS,
   stakkd: DEFAULT_STAKKD,
+  listening_room: DEFAULT_LISTENING_ROOM,
+  spins: DEFAULT_SPINS,
   stats_band: DEFAULT_STATS_BAND,
   testimonial: DEFAULT_TESTIMONIAL,
   faq_header: DEFAULT_FAQ_HEADER,

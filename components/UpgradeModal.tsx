@@ -85,7 +85,6 @@ const FEATURE_LABELS: Record<string, string> = {
   manual_finder: 'Manual Finder',
   shelf_organizer: 'Shelf Organizer',
   room_planner: 'Room Planner',
-  listening_room: 'Listening Room',
   bulk_import: 'Bulk Import',
   export: 'Collection Export',
   analytics: 'Collection Analytics',
@@ -98,6 +97,8 @@ const CURATOR_FEATURES = [
   'AI playlist generation',
   'Lyrics for all tracks',
   'Multi-source cover art',
+  'Wantlist & price alerts',
+  'Discogs integration',
   'Stakkd \u2014 unlimited gear',
   'AI gear identification',
   'Manual finder & setup guides',
@@ -106,9 +107,8 @@ const CURATOR_FEATURES = [
 
 const ENTHUSIAST_FEATURES = [
   'Everything in Curator',
-  'Room Planner \u2014 AI gear placement',
+  'Room Planner \u2014 rooms, layout & gear placement',
   'Shelf Organizer \u2014 know exactly where every record goes',
-  'Listening Room \u2014 curate and save listening sessions',
   'Bulk import & export',
   'API access',
   'Collection Analytics \u2014 genre, decade & growth charts',
@@ -621,23 +621,6 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, feature, d
                   <p className="text-sm font-semibold text-th-text mb-0.5">Design your perfect listening room</p>
                   <p className="text-xs text-th-text3">
                     Tell us your room, we&rsquo;ll tell you where to put your gear. AI analyzes your space and equipment for optimal speaker placement, stereo imaging, and vibration isolation.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Listening Room feature callout (contextual) */}
-            {feature === 'listening_room' && (
-              <div className="rounded-xl border border-[#dd6e42]/15 bg-[#dd6e42]/[0.04] p-4 mb-6 flex items-start gap-3">
-                <div className="shrink-0 mt-0.5">
-                  <svg className="w-5 h-5 text-[#dd6e42]" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-th-text mb-0.5">Listening Room</p>
-                  <p className="text-xs text-th-text3">
-                    Browse your collection, build a session queue, set the &ldquo;Now Spinning&rdquo; record, and save sessions as playlists&nbsp;&mdash; with ambient mode for evening listening.
                   </p>
                 </div>
               </div>

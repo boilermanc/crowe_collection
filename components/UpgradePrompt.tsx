@@ -43,12 +43,7 @@ const FEATURE_INFO: Record<string, { title: string; description: string; cta?: s
   },
   room_planner: {
     title: 'Room Planner',
-    description: 'Design your listening rooms and get AI-powered gear placement recommendations. Available on the Enthusiast plan.',
-    cta: 'Upgrade to Enthusiast',
-  },
-  listening_room: {
-    title: 'Listening Room',
-    description: 'Curate listening sessions from your collection — browse, queue, reorder, and save as playlists. Available on the Enthusiast plan.',
+    description: 'Create listening rooms with dimensions and acoustics, visualize gear placement, and get AI-powered layout recommendations. Available on the Enthusiast plan.',
     cta: 'Upgrade to Enthusiast',
   },
   bulk_import: {

@@ -443,11 +443,45 @@
 .landing-page .fi-6{background:rgba(79,109,122,.05);border:1.5px solid rgba(79,109,122,.1)}
 .landing-page .fi-stakkd{background:linear-gradient(135deg,rgba(79,109,122,.08),rgba(192,214,223,.2));border:1.5px solid rgba(79,109,122,.15)}
 .landing-page .fi-analytics{background:rgba(232,218,178,.2);border:1.5px solid rgba(232,218,178,.4)}
+.landing-page .fi-listening{background:rgba(221,110,66,.06);border:1.5px solid rgba(221,110,66,.12)}
+.landing-page .fi-spins{background:rgba(79,109,122,.06);border:1.5px solid rgba(79,109,122,.1)}
+.landing-page .fi-wantlist{background:rgba(232,218,178,.25);border:1.5px solid rgba(232,218,178,.45)}
+.landing-page .fi-format{background:rgba(192,214,223,.2);border:1.5px solid rgba(192,214,223,.35)}
 
 .landing-page .feature-card h3 {
   font-size:1.2rem;
   margin-bottom:10px;
   color:var(--slate-dark);
+}
+
+.landing-page .feature-tier-badge {
+  display:inline-block;
+  font-family:'Space Mono',monospace;
+  font-size:.6rem;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  padding:3px 10px;
+  border-radius:10px;
+  margin-bottom:12px;
+}
+
+.landing-page .tier-all {
+  background:rgba(79,109,122,.08);
+  color:var(--slate);
+  border:1px solid rgba(79,109,122,.15);
+}
+
+.landing-page .tier-curator {
+  background:rgba(79,109,122,.1);
+  color:var(--slate-dark);
+  border:1px solid rgba(79,109,122,.2);
+}
+
+.landing-page .tier-enthusiast {
+  background:rgba(221,110,66,.08);
+  color:var(--peach);
+  border:1px solid rgba(221,110,66,.15);
 }
 
 .landing-page .feature-card p {
@@ -915,6 +949,326 @@
   border-left:5px solid transparent;
   border-right:5px solid transparent;
   border-top:6px solid var(--slate);
+}
+
+/* —— Listening Room —— */
+.landing-page .listening-room-section {
+  background:var(--bg2);
+  overflow:hidden;
+}
+
+.landing-page .listening-room-section .container {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:80px;
+  align-items:center;
+}
+
+.landing-page .lr-visual {
+  order:2;
+}
+
+.landing-page .lr-text {
+  order:1;
+}
+
+.landing-page .lr-mock {
+  background:#141920;
+  border-radius:var(--radius);
+  padding:28px;
+  border:2px solid rgba(255,255,255,.06);
+  box-shadow:0 8px 32px rgba(0,0,0,.3);
+  max-width:380px;
+  margin:0 auto;
+}
+
+.landing-page .lr-mock-header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:20px;
+}
+
+.landing-page .lr-mock-label {
+  font-family:'Space Mono',monospace;
+  font-size:.65rem;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  color:var(--peach);
+}
+
+.landing-page .lr-ambient-badge {
+  font-size:.6rem;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  color:rgba(255,255,255,.5);
+  background:rgba(255,255,255,.06);
+  padding:3px 10px;
+  border-radius:12px;
+}
+
+.landing-page .lr-now-playing {
+  background:rgba(221,110,66,.08);
+  border:1px solid rgba(221,110,66,.2);
+  border-radius:12px;
+  padding:16px;
+  margin-bottom:16px;
+}
+
+.landing-page .lr-np-label {
+  font-family:'Space Mono',monospace;
+  font-size:.55rem;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.1em;
+  color:var(--peach);
+  margin-bottom:10px;
+}
+
+.landing-page .lr-np-album {
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+
+.landing-page .lr-np-art {
+  width:48px;
+  height:48px;
+  border-radius:8px;
+  background:linear-gradient(135deg,var(--peach),var(--slate));
+  flex-shrink:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1.2rem;
+}
+
+.landing-page .lr-np-info h5 {
+  font-size:.85rem;
+  font-weight:600;
+  color:rgba(255,255,255,.9);
+  margin-bottom:2px;
+}
+
+.landing-page .lr-np-info p {
+  font-size:.7rem;
+  color:rgba(255,255,255,.45);
+}
+
+.landing-page .lr-queue {
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.landing-page .lr-queue-label {
+  font-family:'Space Mono',monospace;
+  font-size:.55rem;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.1em;
+  color:rgba(255,255,255,.35);
+  margin-bottom:4px;
+}
+
+.landing-page .lr-queue-item {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:10px 12px;
+  border-radius:8px;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.04);
+}
+
+.landing-page .lr-qi-art {
+  width:32px;
+  height:32px;
+  border-radius:6px;
+  flex-shrink:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:.8rem;
+}
+
+.landing-page .lr-qi-info {
+  flex:1;
+  min-width:0;
+}
+
+.landing-page .lr-qi-info h6 {
+  font-size:.75rem;
+  font-weight:500;
+  color:rgba(255,255,255,.7);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.landing-page .lr-qi-info span {
+  font-size:.65rem;
+  color:rgba(255,255,255,.3);
+}
+
+.landing-page .lr-qi-grip {
+  font-size:.7rem;
+  color:rgba(255,255,255,.15);
+  flex-shrink:0;
+}
+
+/* —— Spins —— */
+.landing-page .spins-section {
+  background:var(--bg);
+  overflow:hidden;
+}
+
+.landing-page .spins-section .container {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:80px;
+  align-items:center;
+}
+
+.landing-page .spins-visual {
+  order:1;
+}
+
+.landing-page .spins-text {
+  order:2;
+}
+
+.landing-page .spins-mock {
+  background:#fff;
+  border-radius:var(--radius);
+  padding:28px;
+  border:2px solid var(--alabaster);
+  box-shadow:var(--shadow);
+  max-width:380px;
+  margin:0 auto;
+}
+
+.landing-page .spins-mock-header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:20px;
+}
+
+.landing-page .spins-mock-label {
+  font-family:'Space Mono',monospace;
+  font-size:.65rem;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  color:var(--peach);
+}
+
+.landing-page .spins-stats {
+  display:flex;
+  gap:12px;
+  margin-bottom:20px;
+}
+
+.landing-page .spins-stat {
+  flex:1;
+  text-align:center;
+  padding:10px 8px;
+  border-radius:10px;
+  background:var(--alabaster);
+}
+
+.landing-page .spins-stat-value {
+  font-family:'Playfair Display',serif;
+  font-size:1.25rem;
+  font-weight:700;
+  color:var(--slate-dark);
+  display:block;
+}
+
+.landing-page .spins-stat-label {
+  font-size:.6rem;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  color:var(--slate);
+  display:block;
+  margin-top:2px;
+}
+
+.landing-page .spins-date-label {
+  font-family:'Space Mono',monospace;
+  font-size:.6rem;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.1em;
+  color:var(--slate);
+  margin-bottom:8px;
+}
+
+.landing-page .spins-list {
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.landing-page .spin-item {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:10px 12px;
+  border-radius:10px;
+  background:var(--alabaster);
+  border:1px solid var(--beige);
+  transition:all .2s;
+}
+
+.landing-page .spin-item:hover {
+  transform:translateY(-1px);
+  box-shadow:var(--shadow);
+}
+
+.landing-page .spin-art {
+  width:36px;
+  height:36px;
+  border-radius:8px;
+  flex-shrink:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1rem;
+}
+
+.landing-page .spin-info {
+  flex:1;
+  min-width:0;
+}
+
+.landing-page .spin-info h6 {
+  font-size:.8rem;
+  font-weight:600;
+  color:var(--slate-dark);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.landing-page .spin-info span {
+  font-size:.65rem;
+  color:var(--slate);
+}
+
+.landing-page .spin-count {
+  font-family:'Space Mono',monospace;
+  font-size:.65rem;
+  font-weight:700;
+  color:var(--peach);
+  background:rgba(221,110,66,.08);
+  padding:3px 8px;
+  border-radius:8px;
+  flex-shrink:0;
 }
 
 /* —— Stats Band —— */
@@ -1867,7 +2221,9 @@
   .landing-page .discogs-section .container,
   .landing-page .value-section .container,
   .landing-page .playlist-section .container,
-  .landing-page .stakkd-section .container{grid-template-columns:1fr;gap:48px}
+  .landing-page .stakkd-section .container,
+  .landing-page .listening-room-section .container,
+  .landing-page .spins-section .container{grid-template-columns:1fr;gap:48px}
   .landing-page .playlist-visual{order:2}
   .landing-page .playlist-text{order:1}
   .landing-page .stakkd-visual{order:1}
@@ -1947,6 +2303,17 @@
   .landing-page .signal-node-icon{width:36px;height:36px}
   .landing-page .signal-node-icon svg{width:18px;height:18px}
   .landing-page .signal-connector{height:24px}
+
+  /* Listening Room */
+  .landing-page .lr-mock{padding:20px;max-width:100%}
+  .landing-page .lr-np-art{width:40px;height:40px}
+  .landing-page .lr-qi-art{width:28px;height:28px}
+
+  /* Spins */
+  .landing-page .spins-mock{padding:20px;max-width:100%}
+  .landing-page .spins-stats{gap:8px}
+  .landing-page .spins-stat{padding:8px 6px}
+  .landing-page .spins-stat-value{font-size:1.1rem}
 
   /* Sellr callout — constrain inline-styled card */
   .landing-page .sellr-callout-visual > div{max-width:100% !important;padding:20px !important}

@@ -9,8 +9,6 @@ import { proxyImageUrl } from '../services/imageProxy';
 import { useToast } from '../contexts/ToastContext';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { playlistService, SavedPlaylist } from '../services/playlistService';
-import { useSubscription } from '../contexts/SubscriptionContext';
-import UpgradePrompt from './UpgradePrompt';
 
 const DURATION_OPTIONS = [
   { label: '30 min', minutes: 30 },
@@ -49,8 +47,6 @@ interface PlaylistStudioProps {
 const PlaylistStudio: React.FC<PlaylistStudioProps> = ({ albums, onClose, seedAlbum }) => {
   const { showToast } = useToast();
   const navigate = useNavigate();
-  const { canUse } = useSubscription();
-  const hasListeningRoom = canUse('listening_room');
   const modalRef = useRef<HTMLDivElement>(null);
   const stableOnClose = useCallback(onClose, [onClose]);
   useFocusTrap(modalRef, stableOnClose);
@@ -68,7 +64,6 @@ const PlaylistStudio: React.FC<PlaylistStudioProps> = ({ albums, onClose, seedAl
   const [showLibrary, setShowLibrary] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
-  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -334,38 +329,22 @@ const PlaylistStudio: React.FC<PlaylistStudioProps> = ({ albums, onClose, seedAl
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <h3 className="font-display text-lg text-[#c4b5a0] leading-tight">Listening Room</h3>
-                {!hasListeningRoom && (
-                  <span className="px-1.5 py-0.5 rounded text-[8px] font-label font-bold uppercase tracking-wider bg-[#dd6e42]/15 text-[#dd6e42]">
-                    Enthusiast
-                  </span>
-                )}
               </div>
               <p className="text-[11px] md:text-xs text-[#c4b5a0]/50 mt-1 leading-relaxed">
                 Take your playlists to the chair. Browse, build sessions, and vibe in an immersive tablet-optimized experience.
               </p>
             </div>
-            {hasListeningRoom ? (
-              <button
-                type="button"
-                onClick={() => {
-                  onClose();
-                  navigate('/listening-room');
-                }}
-                aria-label="Enter Listening Room"
-                className="px-4 py-2.5 rounded-xl bg-[#dd6e42] text-white font-label text-[10px] md:text-xs font-bold tracking-wide hover:bg-[#c45a30] active:scale-[0.97] transition-all flex-shrink-0 whitespace-nowrap"
-              >
-                Enter
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setShowUpgradePrompt(true)}
-                aria-label="Upgrade to unlock Listening Room"
-                className="px-4 py-2.5 rounded-xl border border-[#dd6e42]/30 text-[#dd6e42] font-label text-[10px] md:text-xs font-bold tracking-wide hover:bg-[#dd6e42]/10 active:scale-[0.97] transition-all flex-shrink-0 whitespace-nowrap"
-              >
-                Upgrade to Unlock
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                navigate('/listening-room');
+              }}
+              aria-label="Enter Listening Room"
+              className="px-4 py-2.5 rounded-xl bg-[#dd6e42] text-white font-label text-[10px] md:text-xs font-bold tracking-wide hover:bg-[#c45a30] active:scale-[0.97] transition-all flex-shrink-0 whitespace-nowrap"
+            >
+              Enter
+            </button>
           </div>
 
           {showLibrary ? (
@@ -386,19 +365,17 @@ const PlaylistStudio: React.FC<PlaylistStudioProps> = ({ albums, onClose, seedAl
                       <h4 className="text-lg font-bold text-white truncate">{sp.name}</h4>
                       <p className="text-xs text-white/40">{sp.mood} · {sp.items.length} {sp.focus}s · {new Date(sp.created_at).toLocaleDateString()}</p>
                     </button>
-                    {hasListeningRoom && (
-                      <button
-                        onClick={() => {
-                          onClose();
-                          navigate(`/listening-room?playlist=${sp.id}`);
-                        }}
-                        className="ml-2 p-2 md:p-3 text-white/30 hover:text-[#dd6e42] transition-colors flex-shrink-0"
-                        aria-label={`Open ${sp.name} in Listening Room`}
-                        title="Open in Listening Room"
-                      >
-                        <Headphones className="w-4 h-4" />
-                      </button>
-                    )}
+                    <button
+                      onClick={() => {
+                        onClose();
+                        navigate(`/listening-room?playlist=${sp.id}`);
+                      }}
+                      className="ml-2 p-2 md:p-3 text-white/30 hover:text-[#dd6e42] transition-colors flex-shrink-0"
+                      aria-label={`Open ${sp.name} in Listening Room`}
+                      title="Open in Listening Room"
+                    >
+                      <Headphones className="w-4 h-4" />
+                    </button>
                     <button
                       onClick={() => handleDeleteSaved(sp.id)}
                       className="ml-2 p-2 md:p-3 text-white/30 hover:text-red-400 transition-colors flex-shrink-0"
@@ -624,17 +601,13 @@ const PlaylistStudio: React.FC<PlaylistStudioProps> = ({ albums, onClose, seedAl
             <button
               type="button"
               onClick={() => {
-                if (hasListeningRoom) {
-                  const albumIds = [...new Set(playlist.items.map(item => item.albumId))];
-                  const params = new URLSearchParams({
-                    albums: albumIds.join(','),
-                    name: playlist.name,
-                  });
-                  onClose();
-                  navigate(`/listening-room?${params.toString()}`);
-                } else {
-                  setShowUpgradePrompt(true);
-                }
+                const albumIds = [...new Set(playlist.items.map(item => item.albumId))];
+                const params = new URLSearchParams({
+                  albums: albumIds.join(','),
+                  name: playlist.name,
+                });
+                onClose();
+                navigate(`/listening-room?${params.toString()}`);
               }}
               aria-label="Open generated playlist in Listening Room"
               className="mt-6 md:mt-8 px-6 py-3 md:py-4 rounded-full bg-[#dd6e42] text-white font-label text-[9px] md:text-[11px] tracking-[0.2em] font-bold hover:bg-[#c45a30] active:scale-95 transition-all shadow-lg shadow-[#dd6e42]/20 flex items-center gap-2"
@@ -720,13 +693,6 @@ const PlaylistStudio: React.FC<PlaylistStudioProps> = ({ albums, onClose, seedAl
         )}
       </div>
 
-      {showUpgradePrompt && (
-        <UpgradePrompt
-          feature="listening_room"
-          onClose={() => setShowUpgradePrompt(false)}
-          onUpgrade={() => setShowUpgradePrompt(false)}
-        />
-      )}
     </div>
   );
 };

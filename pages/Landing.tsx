@@ -485,6 +485,14 @@ const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
               <div className="feature-card" key={f.title}>
                 <div className={`feature-icon ${f.cls}`}>{f.icon}</div>
                 <h3>{f.title}</h3>
+                {f.tier && f.tier !== 'all' && (
+                  <span className={`feature-tier-badge tier-${f.tier}`}>
+                    {f.tier === 'curator' ? 'Curator' : 'Enthusiast'}
+                  </span>
+                )}
+                {f.tier === 'all' && (
+                  <span className="feature-tier-badge tier-all">All Plans</span>
+                )}
                 <p>{f.desc}</p>
               </div>
             ))}
@@ -765,6 +773,106 @@ const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
         </div>
       </section>
 
+      <section className="section listening-room-section" id="listening-room">
+        <div className="container">
+          <div className="lr-text">
+            <div className="section-label">{content.listening_room.label}</div>
+            <h2 className="section-title">{content.listening_room.title}<br /><em style={{ color: 'var(--peach)', fontWeight: 400 }}>{content.listening_room.title_em}</em></h2>
+            <p className="section-sub">{content.listening_room.subtitle}</p>
+            <ul className="showcase-list" style={{ marginTop: 28 }}>
+              {content.listening_room.checklist.map(checkItem)}
+            </ul>
+          </div>
+          <div className="lr-visual">
+            <div className="lr-mock">
+              <div className="lr-mock-header">
+                <span className="lr-mock-label">Listening Room</span>
+                <span className="lr-ambient-badge">Ambient Mode</span>
+              </div>
+              <div className="lr-now-playing">
+                <div className="lr-np-label">Now Spinning</div>
+                <div className="lr-np-album">
+                  <div className="lr-np-art" style={{ background: 'linear-gradient(135deg, #2C4A6E, #1a3552)' }}>{'\uD83C\uDFB7'}</div>
+                  <div className="lr-np-info">
+                    <h5>Kind of Blue</h5>
+                    <p>Miles Davis &bull; 1959</p>
+                  </div>
+                </div>
+              </div>
+              <div className="lr-queue">
+                <div className="lr-queue-label">Up Next</div>
+                {[
+                  { emoji: '\uD83C\uDFB9', title: 'A Love Supreme', artist: 'John Coltrane', bg: 'linear-gradient(135deg, #4a3728, #2a1f18)' },
+                  { emoji: '\uD83C\uDFBA', title: 'Head Hunters', artist: 'Herbie Hancock', bg: 'linear-gradient(135deg, #3d5a3a, #1f2d1e)' },
+                  { emoji: '\uD83C\uDFB6', title: 'Maiden Voyage', artist: 'Herbie Hancock', bg: 'linear-gradient(135deg, #3a4a5d, #1e2830)' },
+                ].map(item => (
+                  <div className="lr-queue-item" key={item.title}>
+                    <div className="lr-qi-art" style={{ background: item.bg }}>{item.emoji}</div>
+                    <div className="lr-qi-info">
+                      <h6>{item.title}</h6>
+                      <span>{item.artist}</span>
+                    </div>
+                    <span className="lr-qi-grip">&#x2630;</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="section spins-section" id="spins">
+        <div className="container">
+          <div className="spins-visual">
+            <div className="spins-mock">
+              <div className="spins-mock-header">
+                <span className="spins-mock-label">Spins</span>
+              </div>
+              <div className="spins-stats">
+                <div className="spins-stat">
+                  <span className="spins-stat-value">142</span>
+                  <span className="spins-stat-label">Total Spins</span>
+                </div>
+                <div className="spins-stat">
+                  <span className="spins-stat-value">38</span>
+                  <span className="spins-stat-label">Albums</span>
+                </div>
+                <div className="spins-stat">
+                  <span className="spins-stat-value">12</span>
+                  <span className="spins-stat-label">This Week</span>
+                </div>
+              </div>
+              <div className="spins-date-label">Today</div>
+              <div className="spins-list">
+                {[
+                  { emoji: '\uD83C\uDFB7', title: 'Kind of Blue', artist: 'Miles Davis', count: '14x', bg: 'linear-gradient(135deg, var(--sky), var(--slate))' },
+                  { emoji: '\uD83C\uDFB8', title: 'Rumours', artist: 'Fleetwood Mac', count: '11x', bg: 'linear-gradient(135deg, var(--beige), var(--peach))' },
+                  { emoji: '\uD83E\uDDE0', title: 'OK Computer', artist: 'Radiohead', count: '9x', bg: 'linear-gradient(135deg, var(--slate), var(--sky))' },
+                  { emoji: '\uD83C\uDF1C', title: 'Purple Rain', artist: 'Prince', count: '8x', bg: 'linear-gradient(135deg, #6b46a0, var(--slate))' },
+                ].map(item => (
+                  <div className="spin-item" key={item.title}>
+                    <div className="spin-art" style={{ background: item.bg }}>{item.emoji}</div>
+                    <div className="spin-info">
+                      <h6>{item.title}</h6>
+                      <span>{item.artist}</span>
+                    </div>
+                    <span className="spin-count">{item.count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="spins-text">
+            <div className="section-label">{content.spins.label}</div>
+            <h2 className="section-title">{content.spins.title}<br /><em style={{ color: 'var(--peach)', fontWeight: 400 }}>{content.spins.title_em}</em></h2>
+            <p className="section-sub">{content.spins.subtitle}</p>
+            <ul className="showcase-list" style={{ marginTop: 28 }}>
+              {content.spins.checklist.map(checkItem)}
+            </ul>
+          </div>
+        </div>
+      </section>
+
       <section className="section sellr-callout" id="sellr">
         <div className="container">
           <div className="sellr-callout-text">
@@ -899,8 +1007,10 @@ const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
                 <li><Check />Search, sort &amp; filter</li>
                 <li><Check />Personal notes &amp; tags</li>
                 <li><Check />Up to 3 gear items</li>
-                <li className="disabled"><X />AI gear identification</li>
-                <li className="disabled"><X />Manual finder &amp; setup guides</li>
+                <li><Check />Wantlist with Discogs pricing</li>
+                <li><Check />Spins &amp; play history</li>
+                <li><Check />Discogs collection import</li>
+                <li><Check />Listening Room</li>
                 <li className="disabled"><X />AI playlists</li>
                 <li className="disabled"><X />Lyrics lookup</li>
               </ul>
@@ -927,10 +1037,13 @@ const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
                 <li><Check />Lyrics for all tracks</li>
                 <li><Check />Multi-source cover art</li>
                 <li><Check />Pricing &amp; condition grading</li>
+                <li><Check />Wantlist &amp; price alerts</li>
+                <li><Check />Discogs integration</li>
                 <li><Check />Export collection data</li>
                 <li><Check />Stakkd &mdash; unlimited gear</li>
                 <li><Check />AI gear identification</li>
                 <li><Check />Manual finder &amp; setup guides</li>
+                <li><Check />Listening Room</li>
               </ul>
               <button className="price-btn primary" onClick={() => handleCheckout('curator')}>Start Free Trial</button>
               <button className="skip-trial-link" onClick={() => handleCheckout('curator', true)}>Or buy now &mdash; no trial</button>
@@ -950,13 +1063,12 @@ const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
               </div>
               <ul className="price-features">
                 <li><Check />Everything in Curator</li>
-                <li><Check />Full Stakkd with signal chain</li>
-                <li><Check />Room Planner &mdash; AI gear placement</li>
+                <li><Check />Room Planner &mdash; rooms, layout &amp; gear placement</li>
                 <li><Check />Shelf Organizer</li>
+                <li><Check />Collection Analytics &mdash; charts &amp; insights</li>
                 <li><Check />Bulk import &amp; export</li>
-                <li><Check />API access</li>
-                <li><Check />Collection Analytics &mdash; genre, decade &amp; growth charts</li>
                 <li><Check />PDF collection catalogs</li>
+                <li><Check />API access</li>
                 <li><Check />Early beta access</li>
                 <li><Check />Priority support</li>
               </ul>

@@ -136,6 +136,40 @@ function authUrl(tier?: string) {
   return `/?${params.toString()}`;
 }
 
+function WantlistSvg() {
+  return (
+    <svg viewBox="0 0 48 48" className="w-10 h-10" aria-hidden="true" fill="none" stroke={C.peach} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="8" y="6" width="32" height="36" rx="4" />
+      <line x1="16" y1="16" x2="32" y2="16" />
+      <line x1="16" y1="24" x2="28" y2="24" />
+      <line x1="16" y1="32" x2="24" y2="32" />
+      <path d="M34 28l4 4-4 4" />
+    </svg>
+  );
+}
+
+function SpinsSvg() {
+  return (
+    <svg viewBox="0 0 48 48" className="w-10 h-10" aria-hidden="true" fill="none" stroke={C.peach} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="24" cy="24" r="16" />
+      <circle cx="24" cy="24" r="4" />
+      <path d="M24 8v4M24 36v4M8 24h4M36 24h4" />
+    </svg>
+  );
+}
+
+function ListeningRoomSvg() {
+  return (
+    <svg viewBox="0 0 48 48" className="w-10 h-10" aria-hidden="true" fill="none" stroke={C.peach} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10 36v-12a14 14 0 0 1 28 0v12" />
+      <rect x="8" y="34" width="8" height="8" rx="2" />
+      <rect x="32" y="34" width="8" height="8" rx="2" />
+      <circle cx="24" cy="24" r="4" />
+      <path d="M20 24h-4M28 24h4" />
+    </svg>
+  );
+}
+
 /* ──────────────────────────────────────────────
    Feature card data
    ────────────────────────────────────────────── */
@@ -143,17 +177,38 @@ const features = [
   {
     Icon: CameraSvg,
     title: 'AI-Powered Scanning',
+    tier: 'All Plans' as const,
     desc: 'Point your phone at any album \u2014 vinyl, cassette, or 8-track. Rekkrd identifies it, pulls metadata, and adds it to your collection in seconds.',
   },
   {
     Icon: HeadphonesSvg,
     title: 'Stakkd Gear Catalog',
+    tier: 'Curator' as const,
     desc: 'Photograph your turntable, amp, or speakers. Stakkd identifies your gear, pulls specs, and documents your entire audio setup.',
   },
   {
     Icon: PlaylistSvg,
     title: 'Smart Playlists',
+    tier: 'Curator' as const,
     desc: 'Generate mood-based playlists from your own collection. Let AI suggest the perfect listening session.',
+  },
+  {
+    Icon: WantlistSvg,
+    title: 'Wantlist & Price Tracking',
+    tier: 'All Plans' as const,
+    desc: 'Track records you\u2019re hunting with live Discogs pricing. Set price alerts and mark as owned when you find them.',
+  },
+  {
+    Icon: SpinsSvg,
+    title: 'Spins & Play History',
+    tier: 'All Plans' as const,
+    desc: 'Log every record you spin. Track play counts, see your most-played records, and browse your listening timeline.',
+  },
+  {
+    Icon: ListeningRoomSvg,
+    title: 'Listening Room',
+    tier: 'All Plans' as const,
+    desc: 'Build ambient listening sessions. Queue albums, toggle ambient mode, and save sessions as playlists.',
   },
 ];
 
@@ -166,7 +221,15 @@ const tiers = [
     price: 'Free',
     period: '',
     badge: '',
-    perks: ['100 albums', '10 AI scans / month', '3 gear items'],
+    perks: [
+      '100 albums',
+      '10 AI scans / month',
+      '3 gear items',
+      'Wantlist with Discogs pricing',
+      'Spins & play history',
+      'Discogs collection import',
+      'Listening Room',
+    ],
     cta: 'Get Started Free',
     tier: 'collector',
     highlighted: false,
@@ -176,7 +239,17 @@ const tiers = [
     price: '$4.99',
     period: '/mo',
     badge: 'Most Popular',
-    perks: ['Unlimited albums', 'Unlimited scans', 'Unlimited gear', 'Playlist generation', 'Collection Export \u2014 CSV & PDF'],
+    perks: [
+      'Unlimited albums',
+      'Unlimited scans',
+      'Unlimited gear',
+      'Playlist generation',
+      'Lyrics lookup',
+      'Wantlist & price alerts',
+      'Discogs integration',
+      'Listening Room',
+      'Collection Export \u2014 CSV & PDF',
+    ],
     cta: 'Start Curating',
     tier: 'curator',
     highlighted: true,
@@ -186,7 +259,15 @@ const tiers = [
     price: '$9.99',
     period: '/mo',
     badge: '',
-    perks: ['Everything in Curator', 'Room Planner \u2014 AI gear placement', 'Listening Room \u2014 curate sessions', 'Priority AI', 'CSV / JSON export', 'Advanced analytics'],
+    perks: [
+      'Everything in Curator',
+      'Room Planner \u2014 rooms, layout & gear placement',
+      'Shelf Organizer',
+      'Collection Analytics',
+      'Bulk import & export',
+      'PDF collection catalogs',
+      'Priority support',
+    ],
     cta: 'Go Enthusiast',
     tier: 'enthusiast',
     highlighted: false,
@@ -336,7 +417,10 @@ export default function WelcomeLandingPage() {
         </FadeIn>
 
         <div className="mx-auto max-w-5xl grid grid-cols-1 sm:grid-cols-3 gap-6">
-          {features.map(({ Icon, title, desc }) => {
+          {features.map(({ Icon, title, tier, desc }) => {
+            const badgeColor = tier === 'Curator'
+              ? { bg: `${C.peach}14`, color: C.peach, border: `${C.peach}28` }
+              : { bg: `${C.body}12`, color: C.body, border: `${C.body}25` };
             const card = (
               <div
                 className="rounded-2xl p-6 sm:p-8 h-full flex flex-col items-center text-center"
@@ -354,6 +438,18 @@ export default function WelcomeLandingPage() {
                 >
                   {title}
                 </h3>
+                <span
+                  className="inline-block text-xs font-semibold uppercase tracking-wider px-3 py-0.5 rounded-full mb-3"
+                  style={{
+                    backgroundColor: badgeColor.bg,
+                    color: badgeColor.color,
+                    border: `1px solid ${badgeColor.border}`,
+                    fontSize: '0.6rem',
+                    letterSpacing: '0.08em',
+                  }}
+                >
+                  {tier}
+                </span>
                 <p className="text-sm leading-relaxed" style={{ color: C.body }}>
                   {desc}
                 </p>

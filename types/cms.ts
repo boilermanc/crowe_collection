@@ -24,6 +24,7 @@ export interface CmsFeature {
   cls: string;
   title: string;
   desc: string;
+  tier?: 'all' | 'curator' | 'enthusiast';
 }
 
 export interface CmsStep {
@@ -107,6 +108,8 @@ export interface CmsLandingContent {
   playlist_moods: string[];
   playlist_tracks: CmsPlaylistTrack[];
   stakkd: CmsShowcase;
+  listening_room: CmsShowcase;
+  spins: CmsShowcase;
   stats_band: CmsStatItem[];
   testimonial: CmsTestimonial;
   faq_header: { label: string; title: string };
