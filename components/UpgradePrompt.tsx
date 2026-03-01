@@ -46,6 +46,11 @@ const FEATURE_INFO: Record<string, { title: string; description: string; cta?: s
     description: 'Design your listening rooms and get AI-powered gear placement recommendations. Available on the Enthusiast plan.',
     cta: 'Upgrade to Enthusiast',
   },
+  listening_room: {
+    title: 'Listening Room',
+    description: 'Curate listening sessions from your collection — browse, queue, reorder, and save as playlists. Available on the Enthusiast plan.',
+    cta: 'Upgrade to Enthusiast',
+  },
   bulk_import: {
     title: 'Bulk CSV Import',
     description: 'Import your entire collection from a CSV file with smart column mapping.',

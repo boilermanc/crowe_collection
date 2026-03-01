@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, Bell, TrendingUp } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { BarChart3, Bell, Headphones, TrendingUp } from 'lucide-react';
 
 type ViewMode = 'public-landing' | 'landing' | 'grid' | 'list' | 'stakkd'
   | 'discogs' | 'wantlist' | 'value-dashboard' | 'profile' | 'price-alerts' | 'spins' | 'shelves' | 'bulk-import' | 'analytics';
@@ -30,6 +31,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   scansRemaining,
 }) => {
   const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const navigate = useNavigate();
 
   // Auto-close sheet on view change
   useEffect(() => {
@@ -71,6 +73,15 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
               <path d="M10.5 8.5a1.5 1.5 0 0 1 3 0c0 1.5-1.5 2-1.5 3.5" />
             </svg>
             <span className={`text-sm font-label tracking-wide ${currentView === 'spins' ? 'text-[#dd6e42]' : 'text-th-nav-text'}`}>Spins</span>
+          </button>
+
+          {/* Listening Room */}
+          <button
+            onClick={() => { navigate('/listening-room'); setIsMoreOpen(false); }}
+            className="flex items-center gap-4 w-full px-5 py-3.5 text-left active:bg-th-nav-text/[0.10] transition-colors border-t border-th-nav-text/[0.08]"
+          >
+            <Headphones className="w-5 h-5 text-th-nav-text/80 flex-shrink-0" />
+            <span className="text-sm font-label tracking-wide text-th-nav-text">Listening Room</span>
           </button>
 
           {/* Value Dashboard */}

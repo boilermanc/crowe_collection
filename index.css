@@ -179,6 +179,20 @@ body {
 .admin-root ::-webkit-scrollbar-thumb { background: rgb(var(--admin-border-strong)); border-radius: 10px; }
 .admin-root ::-webkit-scrollbar-thumb:hover { background: rgb(var(--admin-text-subtle)); }
 
+/* ── Listening Room: quick-add button visibility ────────────────── */
+/* Touch devices: always visible */
+.quick-add-btn { opacity: 1; }
+/* Hover-capable devices: show on parent hover only */
+@media (hover: hover) {
+  .quick-add-btn { opacity: 0; transition: opacity 150ms ease; }
+  .group\/cell:hover .quick-add-btn,
+  .quick-add-btn:focus-visible { opacity: 1; }
+}
+
+/* ── Scrollbar-hide utility ─────────────────────────────────────── */
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+
 /* ── Sellr mobile: eliminate 300ms tap delay ────────────────────── */
 .bg-sellr-bg a,
 .bg-sellr-bg button,

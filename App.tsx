@@ -45,7 +45,7 @@ import SpinsPage from './src/components/SpinsPage';
 import ShelfSetup from './src/components/ShelfSetup';
 import ImportExportPage from './src/components/ImportExportPage';
 import { getAlbumPlacementInfo } from './src/helpers/shelfHelpers';
-import { BarChart3, Bell, TrendingUp, User } from 'lucide-react';
+import { BarChart3, Bell, Headphones, TrendingUp, User } from 'lucide-react';
 import CollectionAnalytics from './src/components/CollectionAnalytics';
 import { wantlistService } from './services/wantlistService';
 import { engagementService } from './services/engagementService';
@@ -995,6 +995,13 @@ const App: React.FC = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                 </svg>
               )}
+            </button>
+            <button
+              onClick={() => navigate('/listening-room')}
+              className="hidden md:flex p-3 rounded-full border transition-all flex-shrink-0 bg-th-surface/[0.04] border-th-surface/[0.10] text-th-text2 hover:text-th-text"
+              title="Listening Room"
+            >
+              <Headphones className="w-5 h-5" />
             </button>
             <button
               onClick={() => setCurrentView('stakkd')}
