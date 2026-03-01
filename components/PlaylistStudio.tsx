@@ -205,6 +205,16 @@ const PlaylistStudio: React.FC<PlaylistStudioProps> = ({ albums, onClose, seedAl
       const albumsForGeneration = mood === 'Surprise Me' ? albums : filteredAlbums;
       const result = await geminiService.generatePlaylist(albumsForGeneration, effectiveMood, effectiveFocus, targetMinutes);
       if (result.items.length === 0) {
+        if (mood === 'Surprise Me' && albums.length > 0) {
+          const fallbackResult = await geminiService.generatePlaylist(albums, 'Pick a fun, eclectic mix from this collection. Any genre, any era — just make it interesting.', effectiveFocus, targetMinutes);
+          if (fallbackResult.items.length > 0) {
+            setPlaylist(fallbackResult);
+            setCurrentIndex(0);
+            setStep('player');
+            setIsSaved(false);
+            return;
+          }
+        }
         showToast("No records in your crate match that vibe. Try a different mood!", "info", { duration: 0 });
         setStep('config');
         return;
@@ -245,7 +255,7 @@ const PlaylistStudio: React.FC<PlaylistStudioProps> = ({ albums, onClose, seedAl
             <SpinningRecord size="w-48 h-48 md:w-64 md:h-64" labelColor="bg-[#4f6d7a]" />
           </div>
           <div className="mt-12 text-center">
-            <h2 className="font-label text-white text-lg md:text-xl tracking-widest animate-pulse mb-2 uppercase">CRATING THE VIBE</h2>
+            <h2 className="font-label text-white text-lg md:text-xl tracking-widest animate-pulse mb-2 uppercase">CRAFTING THE VIBE</h2>
             <p className="text-white/50 text-xs md:text-sm">Browsing your crate for "{mood}"...</p>
           </div>
         </div>
@@ -551,7 +561,7 @@ const PlaylistStudio: React.FC<PlaylistStudioProps> = ({ albums, onClose, seedAl
 
               <button
                 onClick={handleGenerate}
-                disabled={!mood.trim() || filteredAlbums.length === 0}
+                disabled={!mood.trim() || (mood !== 'Surprise Me' && filteredAlbums.length === 0)}
                 className="w-full py-5 md:py-6 rounded-full bg-gradient-to-r from-rose-900 to-red-950 hover:from-rose-800 hover:to-red-900 text-white font-label tracking-[0.3em] font-bold text-[10px] md:text-xs hover:scale-[1.02] active:scale-95 transition-all shadow-2xl shadow-rose-900/30 disabled:opacity-30"
               >
                 CURATE SELECTION
