@@ -153,6 +153,7 @@ const IntegrationsPage: React.FC = () => {
       setTimeout(() => setSaveMessage(null), 3000);
     } catch (err) {
       setSaveMessage('Failed to save settings');
+      setTimeout(() => setSaveMessage(null), 5000);
       console.error('Save error:', err);
     } finally {
       setSaving(false);
@@ -176,6 +177,7 @@ const IntegrationsPage: React.FC = () => {
       setTimeout(() => setEmailSaveMessage(null), 3000);
     } catch (err) {
       setEmailSaveMessage('Failed to save email settings');
+      setTimeout(() => setEmailSaveMessage(null), 5000);
       console.error('Email settings save error:', err);
     } finally {
       setEmailSaving(false);
@@ -629,6 +631,15 @@ const IntegrationsPage: React.FC = () => {
           }}
         >
           {saveMessage}
+          <button
+            onClick={() => setSaveMessage(null)}
+            aria-label="Dismiss"
+            className="ml-1 text-white/60 hover:text-white transition-colors"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
       )}
     </div>

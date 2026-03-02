@@ -62,6 +62,15 @@ const Toast: React.FC = () => {
             {action}
           </button>
         )}
+        <button
+          onClick={dismiss}
+          aria-label="Dismiss notification"
+          className="ml-1 text-th-text/40 hover:text-th-text transition-colors flex-shrink-0"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
     </div>
   );

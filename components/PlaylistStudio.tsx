@@ -57,13 +57,14 @@ const PlaylistStudio: React.FC<PlaylistStudioProps> = ({ albums, onClose, seedAl
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showCustomMood, setShowCustomMood] = useState(false);
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
-  const [targetMinutes, setTargetMinutes] = useState(0);
+  const [targetMinutes, setTargetMinutes] = useState(30);
   const [mode, setMode] = useState<'quick' | 'custom'>('quick');
   const [selectedSources, setSelectedSources] = useState<string[]>(['all']);
   const [savedPlaylists, setSavedPlaylists] = useState<SavedPlaylist[]>([]);
   const [showLibrary, setShowLibrary] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [noMatchMessage, setNoMatchMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -186,6 +187,7 @@ const PlaylistStudio: React.FC<PlaylistStudioProps> = ({ albums, onClose, seedAl
 
   const handleGenerate = async () => {
     if (!mood.trim()) return;
+    setNoMatchMessage(null);
     setStep('loading');
     try {
       const effectiveFocus = mode === 'quick' ? 'song' : focus;
@@ -210,7 +212,7 @@ const PlaylistStudio: React.FC<PlaylistStudioProps> = ({ albums, onClose, seedAl
             return;
           }
         }
-        showToast("No records in your crate match that vibe. Try a different mood!", "info", { duration: 0 });
+        setNoMatchMessage("No records in your crate match that vibe. Try a different mood!");
         setStep('config');
         return;
       }
@@ -534,6 +536,15 @@ const PlaylistStudio: React.FC<PlaylistStudioProps> = ({ albums, onClose, seedAl
                     ))}
                   </div>
                 </section>
+              )}
+
+              {noMatchMessage && (
+                <div role="status" aria-live="polite" className="flex items-center justify-center gap-3 rounded-2xl bg-white/5 border border-white/10 px-6 py-4">
+                  <svg className="w-5 h-5 text-[#6a8c9a] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <p className="text-white/60 font-label text-[10px] md:text-xs tracking-wider uppercase">{noMatchMessage}</p>
+                </div>
               )}
 
               <button
