@@ -46,7 +46,7 @@ const StakkdOnboarding: React.FC<StakkdOnboardingProps> = ({ onComplete }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-th-bg/95 backdrop-blur-xl flex flex-col items-center justify-center p-4 pb-24">
+    <div className="fixed inset-0 z-[60] bg-th-bg/95 backdrop-blur-xl flex flex-col items-center justify-center p-4">
 
       {/* Progress bar */}
       <div className="w-full max-w-lg mb-8">
