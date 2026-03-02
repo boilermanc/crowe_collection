@@ -8,6 +8,7 @@ import { USER_AGENT } from '../lib/constants.js';
 import { searchItunes } from '../lib/itunes.js';
 import { searchDiscogs } from '../services/discogsService.js';
 import type { DiscogsMatch } from '../../types.js';
+import { requireSupabaseAdmin } from '../lib/supabaseAdmin.js';
 
 const router = Router();
 
@@ -44,12 +45,7 @@ setInterval(() => {
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
-function getSupabaseAdmin() {
-  return createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
+
 
 function errorResponse(res: Response, code: number, message: string) {
   res.status(code).json({ error: message, code });
@@ -58,7 +54,7 @@ function errorResponse(res: Response, code: number, message: string) {
 async function requireActiveSession(sessionId: unknown): Promise<boolean> {
   if (!sessionId || typeof sessionId !== 'string') return false;
 
-  const supabase = getSupabaseAdmin();
+  const supabase = requireSupabaseAdmin();
   const { data, error } = await supabase
     .from('sellr_sessions')
     .select('status, expires_at')

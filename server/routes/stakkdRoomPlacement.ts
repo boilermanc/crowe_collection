@@ -6,6 +6,7 @@ import { createRateLimit } from '../middleware/rateLimit.js';
 import { requirePlan } from '../lib/subscription.js';
 import { ai } from '../lib/gemini.js';
 import { retryWithBackoff } from '../utils/retry.js';
+import { getSupabaseAdmin } from '../lib/supabaseAdmin.js';
 
 const router = Router();
 const placementRateLimit = createRateLimit(10, 60);
@@ -13,11 +14,7 @@ const placementRateLimit = createRateLimit(10, 60);
 const GEMINI_TIMEOUT_MS = 90_000;
 
 let _admin: ReturnType<typeof createClient> | null = null;
-function getSupabaseAdmin() {
-  if (_admin) return _admin;
-  _admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-  return _admin;
-}
+
 
 function getAuth(req: Request): string {
   return (req as Request & { auth: AuthResult }).auth.userId;

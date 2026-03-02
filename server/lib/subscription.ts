@@ -1,5 +1,6 @@
 import type { Response } from 'express';
 import { createClient } from '@supabase/supabase-js';
+import { getSupabaseAdmin } from './supabaseAdmin.js';
 
 export type Plan = 'collector' | 'curator' | 'enthusiast';
 export type SubscriptionStatus = 'trialing' | 'active' | 'canceled' | 'past_due' | 'incomplete' | 'expired';
@@ -25,15 +26,6 @@ const TIER_LEVELS: Record<Plan, number> = {
 };
 
 let _admin: ReturnType<typeof createClient> | null = null;
-
-function getSupabaseAdmin() {
-  if (_admin) return _admin;
-  _admin = createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-  return _admin;
-}
 
 /**
  * Fetches subscription info for a user.

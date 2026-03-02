@@ -2,15 +2,11 @@ import { Router, type Request, type Response } from 'express';
 import { createClient } from '@supabase/supabase-js';
 import puppeteer from 'puppeteer';
 import { buildSellrPdfHtml } from '../sellrPdfTemplate.js';
+import { requireSupabaseAdmin } from '../lib/supabaseAdmin.js';
 
 const router = Router();
 
-function getSupabaseAdmin() {
-  return createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
+
 
 function errorResponse(res: Response, code: number, message: string) {
   res.status(code).json({ error: message, code });
@@ -21,7 +17,7 @@ function errorResponse(res: Response, code: number, message: string) {
 router.get('/api/sellr/report/token/:report_token', async (req: Request, res: Response) => {
   try {
     const { report_token } = req.params;
-    const supabase = getSupabaseAdmin();
+    const supabase = requireSupabaseAdmin();
 
     const { data: order, error: orderErr } = await supabase
       .from('sellr_orders')
@@ -77,7 +73,7 @@ router.get('/api/sellr/report/token/:report_token', async (req: Request, res: Re
 router.get('/api/sellr/report/session/:session_id', async (req: Request, res: Response) => {
   try {
     const { session_id } = req.params;
-    const supabase = getSupabaseAdmin();
+    const supabase = requireSupabaseAdmin();
 
     // Fetch session
     const { data: session, error: sessionErr } = await supabase
@@ -142,7 +138,7 @@ router.post('/api/sellr/report/pdf', async (req: Request, res: Response) => {
       return;
     }
 
-    const supabase = getSupabaseAdmin();
+    const supabase = requireSupabaseAdmin();
 
     // Fetch session
     const { data: session, error: sessionErr } = await supabase

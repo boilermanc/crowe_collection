@@ -31,10 +31,6 @@ const SubscriptionBanner: React.FC<SubscriptionBannerProps> = ({ onUpgrade }) =>
           headers['Authorization'] = `Bearer ${session.access_token}`;
         }
       }
-      if (!headers['Authorization']) {
-        const secret = import.meta.env.VITE_API_SECRET;
-        if (secret) headers['Authorization'] = `Bearer ${secret}`;
-      }
       const response = await fetch('/api/customer-portal', { method: 'POST', headers });
       if (!response.ok) throw new Error('Portal failed');
       const { url } = await response.json();

@@ -1,18 +1,11 @@
 import { Router } from 'express';
-import { createClient } from '@supabase/supabase-js';
 import type Stripe from 'stripe';
 import { requireAuthWithUser, type AuthResult } from '../middleware/auth.js';
 import { getStripe } from '../lib/stripe.js';
 import { isKnownPriceId } from '../lib/stripeConfig.js';
+import { getSupabaseAdmin } from '../lib/supabaseAdmin.js';
 
 const router = Router();
-
-function getSupabaseAdmin() {
-  return createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
 
 router.post(
   '/api/checkout',

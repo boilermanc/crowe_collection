@@ -1,17 +1,13 @@
 import { Router, type Request, type Response } from 'express';
 import { createClient } from '@supabase/supabase-js';
 import { ai } from '../lib/gemini.js';
+import { requireSupabaseAdmin } from '../lib/supabaseAdmin.js';
 
 const router = Router();
 
 const GEMINI_TIMEOUT_MS = 60_000;
 
-function getSupabaseAdmin() {
-  return createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
+
 
 function errorResponse(res: Response, code: number, message: string) {
   res.status(code).json({ error: message, code });
@@ -36,7 +32,7 @@ router.post('/api/sellr/lot/:session_id/calculate', async (req: Request, res: Re
       return;
     }
 
-    const supabase = getSupabaseAdmin();
+    const supabase = requireSupabaseAdmin();
 
     const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
     if (authErr || !user) {
@@ -132,7 +128,7 @@ router.post('/api/sellr/lot/:session_id/post', async (req: Request, res: Respons
       return;
     }
 
-    const supabase = getSupabaseAdmin();
+    const supabase = requireSupabaseAdmin();
 
     const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
     if (authErr || !user) {

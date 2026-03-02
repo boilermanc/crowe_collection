@@ -2,16 +2,11 @@ import { Router, type Request, type Response } from 'express';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import { requireAdmin, type AdminAuthResult } from '../middleware/adminAuth.js';
+import { getSupabaseAdmin } from '../lib/supabaseAdmin.js';
 
 const router = Router();
 
 let _admin: ReturnType<typeof createClient> | null = null;
-function getSupabaseAdmin() {
-  if (_admin) return _admin;
-  _admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-  return _admin;
-}
-
 // ── Customers ──────────────────────────────────────────────────────
 async function handleCustomers(_req: Request, res: Response) {
   const supabase = getSupabaseAdmin();

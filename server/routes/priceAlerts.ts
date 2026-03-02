@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { createClient } from '@supabase/supabase-js';
 import { requireAuthWithUser, type AuthResult } from '../middleware/auth.js';
+import { requireSupabaseAdmin } from '../lib/supabaseAdmin.js';
 
 const router = Router();
 
@@ -21,12 +22,7 @@ interface PriceAlert {
 
 const VALID_CONDITIONS = ['M', 'NM', 'VG+', 'VG', 'G+', 'G', 'F', 'P'];
 
-function getSupabaseAdmin() {
-  return createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
+
 
 function getUserId(req: Parameters<typeof requireAuthWithUser>[0]): string {
   return (req as typeof req & { auth: AuthResult }).auth.userId;
@@ -40,7 +36,7 @@ router.get(
     const userId = getUserId(req);
 
     try {
-      const supabase = getSupabaseAdmin();
+      const supabase = requireSupabaseAdmin();
       const { data, error } = await supabase
         .from('discogs_price_alerts')
         .select('*')
@@ -94,7 +90,7 @@ router.post(
         return;
       }
 
-      const supabase = getSupabaseAdmin();
+      const supabase = requireSupabaseAdmin();
 
       // Check for duplicate active alert
       const { data: existing, error: dupError } = await supabase
@@ -154,7 +150,7 @@ router.delete(
     const alertId = req.params.id;
 
     try {
-      const supabase = getSupabaseAdmin();
+      const supabase = requireSupabaseAdmin();
 
       // Verify ownership
       const { data: alert, error: fetchError } = await supabase
@@ -205,7 +201,7 @@ router.patch(
     const alertId = req.params.id;
 
     try {
-      const supabase = getSupabaseAdmin();
+      const supabase = requireSupabaseAdmin();
 
       // Fetch current state + verify ownership
       const { data: alert, error: fetchError } = await supabase

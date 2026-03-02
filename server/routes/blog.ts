@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { requireAuthWithUser } from '../middleware/auth.js';
+import { requireAdmin } from '../middleware/adminAuth.js';
 import {
   getPublishedPosts,
   getPostBySlug,
@@ -18,7 +18,7 @@ const router = Router();
 
 // ── Admin routes (before :slug catch-all) ──────────────────────────
 
-router.get('/api/blog/admin/posts', requireAuthWithUser, async (_req, res) => {
+router.get('/api/blog/admin/posts', requireAdmin, async (_req, res) => {
   try {
     const posts = await getAllPostsAdmin();
     res.json({ posts });
@@ -28,7 +28,7 @@ router.get('/api/blog/admin/posts', requireAuthWithUser, async (_req, res) => {
   }
 });
 
-router.get('/api/blog/admin/posts/:slug', requireAuthWithUser, async (req, res) => {
+router.get('/api/blog/admin/posts/:slug', requireAdmin, async (req, res) => {
   try {
     const post = await getPostBySlugAdmin(req.params.slug);
     if (!post) {
@@ -42,7 +42,7 @@ router.get('/api/blog/admin/posts/:slug', requireAuthWithUser, async (req, res) 
   }
 });
 
-router.post('/api/blog/admin/posts', requireAuthWithUser, async (req, res) => {
+router.post('/api/blog/admin/posts', requireAdmin, async (req, res) => {
   try {
     const { title, body } = req.body;
     if (!title || typeof title !== 'string' || !body || typeof body !== 'string') {
@@ -57,7 +57,7 @@ router.post('/api/blog/admin/posts', requireAuthWithUser, async (req, res) => {
   }
 });
 
-router.put('/api/blog/admin/posts/:id', requireAuthWithUser, async (req, res) => {
+router.put('/api/blog/admin/posts/:id', requireAdmin, async (req, res) => {
   try {
     const post = await updatePost(req.params.id, req.body);
     res.json(post);
@@ -67,7 +67,7 @@ router.put('/api/blog/admin/posts/:id', requireAuthWithUser, async (req, res) =>
   }
 });
 
-router.delete('/api/blog/admin/posts/:id', requireAuthWithUser, async (req, res) => {
+router.delete('/api/blog/admin/posts/:id', requireAdmin, async (req, res) => {
   try {
     await deletePost(req.params.id);
     res.json({ success: true });
@@ -79,7 +79,7 @@ router.delete('/api/blog/admin/posts/:id', requireAuthWithUser, async (req, res)
 
 // ── Blog ideas admin routes ─────────────────────────────────────────
 
-router.get('/api/blog/admin/ideas', requireAuthWithUser, async (_req, res) => {
+router.get('/api/blog/admin/ideas', requireAdmin, async (_req, res) => {
   try {
     const ideas = await getAllIdeas();
     res.json({ ideas });
@@ -89,7 +89,7 @@ router.get('/api/blog/admin/ideas', requireAuthWithUser, async (_req, res) => {
   }
 });
 
-router.post('/api/blog/admin/ideas', requireAuthWithUser, async (req, res) => {
+router.post('/api/blog/admin/ideas', requireAdmin, async (req, res) => {
   try {
     const { idea } = req.body;
     if (!idea || typeof idea !== 'string' || !idea.trim()) {
@@ -111,7 +111,7 @@ router.post('/api/blog/admin/ideas', requireAuthWithUser, async (req, res) => {
 
 // ── Hero image generation ─────────────────────────────────────────
 
-router.post('/api/blog/generate-image', requireAuthWithUser, async (req, res) => {
+router.post('/api/blog/generate-image', requireAdmin, async (req, res) => {
   const { post_id, title, excerpt } = req.body;
   if (!post_id || typeof post_id !== 'string' || !title || typeof title !== 'string') {
     res.status(400).json({ error: 'post_id and title are required strings' });

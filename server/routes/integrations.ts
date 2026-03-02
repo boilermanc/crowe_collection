@@ -4,16 +4,11 @@ import Stripe from 'stripe';
 import { Resend } from 'resend';
 import { requireAdmin } from '../middleware/adminAuth.js';
 import { invalidateStripeCache } from '../lib/stripe.js';
+import { getSupabaseAdmin } from '../lib/supabaseAdmin.js';
 
 const router = Router();
 
 let _admin: ReturnType<typeof createClient> | null = null;
-function getSupabaseAdmin() {
-  if (_admin) return _admin;
-  _admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-  return _admin;
-}
-
 // ── GET /api/admin/integrations ─────────────────────────────────────
 // Fetch settings by category. Defaults to 'integrations', supports ?category=stripe.
 router.get('/api/admin/integrations', requireAdmin, async (req: Request, res: Response) => {

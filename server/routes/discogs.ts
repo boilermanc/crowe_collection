@@ -1,20 +1,13 @@
 import { Router } from 'express';
-import { createClient } from '@supabase/supabase-js';
 import { discogsRateLimiter } from '../middleware/discogsRateLimit.js';
 import { searchDiscogs, getRelease, getMasterRelease } from '../services/discogsService.js';
 import { discogsConfig } from '../lib/discogs.js';
 import type { DiscogsSearchParams } from '../../types/discogs.js';
+import { getSupabaseAdmin } from '../lib/supabaseAdmin.js';
 
 const DISCOGS_IMAGES_BUCKET = 'discogs-images';
 const SIGNED_URL_EXPIRY = 3600; // 1 hour
 const CACHE_CONTROL = 'public, max-age=86400'; // 24 hours
-
-function getSupabaseAdmin() {
-  return createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 const router = Router();
 

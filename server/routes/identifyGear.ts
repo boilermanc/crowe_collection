@@ -8,15 +8,12 @@ import { ai } from '../lib/gemini.js';
 import { getSubscription, incrementScanCount, PLAN_LIMITS } from '../lib/subscription.js';
 import { retryWithBackoff, isRetryableError } from '../utils/retry.js';
 import { GEAR_CATEGORIES } from '../../types.js';
+import { getSupabaseAdmin } from '../lib/supabaseAdmin.js';
 
 const router = Router();
 
 let _admin: ReturnType<typeof createClient> | null = null;
-function getSupabaseAdmin() {
-  if (_admin) return _admin;
-  _admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-  return _admin;
-}
+
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const GEMINI_TIMEOUT_MS = 90_000; // 90s — under typical proxy timeouts (120s)

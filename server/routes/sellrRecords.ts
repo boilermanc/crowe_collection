@@ -1,6 +1,7 @@
 import { Router, type Request, type Response } from 'express';
 import { createClient } from '@supabase/supabase-js';
 import { consumeSlots, releaseSlot } from '../sellrSlots.js';
+import { requireSupabaseAdmin } from '../lib/supabaseAdmin.js';
 
 const router = Router();
 
@@ -12,19 +13,14 @@ const TIER_LIMITS: Record<string, number> = {
   full: 500,
 };
 
-function getSupabaseAdmin() {
-  return createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
+
 
 function errorResponse(res: Response, code: number, message: string) {
   res.status(code).json({ error: message, code });
 }
 
 /** Fetch a session and verify it's active + not expired. */
-async function getActiveSession(supabase: ReturnType<typeof getSupabaseAdmin>, sessionId: string) {
+async function getActiveSession(supabase: ReturnType<typeof requireSupabaseAdmin>, sessionId: string) {
   const { data, error } = await supabase
     .from('sellr_sessions')
     .select('*')
@@ -47,7 +43,7 @@ router.post('/api/sellr/records', async (req: Request, res: Response) => {
       return;
     }
 
-    const supabase = getSupabaseAdmin();
+    const supabase = requireSupabaseAdmin();
 
     const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
     if (authErr || !user) {
@@ -143,7 +139,7 @@ router.delete('/api/sellr/records/:record_id', async (req: Request, res: Respons
       return;
     }
 
-    const supabase = getSupabaseAdmin();
+    const supabase = requireSupabaseAdmin();
     const session = await getActiveSession(supabase, session_id);
 
     if (!session) {
@@ -227,7 +223,7 @@ router.patch('/api/sellr/records/:record_id', async (req: Request, res: Response
       return;
     }
 
-    const supabase = getSupabaseAdmin();
+    const supabase = requireSupabaseAdmin();
     const session = await getActiveSession(supabase, session_id);
 
     if (!session) {
@@ -278,7 +274,7 @@ router.patch('/api/sellr/records/:record_id', async (req: Request, res: Response
 router.get('/api/sellr/records/session/:session_id', async (req: Request, res: Response) => {
   try {
     const session_id = req.params.session_id as string;
-    const supabase = getSupabaseAdmin();
+    const supabase = requireSupabaseAdmin();
 
     const session = await getActiveSession(supabase, session_id);
     if (!session) {

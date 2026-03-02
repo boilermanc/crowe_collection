@@ -3,17 +3,13 @@ import { createClient } from '@supabase/supabase-js';
 import { requireAuthWithUser, type AuthResult } from '../middleware/auth.js';
 import { sendTemplatedEmail } from '../services/emailService.js';
 import { getSubscription, PLAN_LIMITS } from '../lib/subscription.js';
+import { getSupabaseAdmin } from '../lib/supabaseAdmin.js';
 
 const router = Router();
 
 const MILESTONES = [50, 100, 250, 500, 1000];
 
-function getSupabaseAdmin() {
-  return createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
+
 
 // ── POST /api/collection/check-limit ─────────────────────────────────
 // Called before saving an album. Returns 403 if the user's plan has a

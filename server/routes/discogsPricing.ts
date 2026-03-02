@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { requireAuthWithUser, type AuthResult } from '../middleware/auth.js';
 import { discogsRequest } from '../services/discogsService.js';
 import type { Request } from 'express';
+import { getSupabaseAdmin } from '../lib/supabaseAdmin.js';
 
 const router = Router();
 const LOG_PREFIX = '[discogs-pricing]';
@@ -36,12 +37,7 @@ interface DiscogsReleasePartial {
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
-function getSupabaseAdmin() {
-  return createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
+
 
 function getUserId(req: Request): string {
   return (req as Request & { auth: AuthResult }).auth.userId;

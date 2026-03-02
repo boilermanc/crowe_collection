@@ -4,6 +4,7 @@ import { getStripe, getSellrWebhookSecret } from '../lib/stripe.js';
 import type Stripe from 'stripe';
 import { sendPaymentConfirmedEmail, sendAdminOrderAlert } from '../sellrEmails.js';
 import { purchaseSlots, TIER_SLOTS } from '../sellrSlots.js';
+import { requireSupabaseAdmin } from '../lib/supabaseAdmin.js';
 
 const router = Router();
 
@@ -18,12 +19,7 @@ const TIER_AMOUNT_CENTS: Record<Tier, number> = {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function getSupabaseAdmin() {
-  return createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
+
 
 function errorResponse(res: Response, code: number, message: string) {
   res.status(code).json({ error: message, code });
@@ -45,7 +41,7 @@ router.post('/api/sellr/checkout/create-intent', async (req: Request, res: Respo
       return;
     }
 
-    const supabase = getSupabaseAdmin();
+    const supabase = requireSupabaseAdmin();
 
     // Validate session exists, is active, and has a tier
     const { data: session, error: sessionErr } = await supabase
@@ -152,7 +148,7 @@ router.post('/api/sellr/checkout/webhook', async (req: Request, res: Response) =
 
   console.log(`[sellr-checkout] Webhook received: ${event.type} (${event.id})`);
 
-  const supabase = getSupabaseAdmin();
+  const supabase = requireSupabaseAdmin();
 
   try {
     switch (event.type) {

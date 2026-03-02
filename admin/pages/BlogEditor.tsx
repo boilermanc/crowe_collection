@@ -136,11 +136,6 @@ const BlogEditor: React.FC<BlogEditorProps> = ({ post, onSave, onCancel }) => {
           headers['Authorization'] = `Bearer ${session.access_token}`;
         }
       }
-      if (!headers['Authorization']) {
-        const secret = import.meta.env.VITE_API_SECRET;
-        if (secret) headers['Authorization'] = `Bearer ${secret}`;
-      }
-
       const resp = await fetch('/api/blog/generate-image', {
         method: 'POST',
         headers,

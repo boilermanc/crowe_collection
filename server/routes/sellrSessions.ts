@@ -1,18 +1,14 @@
 import { Router, type Request, type Response } from 'express';
 import { createClient } from '@supabase/supabase-js';
 import { sendSessionCreatedEmail } from '../sellrEmails.js';
+import { requireSupabaseAdmin } from '../lib/supabaseAdmin.js';
 
 const router = Router();
 
 const VALID_TIERS = ['starter', 'standard', 'full'] as const;
 type Tier = (typeof VALID_TIERS)[number];
 
-function getSupabaseAdmin() {
-  return createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
+
 
 function errorResponse(res: Response, code: number, message: string) {
   res.status(code).json({ error: message, code });
@@ -29,7 +25,7 @@ router.post('/api/sellr/sessions', async (req: Request, res: Response) => {
       return;
     }
 
-    const supabase = getSupabaseAdmin();
+    const supabase = requireSupabaseAdmin();
 
     const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
     if (authErr || !user) {
@@ -119,7 +115,7 @@ router.post('/api/sellr/sessions', async (req: Request, res: Response) => {
 router.get('/api/sellr/sessions/:session_id', async (req: Request, res: Response) => {
   try {
     const { session_id } = req.params;
-    const supabase = getSupabaseAdmin();
+    const supabase = requireSupabaseAdmin();
 
     const { data: session, error: sessionErr } = await supabase
       .from('sellr_sessions')
@@ -178,7 +174,7 @@ router.patch('/api/sellr/sessions/:session_id', async (req: Request, res: Respon
       return;
     }
 
-    const supabase = getSupabaseAdmin();
+    const supabase = requireSupabaseAdmin();
 
     // Verify session exists and is not expired
     const { data: existing, error: lookupErr } = await supabase
@@ -245,7 +241,7 @@ router.patch('/api/sellr/sessions/:session_id/collection-copy', async (req: Requ
       return;
     }
 
-    const supabase = getSupabaseAdmin();
+    const supabase = requireSupabaseAdmin();
 
     // Verify session exists and is paid
     const { data: existing, error: lookupErr } = await supabase

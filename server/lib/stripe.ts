@@ -1,5 +1,6 @@
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
+import { getSupabaseAdmin } from './supabaseAdmin.js';
 
 export type PlanTier = 'collector' | 'curator' | 'enthusiast';
 
@@ -28,15 +29,6 @@ const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 const _stripeInstances = new Map<string, Stripe>();
 
 let _supabase: ReturnType<typeof createClient> | null = null;
-function getSupabaseAdmin() {
-  if (_supabase) return _supabase;
-  _supabase = createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-  return _supabase;
-}
-
 // ── Env var fallbacks ────────────────────────────────────────────────
 
 function envFallbackConfig(): StripeConfig {

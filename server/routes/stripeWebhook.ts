@@ -1,18 +1,12 @@
 import { Router } from 'express';
 import type Stripe from 'stripe';
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { getStripe, getConfig } from '../lib/stripe.js';
 import { getPlanFromPriceId } from '../lib/stripeConfig.js';
 import { sendTemplatedEmail } from '../services/emailService.js';
+import { requireSupabaseAdmin } from '../lib/supabaseAdmin.js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 const router = Router();
-
-function getSupabaseAdmin(): SupabaseClient {
-  return createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
 
 /** Extract customer ID string from various Stripe object shapes. */
 function extractCustomerId(
@@ -89,7 +83,7 @@ router.post('/api/stripe/webhook', async (req, res) => {
 
   console.log(`Stripe webhook received: ${event.type} (${event.id})`);
 
-  const supabase = getSupabaseAdmin();
+  const supabase = requireSupabaseAdmin();
   const stripe = await getStripe();
 
   try {

@@ -1,16 +1,9 @@
 import { Router } from 'express';
-import { createClient } from '@supabase/supabase-js';
 import { requireAuthWithUser, type AuthResult } from '../middleware/auth.js';
 import { getSubscription, PLAN_LIMITS } from '../lib/subscription.js';
+import { requireSupabaseAdmin } from '../lib/supabaseAdmin.js';
 
 const router = Router();
-
-function getSupabaseAdmin() {
-  return createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
 
 router.get(
   '/api/subscription',
@@ -25,7 +18,7 @@ router.get(
       // Fetch plan_period_end from profiles (set by Stripe webhooks)
       let periodEnd: string | null = null;
       if (userId !== '__legacy__') {
-        const supabase = getSupabaseAdmin();
+        const supabase = requireSupabaseAdmin();
         const { data: profile } = await supabase
           .from('profiles')
           .select('plan_period_end')

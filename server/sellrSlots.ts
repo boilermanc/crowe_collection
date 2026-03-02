@@ -1,11 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
+import { requireSupabaseAdmin } from './lib/supabaseAdmin.js';
 
-function getSupabaseAdmin() {
-  return createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
+
 
 // Map tier to slot count
 export const TIER_SLOTS: Record<string, number> = {
@@ -21,7 +16,7 @@ export async function getSlotStatus(userId: string): Promise<{
   slots_remaining: number;
   last_tier: string | null;
 }> {
-  const supabase = getSupabaseAdmin();
+  const supabase = requireSupabaseAdmin();
   const { data, error } = await supabase
     .from('sellr_accounts')
     .select('slots_purchased, slots_used, last_tier')
@@ -47,7 +42,7 @@ export async function consumeSlots(
   const status = await getSlotStatus(userId);
   if (status.slots_remaining < count) return false;
 
-  const supabase = getSupabaseAdmin();
+  const supabase = requireSupabaseAdmin();
   const { error } = await supabase
     .from('sellr_accounts')
     .update({
@@ -64,7 +59,7 @@ export async function releaseSlot(userId: string): Promise<boolean> {
   const status = await getSlotStatus(userId);
   if (status.slots_used <= 0) return true;
 
-  const supabase = getSupabaseAdmin();
+  const supabase = requireSupabaseAdmin();
   const { error } = await supabase
     .from('sellr_accounts')
     .update({
@@ -82,7 +77,7 @@ export async function purchaseSlots(
   slotsToAdd: number,
   tier: string,
 ): Promise<boolean> {
-  const supabase = getSupabaseAdmin();
+  const supabase = requireSupabaseAdmin();
   const status = await getSlotStatus(userId);
 
   if (status.slots_purchased === 0 && status.last_tier === null) {

@@ -1,15 +1,11 @@
 import { Router, type Request, type Response } from 'express';
 import { createClient } from '@supabase/supabase-js';
 import { requireAuthWithUser, type AuthResult } from '../middleware/auth.js';
+import { requireSupabaseAdmin } from '../lib/supabaseAdmin.js';
 
 const router = Router();
 
-function getSupabaseAdmin() {
-  return createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
+
 
 function errorResponse(res: Response, status: number, message: string, code?: string) {
   res.status(status).json({ error: message, code: code ?? message });
@@ -34,7 +30,7 @@ router.post(
     }
 
     try {
-      const supabase = getSupabaseAdmin();
+      const supabase = requireSupabaseAdmin();
 
       // Fetch the session
       const { data: session, error: sessionErr } = await supabase
@@ -145,7 +141,7 @@ router.post(
     const skipSet = new Set<string>(Array.isArray(skip_duplicate_ids) ? skip_duplicate_ids : []);
 
     try {
-      const supabase = getSupabaseAdmin();
+      const supabase = requireSupabaseAdmin();
 
       // Verify session exists
       const { data: session, error: sessionErr } = await supabase

@@ -2,17 +2,13 @@ import { Router, type Request, type Response } from 'express';
 import { createClient } from '@supabase/supabase-js';
 import { sendTemplatedEmail } from '../services/emailService.js';
 import { discogsRequest } from '../services/discogsService.js';
+import { getSupabaseAdmin } from '../lib/supabaseAdmin.js';
 
 const router = Router();
 const LOG_PREFIX = '[alerts-check]';
 const DELAY_BETWEEN_ALERTS_MS = 500;
 
-function getSupabaseAdmin() {
-  return createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
+
 
 function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));

@@ -3,17 +3,12 @@ import { createClient } from '@supabase/supabase-js';
 import { requireAuthWithUser, type AuthResult } from '../middleware/auth.js';
 import { createRateLimit } from '../middleware/rateLimit.js';
 import { requirePlan } from '../lib/subscription.js';
+import { getSupabaseAdmin } from '../lib/supabaseAdmin.js';
 
 const router = Router();
 const roomRateLimit = createRateLimit(30, 60);
 
 let _admin: ReturnType<typeof createClient> | null = null;
-function getSupabaseAdmin() {
-  if (_admin) return _admin;
-  _admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-  return _admin;
-}
-
 function getAuth(req: Request): string {
   return (req as Request & { auth: AuthResult }).auth.userId;
 }

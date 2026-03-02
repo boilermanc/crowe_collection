@@ -1,5 +1,4 @@
 import { Router, type Request, type Response } from 'express';
-import { createClient } from '@supabase/supabase-js';
 import { getStripe } from '../lib/stripe.js';
 import {
   sendSessionCreatedEmail,
@@ -16,15 +15,9 @@ import {
   runExpireSessionsTracked,
   runRekkrdConversionEmailsTracked,
 } from '../sellrCron.js';
+import { requireSupabaseAdmin } from '../lib/supabaseAdmin.js';
 
 const router = Router();
-
-function getSupabaseAdmin() {
-  return createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 // ── Simple bearer token check for Sellr admin endpoints ─────────────
 function requireSellrAdmin(req: Request, res: Response): boolean {
@@ -97,7 +90,7 @@ router.get('/api/sellr/admin/email-log', async (req: Request, res: Response) => 
     const limit = Math.min(Number(req.query.limit) || 50, 200);
     const offset = Number(req.query.offset) || 0;
 
-    const supabase = getSupabaseAdmin();
+    const supabase = requireSupabaseAdmin();
 
     let query = supabase
       .from('sellr_email_log')
@@ -131,7 +124,7 @@ router.get('/api/sellr/admin/email-log/session/:session_id', async (req: Request
 
   try {
     const { session_id } = req.params;
-    const supabase = getSupabaseAdmin();
+    const supabase = requireSupabaseAdmin();
 
     const { data, error } = await supabase
       .from('sellr_email_log')
@@ -164,7 +157,7 @@ router.get('/api/sellr/admin/orders', async (req: Request, res: Response) => {
     const statusFilter = req.query.status as string | undefined;
     const search = req.query.search as string | undefined;
 
-    const supabase = getSupabaseAdmin();
+    const supabase = requireSupabaseAdmin();
 
     let query = supabase
       .from('sellr_orders')
@@ -219,7 +212,7 @@ router.get('/api/sellr/admin/session/:session_id', async (req: Request, res: Res
 
   try {
     const { session_id } = req.params;
-    const supabase = getSupabaseAdmin();
+    const supabase = requireSupabaseAdmin();
 
     const [sessionRes, recordsRes, orderRes] = await Promise.all([
       supabase
@@ -268,7 +261,7 @@ router.get('/api/sellr/admin/analytics', async (req: Request, res: Response) => 
     const days = periodParam === '7d' ? 7 : periodParam === '90d' ? 90 : 30;
     const since = new Date(Date.now() - days * 86_400_000).toISOString();
 
-    const supabase = getSupabaseAdmin();
+    const supabase = requireSupabaseAdmin();
 
     const [
       ordersRes,
@@ -431,7 +424,7 @@ router.post('/api/sellr/admin/tools/resend-email', async (req: Request, res: Res
       return;
     }
 
-    const supabase = getSupabaseAdmin();
+    const supabase = requireSupabaseAdmin();
 
     // Fetch session
     const { data: session, error: sessErr } = await supabase
@@ -550,7 +543,7 @@ router.post('/api/sellr/admin/tools/expire-session', async (req: Request, res: R
       return;
     }
 
-    const supabase = getSupabaseAdmin();
+    const supabase = requireSupabaseAdmin();
     const { error } = await supabase
       .from('sellr_sessions')
       .update({ status: 'expired' })
@@ -580,7 +573,7 @@ router.post('/api/sellr/admin/tools/refund-order', async (req: Request, res: Res
       return;
     }
 
-    const supabase = getSupabaseAdmin();
+    const supabase = requireSupabaseAdmin();
 
     const { data: order, error: orderErr } = await supabase
       .from('sellr_orders')
@@ -639,7 +632,7 @@ router.post('/api/sellr/admin/tools/regenerate-report-token', async (req: Reques
     }
 
     const newToken = crypto.randomBytes(32).toString('hex');
-    const supabase = getSupabaseAdmin();
+    const supabase = requireSupabaseAdmin();
 
     const { error } = await supabase
       .from('sellr_orders')
@@ -697,7 +690,7 @@ router.post('/api/sellr/admin/tools/adjust-slots', async (req: Request, res: Res
     // Clamp slots_used so it never exceeds new slots_purchased
     const newUsed = Math.min(status.slots_used, newPurchased);
 
-    const supabase = getSupabaseAdmin();
+    const supabase = requireSupabaseAdmin();
     const { error } = await supabase
       .from('sellr_accounts')
       .update({
@@ -735,7 +728,7 @@ router.get('/api/sellr/admin/stats', async (req: Request, res: Response) => {
   if (!requireSellrAdmin(req, res)) return;
 
   try {
-    const supabase = getSupabaseAdmin();
+    const supabase = requireSupabaseAdmin();
 
     const [ordersRes, sessionsRes, recordsRes, sessionsWithEmailRes, paidSessionsRes] = await Promise.all([
       // Total orders + revenue

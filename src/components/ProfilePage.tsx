@@ -470,11 +470,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userId, albumCount, onClose }
           headers['Authorization'] = `Bearer ${session.access_token}`;
         }
       }
-      if (!headers['Authorization']) {
-        const secret = import.meta.env.VITE_API_SECRET;
-        if (secret) headers['Authorization'] = `Bearer ${secret}`;
-      }
-
       const response = await fetch('/api/customer-portal', {
         method: 'POST',
         headers,

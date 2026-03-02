@@ -28,13 +28,6 @@ async function fetchFromApi(): Promise<SubscriptionData> {
     }
   }
 
-  if (!headers['Authorization']) {
-    const secret = import.meta.env.VITE_API_SECRET;
-    if (secret) {
-      headers['Authorization'] = `Bearer ${secret}`;
-    }
-  }
-
   const response = await fetch('/api/subscription', { headers });
   if (!response.ok) throw new Error('Failed to fetch subscription');
   return await response.json();

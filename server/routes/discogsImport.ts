@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { createClient } from '@supabase/supabase-js';
 import { requireAuthWithUser, type AuthResult } from '../middleware/auth.js';
 import type { Request } from 'express';
+import { getSupabaseAdmin } from '../lib/supabaseAdmin.js';
 
 const LOG_PREFIX = '[discogs-import]';
 const MAX_RELEASES = 500;
@@ -9,18 +10,9 @@ const MAX_RELEASES = 500;
 // Strip Discogs artist disambiguation suffix, e.g. "Phil Collins (2)" → "Phil Collins"
 const DISCOGS_ARTIST_SUFFIX = / \(\d+\)$/;
 
-// ── Supabase admin client ─────────────────────────────────────────
 
-let _supabaseAdmin: ReturnType<typeof createClient> | null = null;
 
-function getSupabaseAdmin() {
-  if (_supabaseAdmin) return _supabaseAdmin;
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error(`${LOG_PREFIX} SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY not configured`);
-  _supabaseAdmin = createClient(url, key);
-  return _supabaseAdmin;
-}
+
 
 // ── Types ─────────────────────────────────────────────────────────
 

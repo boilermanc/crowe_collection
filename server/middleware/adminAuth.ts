@@ -1,19 +1,8 @@
 import type { Request, Response, NextFunction } from 'express';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseAdmin } from '../lib/supabaseAdmin.js';
 
 export interface AdminAuthResult {
   userId: string;
-}
-
-let _supabaseAdmin: ReturnType<typeof createClient> | null = null;
-
-function getSupabaseAdmin() {
-  if (_supabaseAdmin) return _supabaseAdmin;
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
-  _supabaseAdmin = createClient(url, key);
-  return _supabaseAdmin;
 }
 
 /**

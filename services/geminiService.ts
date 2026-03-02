@@ -8,19 +8,11 @@ async function getAuthHeaders(): Promise<Record<string, string>> {
     'Content-Type': 'application/json',
   };
 
-  // Prefer Supabase session JWT for per-user identification
   if (supabase) {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.access_token) {
       headers['Authorization'] = `Bearer ${session.access_token}`;
-      return headers;
     }
-  }
-
-  // Fallback to legacy API_SECRET during migration
-  const secret = import.meta.env.VITE_API_SECRET;
-  if (secret) {
-    headers['Authorization'] = `Bearer ${secret}`;
   }
 
   return headers;

@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { getSupabaseAdmin } from '../lib/supabaseAdmin.js';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -35,14 +36,7 @@ export type NewGearCatalogEntry = Omit<
 
 let _admin: ReturnType<typeof createClient> | null = null;
 
-function getSupabaseAdmin() {
-  if (_admin) return _admin;
-  _admin = createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-  return _admin;
-}
+
 
 const TABLE = 'gear_catalog';
 

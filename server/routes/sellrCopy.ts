@@ -1,6 +1,6 @@
 import { Router, type Request, type Response } from 'express';
-import { createClient } from '@supabase/supabase-js';
 import { ai } from '../lib/gemini.js';
+import { requireSupabaseAdmin } from '../lib/supabaseAdmin.js';
 
 const router = Router();
 
@@ -26,13 +26,6 @@ const CONDITION_DESCRIPTIONS: Record<string, string> = {
   F: 'Fair, plays but significantly damaged',
   P: 'Poor, barely playable',
 };
-
-function getSupabaseAdmin() {
-  return createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
 
 function errorResponse(res: Response, code: number, message: string) {
   res.status(code).json({ error: message, code });
@@ -116,7 +109,7 @@ router.post('/api/sellr/copy/record/:record_id', async (req: Request, res: Respo
       return;
     }
 
-    const supabase = getSupabaseAdmin();
+    const supabase = requireSupabaseAdmin();
 
     // Validate session is paid
     const { data: session, error: sessionErr } = await supabase
@@ -187,7 +180,7 @@ router.post('/api/sellr/copy/bulk/:session_id', async (req: Request, res: Respon
     return;
   }
 
-  const supabase = getSupabaseAdmin();
+  const supabase = requireSupabaseAdmin();
 
   // Validate session is paid
   const { data: session, error: sessionErr } = await supabase
@@ -304,7 +297,7 @@ router.post('/api/sellr/copy/collection/:session_id', async (req: Request, res: 
       return;
     }
 
-    const supabase = getSupabaseAdmin();
+    const supabase = requireSupabaseAdmin();
 
     // Validate session is paid
     const { data: session, error: sessionErr } = await supabase

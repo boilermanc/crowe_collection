@@ -1,13 +1,9 @@
 import cron from 'node-cron';
 import { createClient } from '@supabase/supabase-js';
 import { sendAbandonedSessionEmail, sendRekkrdConversionEmail } from './sellrEmails.js';
+import { requireSupabaseAdmin } from './lib/supabaseAdmin.js';
 
-function getSupabaseAdmin() {
-  return createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
+
 
 // ── Cron job history (in-memory, resets on server restart) ──────────
 
@@ -51,7 +47,7 @@ export function getCronJobHistory(): Record<string, JobHistory> {
 // ── Job 1: Abandoned session emails (every hour) ────────────────────
 
 async function runAbandonedSessionEmailsCounted(): Promise<number> {
-  const supabase = getSupabaseAdmin();
+  const supabase = requireSupabaseAdmin();
 
   // Sessions created 20–28 hours ago that are still active with an email
   const now = new Date();
@@ -113,7 +109,7 @@ async function runAbandonedSessionEmailsCounted(): Promise<number> {
 // ── Job 2: Expire old sessions (daily at 2am) ──────────────────────
 
 async function runExpireSessionsCounted(): Promise<number> {
-  const supabase = getSupabaseAdmin();
+  const supabase = requireSupabaseAdmin();
 
   const { data, error } = await supabase
     .from('sellr_sessions')
@@ -137,7 +133,7 @@ async function runExpireSessionsCounted(): Promise<number> {
 // ── Job 3: Rekkrd conversion emails (every hour) ───────────────────
 
 async function runRekkrdConversionEmailsCounted(): Promise<number> {
-  const supabase = getSupabaseAdmin();
+  const supabase = requireSupabaseAdmin();
 
   // Orders completed 47–49 hours ago
   const now = new Date();

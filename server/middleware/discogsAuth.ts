@@ -2,21 +2,13 @@ import type { Request, Response, NextFunction } from 'express';
 import { createClient } from '@supabase/supabase-js';
 import { getAuthenticatedIdentity } from '../services/discogsOAuth.js';
 import type { AuthResult } from './auth.js';
+import { getSupabaseAdmin } from '../lib/supabaseAdmin.js';
 
 const LOG_PREFIX = '[discogs-auth-mw]';
 
-// ── Supabase admin client ─────────────────────────────────────────
 
-let _supabaseAdmin: ReturnType<typeof createClient> | null = null;
 
-function getSupabaseAdmin() {
-  if (_supabaseAdmin) return _supabaseAdmin;
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error(`${LOG_PREFIX} SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY not configured`);
-  _supabaseAdmin = createClient(url, key);
-  return _supabaseAdmin;
-}
+
 
 // ── Types ─────────────────────────────────────────────────────────
 

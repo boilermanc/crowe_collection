@@ -1,16 +1,9 @@
 import { Router } from 'express';
-import { createClient } from '@supabase/supabase-js';
 import { requireAuthWithUser, type AuthResult } from '../middleware/auth.js';
 import { getStripe } from '../lib/stripe.js';
+import { requireSupabaseAdmin } from '../lib/supabaseAdmin.js';
 
 const router = Router();
-
-function getSupabaseAdmin() {
-  return createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
 
 router.post(
   '/api/customer-portal',
@@ -19,7 +12,7 @@ router.post(
     const { userId } = (req as typeof req & { auth: AuthResult }).auth;
 
     try {
-      const supabase = getSupabaseAdmin();
+      const supabase = requireSupabaseAdmin();
 
       const { data: profile } = await supabase
         .from('profiles')
