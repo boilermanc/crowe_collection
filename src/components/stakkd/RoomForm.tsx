@@ -140,7 +140,7 @@ const RoomForm: React.FC<RoomFormProps> = ({ mode, initialData, onSave, onCancel
       role="dialog"
       aria-modal="true"
       aria-label={mode === 'create' ? 'Create new room' : 'Edit room'}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-th-bg/95 p-4 backdrop-blur-xl animate-in fade-in duration-300 outline-none"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-th-bg/95 p-4 backdrop-blur-xl animate-in fade-in duration-300 outline-none"
     >
       <div className="relative w-full max-w-lg max-h-[95vh] overflow-y-auto rounded-2xl border border-th-surface/[0.10] bg-th-bg shadow-2xl">
         {/* Header */}

@@ -33,7 +33,7 @@ const DeleteDialog: React.FC<DeleteDialogProps> = ({ room, onConfirm, onCancel }
       role="dialog"
       aria-modal="true"
       aria-label={`Delete ${room.name}`}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm outline-none"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm outline-none"
     >
       <div className="w-full max-w-sm rounded-2xl border border-th-surface/[0.10] bg-th-bg p-6 shadow-2xl">
         <h3 className="text-base font-semibold text-th-text mb-2">Delete {room.name}?</h3>
@@ -448,7 +448,7 @@ const MyRoomsSection: React.FC = () => {
 
       {/* Loading overlay (features or layout) */}
       {(featuresLoading || layoutLoading) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-th-bg/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-th-bg/80 backdrop-blur-sm">
           <div className="w-6 h-6 border-2 border-[#dd6e42] border-t-transparent rounded-full animate-spin" />
         </div>
       )}

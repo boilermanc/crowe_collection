@@ -229,7 +229,7 @@ const RoomPlacementView: React.FC<RoomPlacementViewProps> = ({ room, features, o
       role="dialog"
       aria-modal="true"
       aria-label={`AI room layout for ${room.name}`}
-      className="fixed inset-0 z-50 flex flex-col bg-th-bg/95 backdrop-blur-xl animate-in fade-in duration-300 outline-none"
+      className="fixed inset-0 z-[60] flex flex-col bg-th-bg/95 backdrop-blur-xl animate-in fade-in duration-300 outline-none"
     >
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-th-surface/10 bg-th-bg shrink-0">
