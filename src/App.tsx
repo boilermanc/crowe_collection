@@ -1089,7 +1089,7 @@ const App: React.FC = () => {
           importedAlbumIds={showImportRings ? importedAlbumIds : undefined}
         />
       ) : currentView === 'stakkd' ? (
-        <StakkdPage onUpgradeRequired={(feature: string) => setUpgradeFeature(feature)} />
+        <StakkdPage onUpgradeRequired={(feature: string) => setUpgradeFeature(feature)} onGoHome={resetView} />
       ) : currentView === 'discogs' ? (
         <main className="max-w-7xl mx-auto px-4 md:px-6 mt-8 space-y-8 pb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

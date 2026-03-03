@@ -2,11 +2,12 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 
 interface StakkdOnboardingProps {
   onComplete: () => void;
+  onGoHome?: () => void;
 }
 
 const TOTAL_STEPS = 4;
 
-const StakkdOnboarding: React.FC<StakkdOnboardingProps> = ({ onComplete }) => {
+const StakkdOnboarding: React.FC<StakkdOnboardingProps> = ({ onComplete, onGoHome }) => {
   const [step, setStep] = useState(0);
   const [fadeState, setFadeState] = useState<'in' | 'out'>('in');
   const pendingStepRef = useRef<number | null>(null);
@@ -47,6 +48,30 @@ const StakkdOnboarding: React.FC<StakkdOnboardingProps> = ({ onComplete }) => {
 
   return (
     <div className="fixed inset-0 z-[60] bg-th-bg/95 backdrop-blur-xl flex flex-col items-center justify-center p-4">
+
+      {/* Home button */}
+      {onGoHome && (
+        <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
+          <button
+            onClick={onGoHome}
+            aria-label="Rekkrd home"
+            title="Back to home"
+            className="w-10 h-10 bg-gradient-to-tr from-[#dd6e42] to-[#4f6d7a] rounded-lg flex items-center justify-center shadow-lg cursor-pointer active:scale-90 transition-transform flex-shrink-0 border-none p-0"
+          >
+            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="11" fill="#f0a882"/>
+              <circle cx="12" cy="12" r="9.5" fill="none" stroke="#d48a6a" strokeWidth="0.4" opacity="0.5"/>
+              <circle cx="12" cy="12" r="8" fill="none" stroke="#d48a6a" strokeWidth="0.3" opacity="0.4"/>
+              <circle cx="12" cy="12" r="6.5" fill="none" stroke="#d48a6a" strokeWidth="0.3" opacity="0.3"/>
+              <circle cx="12" cy="12" r="5.2" fill="#c45a30"/>
+              <text x="12" y="12.5" textAnchor="middle" dominantBaseline="central" fontFamily="Georgia,serif" fontWeight="bold" fontSize="7" fill="#f0a882">R</text>
+            </svg>
+          </button>
+          <span className="font-label text-lg font-bold tracking-tighter text-th-text">
+            REKK<span className="text-[#c45a30]">R</span>D
+          </span>
+        </div>
+      )}
 
       {/* Progress bar */}
       <div className="w-full max-w-lg mb-8">

@@ -200,7 +200,11 @@ const RoomSkeleton: React.FC = () => (
 
 // ── Main Section ─────────────────────────────────────────────────────
 
-const MyRoomsSection: React.FC = () => {
+interface MyRoomsSectionProps {
+  onGoHome?: () => void;
+}
+
+const MyRoomsSection: React.FC<MyRoomsSectionProps> = ({ onGoHome }) => {
   const { rooms, loading, createRoom, updateRoom, deleteRoom, addFeature, removeFeature } = useRooms();
   const { showToast } = useToast();
   const { canUse } = useSubscription();
@@ -464,7 +468,7 @@ const MyRoomsSection: React.FC = () => {
 
       {/* Onboarding overlay (first visit only, Enthusiast users) */}
       {showOnboarding && hasAccess && (
-        <RoomOnboarding onComplete={handleOnboardingComplete} />
+        <RoomOnboarding onComplete={handleOnboardingComplete} onGoHome={onGoHome} />
       )}
 
       {/* User guide modal (always accessible) */}

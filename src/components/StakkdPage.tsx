@@ -126,9 +126,10 @@ function hashGear(gear: Gear[]): string {
 
 interface StakkdPageProps {
   onUpgradeRequired?: (feature: string) => void;
+  onGoHome?: () => void;
 }
 
-const StakkdPage: React.FC<StakkdPageProps> = ({ onUpgradeRequired }) => {
+const StakkdPage: React.FC<StakkdPageProps> = ({ onUpgradeRequired, onGoHome }) => {
   const { showToast } = useToast();
   const { canUse, gearLimitReached: subGearLimitReached, gearLimit, refresh: refreshSubscription } = useSubscription();
   const [gear, setGear] = useState<Gear[]>([]);
@@ -704,7 +705,7 @@ const StakkdPage: React.FC<StakkdPageProps> = ({ onUpgradeRequired }) => {
 
         {/* Onboarding overlay (first visit only) */}
         {showOnboarding && (
-          <StakkdOnboarding onComplete={handleOnboardingComplete} />
+          <StakkdOnboarding onComplete={handleOnboardingComplete} onGoHome={onGoHome} />
         )}
       </div>
     );
@@ -1065,7 +1066,7 @@ const StakkdPage: React.FC<StakkdPageProps> = ({ onUpgradeRequired }) => {
       )}
 
       {/* My Rooms section */}
-      <MyRoomsSection />
+      <MyRoomsSection onGoHome={onGoHome} />
 
       <AddGearMethodModal
         isOpen={methodModalOpen}
@@ -1150,7 +1151,7 @@ const StakkdPage: React.FC<StakkdPageProps> = ({ onUpgradeRequired }) => {
 
       {/* Onboarding overlay (first visit only) */}
       {showOnboarding && (
-        <StakkdOnboarding onComplete={handleOnboardingComplete} />
+        <StakkdOnboarding onComplete={handleOnboardingComplete} onGoHome={onGoHome} />
       )}
 
       {/* User guide modal (always accessible) */}
