@@ -8,6 +8,7 @@ import {
   sendAdminOrderAlert,
 } from '../sellrEmails.js';
 import crypto from 'crypto';
+import { timingSafeCompare } from '../utils/timingSafeCompare.js';
 import { getSlotStatus } from '../sellrSlots.js';
 import {
   getCronJobHistory,
@@ -19,12 +20,6 @@ import { requireSupabaseAdmin } from '../lib/supabaseAdmin.js';
 
 const router = Router();
 
-// ── Timing-safe string comparison ────────────────────────────────────
-function safeCompare(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
-}
-
 // ── Simple bearer token check for Sellr admin endpoints ─────────────
 function requireSellrAdmin(req: Request, res: Response): boolean {
   const token = process.env.SELLR_ADMIN_TOKEN;
@@ -35,7 +30,7 @@ function requireSellrAdmin(req: Request, res: Response): boolean {
 
   const provided = req.headers.authorization ?? '';
   const expected = `Bearer ${token}`;
-  if (!provided || !safeCompare(provided, expected)) {
+  if (!provided || !timingSafeCompare(provided, expected)) {
     res.status(401).json({ error: 'Unauthorized' });
     return false;
   }

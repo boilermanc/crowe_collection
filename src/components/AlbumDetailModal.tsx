@@ -82,7 +82,7 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
         setShelfPlacement(null);
         setHasShelfConfig(false);
       }
-    });
+    }).catch(console.error);
     return () => { cancelled = true; };
   }, [album?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 

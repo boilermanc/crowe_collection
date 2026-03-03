@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { requireAdmin } from '../middleware/adminAuth.js';
+import { createRateLimit } from '../middleware/rateLimit.js';
+import { timingSafeCompare } from '../utils/timingSafeCompare.js';
 import {
   getPublishedPosts,
   getPostBySlug,
@@ -15,6 +17,9 @@ import {
 } from '../services/blogService.js';
 
 const router = Router();
+
+const VALID_CATEGORIES = ['gear', 'collecting', 'culture', 'how-to', 'news', 'reviews', 'general'];
+const blogRateLimit = createRateLimit(30, 60);
 
 // ── Admin routes (before :slug catch-all) ──────────────────────────
 
@@ -44,9 +49,13 @@ router.get('/api/blog/admin/posts/:slug', requireAdmin, async (req, res) => {
 
 router.post('/api/blog/admin/posts', requireAdmin, async (req, res) => {
   try {
-    const { title, body } = req.body;
+    const { title, body, category } = req.body;
     if (!title || typeof title !== 'string' || !body || typeof body !== 'string') {
       res.status(400).json({ error: 'title and body are required strings' });
+      return;
+    }
+    if (category && !VALID_CATEGORIES.includes(category)) {
+      res.status(400).json({ error: 'Invalid category' });
       return;
     }
     const post = await createPost(req.body);
@@ -59,6 +68,11 @@ router.post('/api/blog/admin/posts', requireAdmin, async (req, res) => {
 
 router.put('/api/blog/admin/posts/:id', requireAdmin, async (req, res) => {
   try {
+    const { category } = req.body;
+    if (category && !VALID_CATEGORIES.includes(category)) {
+      res.status(400).json({ error: 'Invalid category' });
+      return;
+    }
     const post = await updatePost(req.params.id as string, req.body);
     res.json(post);
   } catch (error) {
@@ -129,10 +143,10 @@ router.post('/api/blog/generate-image', requireAdmin, async (req, res) => {
   try {
     // Step 1: Generate image prompt via Gemini text model
     const promptResp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`,
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': geminiKey },
         body: JSON.stringify({
           systemInstruction: {
             parts: [{
@@ -162,10 +176,10 @@ router.post('/api/blog/generate-image', requireAdmin, async (req, res) => {
 
     // Step 2: Generate image via Gemini image model
     const imageResp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${geminiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent`,
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': geminiKey },
         body: JSON.stringify({
           contents: [{ parts: [{ text: imagePrompt }] }],
           generationConfig: {
@@ -273,7 +287,7 @@ router.post('/api/blog/webhook', async (req, res) => {
   }
 
   const authHeader = req.headers.authorization;
-  if (!authHeader || authHeader !== `Bearer ${secret}`) {
+  if (!authHeader || !timingSafeCompare(authHeader, `Bearer ${secret}`)) {
     res.status(401).json({ error: 'Unauthorized' });
     return;
   }
@@ -297,7 +311,7 @@ router.post('/api/blog/webhook', async (req, res) => {
 
 // ── Public routes (after admin/webhook to avoid :slug catching them) ─
 
-router.get('/api/blog', async (req, res) => {
+router.get('/api/blog', blogRateLimit, async (req, res) => {
   try {
     const limit = parseInt(req.query.limit as string) || 10;
     const offset = parseInt(req.query.offset as string) || 0;
@@ -313,7 +327,7 @@ router.get('/api/blog', async (req, res) => {
   }
 });
 
-router.get('/api/blog/categories', async (_req, res) => {
+router.get('/api/blog/categories', blogRateLimit, async (_req, res) => {
   try {
     const categories = await getCategories();
     res.json({ categories });
@@ -323,7 +337,7 @@ router.get('/api/blog/categories', async (_req, res) => {
   }
 });
 
-router.get('/api/blog/tags', async (req, res) => {
+router.get('/api/blog/tags', blogRateLimit, async (req, res) => {
   try {
     const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
     const tags = await getPopularTags(limit);
@@ -334,7 +348,7 @@ router.get('/api/blog/tags', async (req, res) => {
   }
 });
 
-router.get('/api/blog/:slug', async (req, res) => {
+router.get('/api/blog/:slug', blogRateLimit, async (req, res) => {
   try {
     const post = await getPostBySlug(req.params.slug);
     if (!post) {

@@ -286,7 +286,7 @@ const PlaylistStudio: React.FC<PlaylistStudioProps> = ({ albums, onClose, seedAl
         <div className="space-y-12">
           {playlist?.items.map((item, idx) => (
             <div key={idx} className="flex gap-8 md:gap-12 items-center break-inside-avoid">
-              <img src={proxyImageUrl(item.cover_url)} crossOrigin="anonymous" loading="lazy" decoding="async" className="w-24 h-24 md:w-40 md:h-40 object-cover border-4 border-[#2d3a3e] shadow-[8px_8px_0_rgba(0,0,0,0.1)]" />
+              <img src={proxyImageUrl(item.cover_url)} alt={`Cover for ${item.albumTitle} by ${item.artist}`} crossOrigin="anonymous" loading="lazy" decoding="async" className="w-24 h-24 md:w-40 md:h-40 object-cover border-4 border-[#2d3a3e] shadow-[8px_8px_0_rgba(0,0,0,0.1)]" />
               <div>
                 <span className="text-sm md:text-lg font-black opacity-20 block mb-1">TRACK {idx + 1}</span>
                 <h3 className="text-2xl md:text-4xl font-bold leading-tight">

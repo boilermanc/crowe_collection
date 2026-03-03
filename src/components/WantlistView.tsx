@@ -43,7 +43,7 @@ const WantlistView: React.FC<WantlistViewProps> = ({ userId, onMarkAsOwned, onRe
     [alerts],
   );
 
-  const fetchAlerts = useCallback(async () => {
+  const fetchAlerts = useCallback(async (signal?: AbortSignal) => {
     try {
       const session = await supabase?.auth.getSession();
       const token = session?.data?.session?.access_token;
@@ -51,12 +51,14 @@ const WantlistView: React.FC<WantlistViewProps> = ({ userId, onMarkAsOwned, onRe
 
       const res = await fetch('/api/price-alerts', {
         headers: { Authorization: `Bearer ${token}` },
+        signal,
       });
       if (res.ok) {
         const body = (await res.json()) as { alerts: PriceAlert[] };
         setAlerts(body.alerts);
       }
-    } catch {
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') return;
       // Non-fatal — default to empty
     } finally {
       setAlertsLoading(false);
@@ -78,8 +80,10 @@ const WantlistView: React.FC<WantlistViewProps> = ({ userId, onMarkAsOwned, onRe
   }, []);
 
   useEffect(() => {
+    const controller = new AbortController();
     fetchWantlist();
-    fetchAlerts();
+    fetchAlerts(controller.signal);
+    return () => controller.abort();
   }, [fetchWantlist, fetchAlerts, userId]);
 
   // Fire-and-forget: fetch prices + cover art for newly added items, then refresh the list.
@@ -640,7 +644,7 @@ const WantlistView: React.FC<WantlistViewProps> = ({ userId, onMarkAsOwned, onRe
                   const needsPricing = data
                     .filter(item => item.discogs_release_id !== null && item.price_median === null)
                     .map(item => item.discogs_release_id!);
-                  backfillPricing(needsPricing);
+                  backfillPricing(needsPricing).catch(console.error);
                 }}
               />
             </div>

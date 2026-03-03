@@ -174,9 +174,22 @@ export async function createPost(input: CreatePostInput): Promise<BlogPost> {
   if (!supabase) throw new Error('Supabase admin not configured');
   const status = input.status ?? 'draft';
 
+  // Generate a unique slug — append -2, -3, etc. if taken
+  let slug = slugify(input.title);
+  let suffix = 2;
+  while (true) {
+    const { count } = await supabase
+      .from('blog_posts')
+      .select('id', { count: 'exact', head: true })
+      .eq('slug', slug);
+    if (!count) break;
+    slug = `${slugify(input.title)}-${suffix}`;
+    suffix++;
+  }
+
   const row = {
     title: input.title,
-    slug: slugify(input.title),
+    slug,
     body: input.body,
     excerpt: input.excerpt ?? null,
     featured_image: input.featured_image ?? null,

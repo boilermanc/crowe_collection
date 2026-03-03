@@ -58,8 +58,8 @@ router.post(
 
       const urlErr = validateStringLength(imageUrl, 2048, 'imageUrl');
       if (urlErr) { res.status(400).json({ error: urlErr }); return; }
-      const idErr = validateStringLength(albumId, 500, 'albumId');
-      if (idErr) { res.status(400).json({ error: idErr }); return; }
+      const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!UUID_REGEX.test(albumId)) { res.status(400).json({ error: 'Invalid album ID' }); return; }
 
       // Validate the image URL to prevent SSRF
       let parsed: URL;

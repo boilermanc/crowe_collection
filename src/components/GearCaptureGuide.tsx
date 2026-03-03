@@ -168,14 +168,16 @@ const GearCaptureGuide: React.FC<GearCaptureGuideProps> = ({ isOpen, onClose, on
           videoRef.current.play().catch(() => {});
           setIsStreaming(true);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Camera access error:', err);
-        if (err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError') {
+        const message = err instanceof Error ? err.message : 'Unknown error';
+        const name = err instanceof Error ? err.name : '';
+        if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
           setCameraError('Camera access denied. Please allow camera access in your browser settings.');
-        } else if (err?.name === 'NotFoundError' || err?.name === 'DevicesNotFoundError') {
+        } else if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
           setCameraError('No camera found on this device.');
         } else {
-          setCameraError(err?.message || 'Could not access camera.');
+          setCameraError(message || 'Could not access camera.');
         }
       }
     }
