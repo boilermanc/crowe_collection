@@ -371,17 +371,19 @@ const ListeningRoomSession: React.FC<ListeningRoomSessionProps> = ({
                             src={proxyImageUrl(album.cover_url)}
                             alt=""
                             className="w-full h-full object-cover"
-                            loading="lazy"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                              (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                            }}
                           />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <svg className="w-5 h-5 text-th-text3/25" viewBox="0 0 24 24" fill="currentColor">
-                              <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="1.5" />
-                              <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" strokeWidth="1.5" />
-                              <circle cx="12" cy="12" r="1" />
-                            </svg>
-                          </div>
-                        )}
+                        ) : null}
+                        <div className={`${album.cover_url ? 'hidden' : ''} w-full h-full flex items-center justify-center`}>
+                          <svg className="w-5 h-5 text-th-text3/40" viewBox="0 0 24 24" fill="currentColor">
+                            <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                            <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                            <circle cx="12" cy="12" r="1" />
+                          </svg>
+                        </div>
                       </div>
 
                       {/* Info */}

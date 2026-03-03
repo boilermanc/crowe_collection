@@ -209,6 +209,11 @@ const ListeningRoomAlbumDetail: React.FC<ListeningRoomAlbumDetailProps> = ({
                     src={proxyImageUrl(album.cover_url)}
                     alt={`Album cover for ${album.title} by ${album.artist}`}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                      const placeholder = (e.target as HTMLImageElement).parentElement?.querySelector('[data-placeholder]');
+                      placeholder?.classList.remove('hidden');
+                    }}
                   />
                   <button
                     type="button"
@@ -219,15 +224,14 @@ const ListeningRoomAlbumDetail: React.FC<ListeningRoomAlbumDetailProps> = ({
                     <Maximize2 className="w-3.5 h-3.5" />
                   </button>
                 </>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <svg className="w-16 h-16 text-th-text3/25" viewBox="0 0 24 24" fill="currentColor">
-                    <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="1.5" />
-                    <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" strokeWidth="1.5" />
-                    <circle cx="12" cy="12" r="1" />
-                  </svg>
-                </div>
-              )}
+              ) : null}
+              <div data-placeholder className={`${album.cover_url ? 'hidden' : ''} w-full h-full flex items-center justify-center`}>
+                <svg className="w-16 h-16 text-th-text3/40" viewBox="0 0 24 24" fill="currentColor">
+                  <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                  <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                  <circle cx="12" cy="12" r="1" />
+                </svg>
+              </div>
             </div>
           </div>
 

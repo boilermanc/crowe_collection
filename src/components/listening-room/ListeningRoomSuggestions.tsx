@@ -151,18 +151,21 @@ const ListeningRoomSuggestions: React.FC<ListeningRoomSuggestionsProps> = ({
                       ambientMode ? 'shadow-md shadow-[#dd6e42]/10' : ''
                     }`}
                     loading="lazy"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                      (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                    }}
                   />
-                ) : (
-                  <div className={`w-full h-full flex items-center justify-center ${
-                    ambientMode ? 'bg-[#1a1a1a]' : 'bg-th-bg2/60'
-                  }`}>
-                    <svg className="w-6 h-6 text-th-text3/25" viewBox="0 0 24 24" fill="currentColor">
-                      <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="1.5" />
-                      <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" strokeWidth="1.5" />
-                      <circle cx="12" cy="12" r="1" />
-                    </svg>
-                  </div>
-                )}
+                ) : null}
+                <div className={`${album.cover_url ? 'hidden' : ''} w-full h-full flex items-center justify-center ${
+                  ambientMode ? 'bg-[#1a1a1a]' : 'bg-th-bg2/60'
+                }`}>
+                  <svg className="w-6 h-6 text-th-text3/40" viewBox="0 0 24 24" fill="currentColor">
+                    <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                    <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                    <circle cx="12" cy="12" r="1" />
+                  </svg>
+                </div>
               </button>
               <button
                 type="button"
