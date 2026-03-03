@@ -204,7 +204,7 @@ export interface ScanConfirmation {
 
 /** Shape returned by the /api/identify-gear endpoint. */
 export interface IdentifiedGear {
-  category: string;
+  category: GearCategory;
   brand: string;
   model: string;
   year: string;

@@ -84,7 +84,7 @@ const App: React.FC = () => {
   const [sortBy, setSortBy] = useState<SortOption>('recent');
 
   // Sellr import highlighting
-  const [importedAlbumIds, setImportedAlbumIds] = useState<Set<string>>(() => {
+  const [importedAlbumIds] = useState<Set<string>>(() => {
     try {
       const raw = localStorage.getItem('rekkrd_imported_album_ids');
       if (raw) {
@@ -97,11 +97,12 @@ const App: React.FC = () => {
   });
   const [showImportBanner, setShowImportBanner] = useState(importedAlbumIds.size > 0);
   const [showImportedOnly, setShowImportedOnly] = useState(false);
+  const [showImportRings, setShowImportRings] = useState(importedAlbumIds.size > 0);
 
   // Auto-clear highlight rings after 3 seconds
   useEffect(() => {
     if (importedAlbumIds.size === 0) return;
-    const timer = setTimeout(() => setImportedAlbumIds(new Set()), 3000);
+    const timer = setTimeout(() => setShowImportRings(false), 3000);
     return () => clearTimeout(timer);
   }, [importedAlbumIds.size]);
 
@@ -318,7 +319,6 @@ const App: React.FC = () => {
     (async () => {
       try {
         const existing = await getProfile(user.id);
-        console.log('[onboarding] profile check:', existing ? 'exists' : 'new user', { onboarding_completed: existing?.onboarding_completed });
         if (!existing) {
           // Capture UTM params from sessionStorage (set by /welcome page)
           const utmFields: Record<string, string> = {};
@@ -336,15 +336,11 @@ const App: React.FC = () => {
           for (const key of ['utm_source', 'utm_medium', 'utm_campaign'] as const) {
             sessionStorage.removeItem(key);
           }
-          console.log('[onboarding] new user → showing wizard');
           setShowOnboarding(true);
           return;
         }
         if (!existing.onboarding_completed) {
-          console.log('[onboarding] incomplete → showing wizard');
           setShowOnboarding(true);
-        } else {
-          console.log('[onboarding] already completed → skipping wizard');
         }
       } catch (err) {
         console.error('[onboarding] error:', err);
@@ -498,17 +494,10 @@ const App: React.FC = () => {
     [albums]
   );
 
-  // Set of imported IDs that persists for the "View imported" filter
-  // (separate from importedAlbumIds which clears after 3s for the ring animation)
-  const [importedIdSet] = useState<Set<string>>(() => {
-    // Snapshot the initial imported IDs before the 3s timer clears them
-    return new Set(importedAlbumIds);
-  });
-
   const filteredAlbums = useMemo(() => {
     let result = albums.filter(a => {
       // Sellr import filter — takes priority, skips other filters
-      if (showImportedOnly) return importedIdSet.has(a.id);
+      if (showImportedOnly) return importedAlbumIds.has(a.id);
 
       const query = searchQuery.toLowerCase();
       const matchesSearch =
@@ -536,7 +525,7 @@ const App: React.FC = () => {
     });
 
     return result;
-  }, [albums, searchQuery, yearRange, favoritesOnly, formatFilter, sortBy, showImportedOnly, importedIdSet]);
+  }, [albums, searchQuery, yearRange, favoritesOnly, formatFilter, sortBy, showImportedOnly, importedAlbumIds]);
 
   // Reset grid page when filters change
   useEffect(() => {
@@ -586,14 +575,12 @@ const App: React.FC = () => {
     return (
       <OnboardingWizard
         onComplete={(startAction, selectedTier, priceId) => {
-          console.log('[onboarding] onComplete fired', { startAction, selectedTier, priceId });
           setShowOnboarding(false);
           setCurrentView('landing');
 
           if (selectedTier === 'curator' || selectedTier === 'enthusiast') {
             setPendingPriceId(priceId ?? null);
             setTimeout(() => {
-              console.log('[onboarding] paid tier selected → opening UpgradeModal', { priceId });
               setUpgradeFeature('plan_upgrade');
             }, 100);
           } else if (startAction === 'scan') {
@@ -1099,7 +1086,7 @@ const App: React.FC = () => {
           favoritesOnly={favoritesOnly}
           onToggleFavoritesFilter={() => setFavoritesOnly(prev => !prev)}
           searchQuery={searchQuery}
-          importedAlbumIds={importedAlbumIds}
+          importedAlbumIds={showImportRings ? importedAlbumIds : undefined}
         />
       ) : currentView === 'stakkd' ? (
         <StakkdPage onUpgradeRequired={(feature: string) => setUpgradeFeature(feature)} />
@@ -1179,7 +1166,7 @@ const App: React.FC = () => {
       ) : (
         <main className="max-w-7xl mx-auto px-4 md:px-6 mt-8">
           {/* Sellr import banner */}
-          {showImportBanner && importedIdSet.size > 0 && (
+          {showImportBanner && importedAlbumIds.size > 0 && (
             <div className="mb-4 flex items-center gap-3 rounded-lg bg-[#6B8F71] text-white px-4 py-3 text-sm">
               <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <circle cx="12" cy="12" r="10" />
@@ -1187,7 +1174,7 @@ const App: React.FC = () => {
                 <line x1="12" y1="2" x2="12" y2="5" />
               </svg>
               <span className="flex-1">
-                {importedIdSet.size} record{importedIdSet.size !== 1 ? 's' : ''} imported from your Sellr appraisal.
+                {importedAlbumIds.size} record{importedAlbumIds.size !== 1 ? 's' : ''} imported from your Sellr appraisal.
               </span>
               <button
                 onClick={() => { setShowImportedOnly(true); }}
@@ -1252,7 +1239,7 @@ const App: React.FC = () => {
               )}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-8">
                 {paginatedAlbums.map(album => (
-                  <AlbumCard key={album.id} album={album} onDelete={handleDelete} onSelect={setSelectedAlbum} onAddToWantlist={handleAddToWantlist} isImported={importedAlbumIds.has(album.id)} spinningAlbumId={spinningAlbumId} />
+                  <AlbumCard key={album.id} album={album} onDelete={handleDelete} onSelect={setSelectedAlbum} onAddToWantlist={handleAddToWantlist} isImported={showImportRings && importedAlbumIds.has(album.id)} spinningAlbumId={spinningAlbumId} />
                 ))}
               </div>
               <Pagination

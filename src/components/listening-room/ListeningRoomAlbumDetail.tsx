@@ -56,7 +56,6 @@ const ListeningRoomAlbumDetail: React.FC<ListeningRoomAlbumDetailProps> = ({
   };
 
   const handleAddToSession = () => {
-    console.log('Add to session:', album.artist, '–', album.title);
     onAddToSession?.(album);
   };
 

@@ -379,7 +379,7 @@ const GearCaptureGuide: React.FC<GearCaptureGuideProps> = ({ isOpen, onClose, on
               {/* Capture preview thumbnail */}
               {frontImage && (
                 <div className="absolute bottom-3 left-3 w-16 h-16 rounded-lg overflow-hidden border-2 border-emerald-400 shadow-lg">
-                  <img src={frontImage} alt="Front panel captured" loading="lazy" className="w-full h-full object-cover" />
+                  <img src={frontImage} alt="Front panel captured" loading="lazy" decoding="async" className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-emerald-400/20 flex items-center justify-center">
                     <svg className="w-6 h-6 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -460,7 +460,7 @@ const GearCaptureGuide: React.FC<GearCaptureGuideProps> = ({ isOpen, onClose, on
               {/* Capture preview thumbnail */}
               {labelImage && (
                 <div className="absolute bottom-3 left-3 w-16 h-16 rounded-lg overflow-hidden border-2 border-emerald-400 shadow-lg">
-                  <img src={labelImage} alt="Back label captured" loading="lazy" className="w-full h-full object-cover" />
+                  <img src={labelImage} alt="Back label captured" loading="lazy" decoding="async" className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-emerald-400/20 flex items-center justify-center">
                     <svg className="w-6 h-6 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />

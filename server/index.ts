@@ -114,7 +114,20 @@ app.use((req, _res, next) => {
 });
 
 // Security headers
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "https://js.stripe.com", "https://challenges.cloudflare.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      connectSrc: ["'self'", "https://api.stripe.com", "https://*.supabase.co"],
+      frameSrc: ["https://js.stripe.com", "https://challenges.cloudflare.com"],
+      imgSrc: ["'self'", "data:", "blob:", "https:"],
+      objectSrc: ["'none'"],
+    },
+  },
+}));
 
 // CORS — use ALLOWED_ORIGINS env var (comma-separated), fallback to localhost
 const allowedOrigins = process.env.ALLOWED_ORIGINS

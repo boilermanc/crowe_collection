@@ -62,9 +62,8 @@ router.post(
       console.log(`${LOG_PREFIX} Request token issued for user ${userId}`);
       res.json({ authorizeUrl });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
       console.error(`${LOG_PREFIX} request-token error:`, error);
-      res.status(500).json({ error: 'Failed to start Discogs authorization', details: message });
+      res.status(500).json({ error: 'Failed to start Discogs authorization' });
     }
   },
 );
@@ -133,9 +132,8 @@ router.get('/api/discogs/auth/callback', async (req, res) => {
     const redirectUrl = frontendUrl === '/' ? '/?discogs=connected' : `${frontendUrl}/?discogs=connected`;
     res.redirect(302, redirectUrl);
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
     console.error(`${LOG_PREFIX} callback error:`, error);
-    res.status(500).json({ error: 'Failed to complete Discogs authorization', details: message });
+    res.status(500).json({ error: 'Failed to complete Discogs authorization' });
   }
 });
 
@@ -168,9 +166,8 @@ router.post(
       console.log(`${LOG_PREFIX} User ${userId} disconnected Discogs account`);
       res.json({ success: true });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
       console.error(`${LOG_PREFIX} disconnect error:`, error);
-      res.status(500).json({ error: 'Failed to disconnect Discogs account', details: message });
+      res.status(500).json({ error: 'Failed to disconnect Discogs account' });
     }
   },
 );

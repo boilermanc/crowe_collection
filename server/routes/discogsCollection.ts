@@ -72,9 +72,8 @@ router.get(
 
       res.status(200).json({ releases: data.releases, pagination: data.pagination });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
       console.error(`${LOG_PREFIX} Error:`, error);
-      res.status(500).json({ error: 'Failed to fetch Discogs collection', details: message });
+      res.status(500).json({ error: 'Failed to fetch Discogs collection' });
     }
   },
 );

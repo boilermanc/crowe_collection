@@ -65,7 +65,7 @@ interface CatalogResult {
   brand: string;
   model: string;
   category: string | null;
-  year: number | null;
+  year: string | null;
   description: string | null;
   specs: Record<string, string | number> | null;
   image_url: string | null;

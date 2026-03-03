@@ -1,6 +1,6 @@
 import { Router, type Request, type Response } from 'express';
 import { createClient } from '@supabase/supabase-js';
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-core';
 import { buildSellrPdfHtml } from '../sellrPdfTemplate.js';
 import { requireSupabaseAdmin } from '../lib/supabaseAdmin.js';
 import { errorResponse } from '../utils/errorResponse.js';
@@ -185,7 +185,11 @@ router.post('/api/sellr/report/pdf', async (req: Request, res: Response) => {
 
     let browser;
     try {
-      browser = await puppeteer.launch({ headless: 'shell', args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+      browser = await puppeteer.launch({
+        executablePath: process.env.CHROME_PATH || '/usr/bin/chromium-browser',
+        headless: 'shell',
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      });
       const page = await browser.newPage();
       await page.setContent(html, { waitUntil: 'domcontentloaded' });
       await page.emulateMediaType('screen');

@@ -49,14 +49,17 @@ router.post('/api/support', supportRateLimit, requireAuthWithUser, async (req, r
       .then(result => result && console.log('[email] Support confirmation sent to', email))
       .catch(err => console.error('[email] Support confirmation failed:', err));
 
-    // Fire-and-forget webhook to n8n
-    fetch('https://n8n.sproutify.app/webhook/support-request', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, subject, message }),
-    }).catch((err) => {
-      console.error('Support webhook failed (non-blocking):', err);
-    });
+    // Fire-and-forget webhook to n8n (skip if not configured)
+    const n8nUrl = process.env.N8N_WEBHOOK_URL;
+    if (n8nUrl) {
+      fetch(n8nUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, subject, message }),
+      }).catch((err) => {
+        console.error('Support webhook failed (non-blocking):', err);
+      });
+    }
 
     res.status(201).json({ success: true, id: data.id });
   } catch (error) {

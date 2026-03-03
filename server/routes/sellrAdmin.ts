@@ -19,6 +19,12 @@ import { requireSupabaseAdmin } from '../lib/supabaseAdmin.js';
 
 const router = Router();
 
+// ── Timing-safe string comparison ────────────────────────────────────
+function safeCompare(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
+}
+
 // ── Simple bearer token check for Sellr admin endpoints ─────────────
 function requireSellrAdmin(req: Request, res: Response): boolean {
   const token = process.env.SELLR_ADMIN_TOKEN;
@@ -27,8 +33,9 @@ function requireSellrAdmin(req: Request, res: Response): boolean {
     return false;
   }
 
-  const auth = req.headers.authorization;
-  if (!auth || auth !== `Bearer ${token}`) {
+  const provided = req.headers.authorization ?? '';
+  const expected = `Bearer ${token}`;
+  if (!provided || !safeCompare(provided, expected)) {
     res.status(401).json({ error: 'Unauthorized' });
     return false;
   }
@@ -550,15 +557,15 @@ router.post('/api/sellr/admin/tools/expire-session', async (req: Request, res: R
       .eq('id', session_id);
 
     if (error) {
-      res.status(500).json({ success: false, message: error.message });
+      console.error('[sellr-admin] expire-session DB error:', error.message);
+      res.status(500).json({ success: false, message: 'Failed to expire session' });
       return;
     }
 
     res.json({ success: true });
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error';
-    console.error('[sellr-admin] expire-session error:', message);
-    res.status(500).json({ success: false, message });
+    console.error('[sellr-admin] expire-session error:', err);
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 
@@ -640,15 +647,15 @@ router.post('/api/sellr/admin/tools/regenerate-report-token', async (req: Reques
       .eq('id', order_id);
 
     if (error) {
-      res.status(500).json({ success: false, message: error.message });
+      console.error('[sellr-admin] regenerate-report-token DB error:', error.message);
+      res.status(500).json({ success: false, message: 'Failed to regenerate token' });
       return;
     }
 
     res.json({ success: true, new_token: newToken });
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error';
-    console.error('[sellr-admin] regenerate-report-token error:', message);
-    res.status(500).json({ success: false, message });
+    console.error('[sellr-admin] regenerate-report-token error:', err);
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 

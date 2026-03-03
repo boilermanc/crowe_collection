@@ -33,7 +33,7 @@ function envFallbackConfig(): StripeConfig {
   return {
     mode: 'live',
     secretKey: process.env.STRIPE_SECRET_KEY || '',
-    publishableKey: process.env.VITE_STRIPE_PUBLISHABLE_KEY || '',
+    publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || '',
     webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || '',
     liveWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET || '',
     testWebhookSecret: process.env.STRIPE_TEST_WEBHOOK_SECRET || '',

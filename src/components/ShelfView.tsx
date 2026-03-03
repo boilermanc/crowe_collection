@@ -564,8 +564,6 @@ const ShelfView: React.FC<ShelfViewProps> = ({
     // Same section drop — no-op, don't mark as override
     if (currentUnitObj.unitNumber === targetUnit) return;
 
-    console.log(`Moved "${album.title}" from Section ${currentUnitObj.unitNumber} to Section ${targetUnit}`);
-
     // Optimistic local update
     setManualMoves(prev => {
       const next = new Map(prev);

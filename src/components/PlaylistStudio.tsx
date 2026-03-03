@@ -244,7 +244,7 @@ const PlaylistStudio: React.FC<PlaylistStudioProps> = ({ albums, onClose, seedAl
   if (step === 'loading') {
     return (
       <div ref={modalRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Playlist Studio - generating" className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-8 outline-none">
-        <img src={bgUrl} alt="" className="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 pointer-events-none" />
+        <img src={bgUrl} alt="" loading="eager" className="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 pointer-events-none" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/75 to-black/60 pointer-events-none" />
         <div className="relative z-10 flex flex-col items-center">
           <div className="relative">
@@ -263,7 +263,7 @@ const PlaylistStudio: React.FC<PlaylistStudioProps> = ({ albums, onClose, seedAl
   return (
     <div ref={modalRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Playlist Studio" className="fixed inset-0 z-[100] bg-black backdrop-blur-2xl overflow-y-auto overflow-x-hidden outline-none">
       {/* Mood background image */}
-      <img src={bgUrl} alt="" className="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 pointer-events-none" />
+      <img src={bgUrl} alt="" loading="eager" className="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 pointer-events-none" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/75 to-black/60 pointer-events-none" />
 
       {/* Print isolation styles */}
@@ -286,7 +286,7 @@ const PlaylistStudio: React.FC<PlaylistStudioProps> = ({ albums, onClose, seedAl
         <div className="space-y-12">
           {playlist?.items.map((item, idx) => (
             <div key={idx} className="flex gap-8 md:gap-12 items-center break-inside-avoid">
-              <img src={proxyImageUrl(item.cover_url)} crossOrigin="anonymous" loading="lazy" className="w-24 h-24 md:w-40 md:h-40 object-cover border-4 border-[#2d3a3e] shadow-[8px_8px_0_rgba(0,0,0,0.1)]" />
+              <img src={proxyImageUrl(item.cover_url)} crossOrigin="anonymous" loading="lazy" decoding="async" className="w-24 h-24 md:w-40 md:h-40 object-cover border-4 border-[#2d3a3e] shadow-[8px_8px_0_rgba(0,0,0,0.1)]" />
               <div>
                 <span className="text-sm md:text-lg font-black opacity-20 block mb-1">TRACK {idx + 1}</span>
                 <h3 className="text-2xl md:text-4xl font-bold leading-tight">
@@ -675,7 +675,7 @@ const PlaylistStudio: React.FC<PlaylistStudioProps> = ({ albums, onClose, seedAl
               {playlist.items.map((item, idx) => (
                 <div key={idx} className="group flex items-center gap-4 md:gap-6 p-3 md:p-5 rounded-2xl hover:bg-white/5 transition-all">
                   <span className="font-label text-white/20 text-lg md:text-xl font-black w-8 md:w-12">{idx + 1}</span>
-                  <img src={proxyImageUrl(item.cover_url)} loading="lazy" className="w-16 h-16 md:w-20 md:h-20 rounded-md object-cover shadow-lg flex-shrink-0" />
+                  <img src={proxyImageUrl(item.cover_url)} loading="lazy" decoding="async" className="w-16 h-16 md:w-20 md:h-20 rounded-md object-cover shadow-lg flex-shrink-0" />
                   <div className="min-w-0">
                     <h4 className="text-sm md:text-xl font-bold text-white group-hover:text-rose-400 transition-colors truncate">
                       {focus === 'album' ? item.albumTitle : item.itemTitle}

@@ -69,9 +69,8 @@ router.get(
 
       res.status(200).json({ wants: data.wants, pagination: data.pagination });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
       console.error(`${LOG_PREFIX} Error:`, error);
-      res.status(500).json({ error: 'Failed to fetch Discogs wantlist', details: message });
+      res.status(500).json({ error: 'Failed to fetch Discogs wantlist' });
     }
   },
 );

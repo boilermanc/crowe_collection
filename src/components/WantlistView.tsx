@@ -142,8 +142,6 @@ const WantlistView: React.FC<WantlistViewProps> = ({ userId, onMarkAsOwned, onRe
         price_median?: number;
         price_high?: number;
       };
-      console.log('[wantlist-backfill] metadata response:', { cover_url: !!data.cover_url, year: data.year, genre: data.genre, discogs_url: data.discogs_url });
-
       setBackfillStatus('Found! Updating cover art and details...');
 
       // Parse discogs_release_id from discogs_url — handles both /release/ and /master/ URLs
@@ -157,18 +155,14 @@ const WantlistView: React.FC<WantlistViewProps> = ({ userId, onMarkAsOwned, onRe
           masterId = parseInt(urlMatch[2], 10);
         }
       }
-      console.log('[wantlist-backfill] parsed release_id:', discogsReleaseId, 'master_id:', masterId, 'from url:', data.discogs_url);
-
       // Resolve master → main_release via Discogs API
       if (!discogsReleaseId && masterId) {
-        console.log('[wantlist-backfill] resolving master', masterId, 'to main release');
         try {
           const masterRes = await fetch(`/api/discogs/masters/${masterId}`, { signal: AbortSignal.timeout(10_000) });
           if (masterRes.ok) {
             const masterData = await masterRes.json() as { main_release?: number; images?: { uri?: string }[] };
             if (masterData.main_release) {
               discogsReleaseId = masterData.main_release;
-              console.log('[wantlist-backfill] master resolved to release_id:', discogsReleaseId);
               // Use master cover art if we don't have one yet
               if (!data.cover_url && masterData.images?.[0]?.uri) {
                 data.cover_url = masterData.images[0].uri;
@@ -182,7 +176,6 @@ const WantlistView: React.FC<WantlistViewProps> = ({ userId, onMarkAsOwned, onRe
 
       // Last resort: Discogs search when no URL was returned at all
       if (!discogsReleaseId && !masterId) {
-        console.log('[wantlist-backfill] no URL from metadata, trying Discogs search');
         try {
           const params = new URLSearchParams({ q: `${artist} ${title}`, type: 'release', format: 'Vinyl', per_page: '1' });
           const searchRes = await fetch(`/api/discogs/search?${params}`, { signal: AbortSignal.timeout(10_000) });
@@ -194,7 +187,6 @@ const WantlistView: React.FC<WantlistViewProps> = ({ userId, onMarkAsOwned, onRe
               if (!data.cover_url && searchMatch.cover_image) {
                 data.cover_url = searchMatch.cover_image;
               }
-              console.log('[wantlist-backfill] Discogs search found release_id:', discogsReleaseId);
             }
           }
         } catch {
@@ -231,7 +223,6 @@ const WantlistView: React.FC<WantlistViewProps> = ({ userId, onMarkAsOwned, onRe
 
       // If we got a discogs_release_id, fetch pricing (which also re-fetches the list)
       if (discogsReleaseId) {
-        console.log('[wantlist-backfill] fetching pricing for release:', discogsReleaseId);
         setBackfillStatus('Fetching marketplace pricing...');
         await backfillPricing([discogsReleaseId]);
       } else {

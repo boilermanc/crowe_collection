@@ -243,7 +243,6 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, feature, d
 
   useEffect(() => {
     if (!isOpen) return;
-    console.log('[upgrade-modal] opened, fetching prices…');
     fetch('/api/prices')
       .then(r => {
         if (!r.ok) {
@@ -254,10 +253,6 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, feature, d
       })
       .then(data => {
         if (data) {
-          console.log('[upgrade-modal] prices loaded', {
-            curatorMonthly: data.tiers?.curator?.monthly?.priceId,
-            enthusiastMonthly: data.tiers?.enthusiast?.monthly?.priceId,
-          });
           setPricing(data);
         } else {
           console.error('[upgrade-modal] no pricing data received');
@@ -279,7 +274,6 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, feature, d
 
     if (priceObj?.priceId) {
       const label = `$${((priceObj.amount ?? 0) / 100).toFixed(2)}/${interval === 'annual' ? 'year' : 'month'}`;
-      console.log('[upgrade-modal] auto-proceeding with', { tier, interval, priceId: priceObj.priceId, label });
       // Call handleSelectPlan inline to avoid stale closure
       (async () => {
         setStep('loading');

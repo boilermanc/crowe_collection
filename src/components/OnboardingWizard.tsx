@@ -564,8 +564,6 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete, preview
     const action = profileData.startAction;
     const interval = profileData.billingInterval;
     const selectedPriceId = (tier === 'curator' || tier === 'enthusiast') ? `${tier}:${interval}` : undefined;
-    console.log('[onboarding] saveAndComplete called', { fullSave, tier, action, interval, selectedPriceId, hasUser: !!user });
-
     if (previewMode) {
       onComplete(action, tier, selectedPriceId);
       return;
@@ -587,8 +585,6 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete, preview
         } : {}),
         onboarding_completed: true,
       } as Parameters<typeof updateProfile>[1]);
-      console.log('[onboarding] profile saved successfully');
-
       // Fire-and-forget: welcome email on onboarding completion
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (session?.access_token) {
@@ -596,12 +592,10 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete, preview
       }
       fetch('/api/onboarding/complete', { method: 'POST', headers }).catch(() => {});
 
-      console.log('[onboarding] calling onComplete with', { action, tier, selectedPriceId });
       onComplete(action, tier, selectedPriceId);
     } catch (err) {
       console.error('[onboarding] Failed to save profile:', err);
       // Still proceed — profile can be updated later
-      console.log('[onboarding] calling onComplete despite error with', { action, tier, selectedPriceId });
       onComplete(action, tier, selectedPriceId);
     } finally {
       setSaving(false);
