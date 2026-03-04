@@ -2759,6 +2759,25 @@
   color:var(--peach-dark);
 }
 
+/* Forgot password */
+.landing-page .auth-forgot-link {
+  text-align:right;
+  margin-top:4px;
+  margin-bottom:8px;
+}
+
+.landing-page .auth-forgot-link a {
+  font-size:.75rem;
+  color:var(--text3);
+  text-decoration:underline;
+  text-underline-offset:2px;
+  transition:color .2s;
+}
+
+.landing-page .auth-forgot-link a:hover {
+  color:var(--peach);
+}
+
 /* Google OAuth button */
 .landing-page .auth-google-btn {
   width:100%;

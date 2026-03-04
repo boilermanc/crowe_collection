@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, FormEvent } from 'react';
+import { Link } from 'react-router-dom';
 import './Landing.css';
 import { useAuthContext } from '../contexts/AuthContext';
 import { supabase } from '../services/supabaseService';
@@ -1284,6 +1285,11 @@ const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
                   </button>
                 </div>
               </div>
+              {authMode === 'signin' && (
+                <div className="auth-forgot-link">
+                  <Link to="/reset-password" onClick={() => setShowAuth(false)}>Forgot password?</Link>
+                </div>
+              )}
               {authMode === 'signup' && (
                 <div className="auth-field">
                   <label htmlFor="landing-confirm-password">Confirm Password</label>

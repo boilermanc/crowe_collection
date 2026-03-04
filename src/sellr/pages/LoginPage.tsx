@@ -180,6 +180,14 @@ const LoginPage: React.FC = () => {
                     className="w-full bg-white border border-sellr-charcoal/10 rounded-lg p-3 text-sm text-sellr-charcoal placeholder:text-sellr-charcoal/40 focus:outline-none focus:ring-2 focus:ring-sellr-blue transition-colors"
                     placeholder="••••••••"
                   />
+                  <div className="text-right mt-1">
+                    <Link
+                      to="/reset-password"
+                      className="text-xs text-sellr-charcoal/50 hover:text-sellr-blue underline underline-offset-2 transition-colors"
+                    >
+                      Forgot password?
+                    </Link>
+                  </div>
                 </div>
               </div>
 

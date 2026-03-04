@@ -39,6 +39,7 @@ import SellrNotFoundPage from './src/sellr/pages/NotFoundPage';
 import { SellrAuthProvider } from './src/sellr/contexts/SellrAuthContext';
 import { SellrProtectedRoute } from './src/sellr/components/SellrProtectedRoute';
 import ListeningRoom from './src/pages/ListeningRoom';
+import ResetPassword from './src/pages/ResetPassword';
 
 
 function NotFoundPage() {
@@ -75,6 +76,7 @@ root.render(
                   <Route path="/about" element={<About />} />
                   <Route path="/welcome" element={<WelcomeLandingPage />} />
                   <Route path="/listening-room" element={<ListeningRoom />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
                   <Route element={<SellrAuthProvider><Outlet /></SellrAuthProvider>}>
                     {/* Public Sellr routes */}
                     <Route path="/sellr" element={<SellrLandingPage />} />
