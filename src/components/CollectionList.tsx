@@ -286,7 +286,7 @@ const CollectionList: React.FC<CollectionListProps> = ({ albums, onSelect, onDel
                 <div className="hidden md:block" role="cell">
                   {album.condition ? (
                     <span className="inline-flex items-center text-[8px] font-mono tracking-wide rounded-full px-2 py-0.5 bg-paper-dark text-ink/60">
-                      {CONDITION_BY_VALUE[album.condition as ConditionGrade].shortLabel}
+                      {CONDITION_BY_VALUE[album.condition as ConditionGrade]?.shortLabel}
                     </span>
                   ) : null}
                 </div>
