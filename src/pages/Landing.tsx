@@ -475,6 +475,26 @@ const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
         </div>
       </section>
 
+      {/* Spennd Banner */}
+      <div className="w-full bg-paper-dark py-4 px-6">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>
+            <div className="font-serif text-[14px] text-ink">
+              Not sure what a record is worth?
+            </div>
+            <div className="font-serif text-[13px] text-ink/60 mt-0.5">
+              Try Spennd — our free grading and pricing tool. No account needed.
+            </div>
+          </div>
+          <a
+            href="/spennd"
+            className="text-burnt-peach font-medium font-mono text-xs hover:underline underline-offset-2 whitespace-nowrap sm:block border border-burnt-peach text-burnt-peach rounded-full py-2 px-4 text-sm text-center w-full sm:w-auto mt-2 sm:mt-0"
+          >
+            Check a record →
+          </a>
+        </div>
+      </div>
+
       <section className="section features" id="features">
         <div className="container">
           <div className="section-header">
