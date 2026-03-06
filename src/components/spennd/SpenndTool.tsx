@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { DiscogsRelease, LabelValidation, MatrixResult, PriceData, EbayData } from '../../types/spennd';
-import { ConditionGrade } from '../../constants/conditionGrades';
+import { ConditionGrade, VINYL_CHECKLIST, CD_CHECKLIST, CONDITION_BY_VALUE, scoreToGrade } from '../../constants/conditionGrades';
 
 type Step = 'search' | 'label' | 'matrix' | 'grading' | 'results';
 
@@ -35,9 +35,14 @@ const SpenndTool: React.FC = () => {
   const [matrixLoading, setMatrixLoading] = useState(false);
   const [matrixResult, setMatrixResult] = useState<MatrixResult | null>(null);
 
-  // Grading, results state (placeholders for now)
+  // Grading state
   const [selectedFormat, setSelectedFormat] = useState<'vinyl' | 'cd' | null>(null);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [answers, setAnswers] = useState<Record<string, number>>({});
   const [grade, setGrade] = useState<ConditionGrade | null>(null);
+  const [conflictNote, setConflictNote] = useState<string | null>(null);
+
+  // Results state (placeholders for now)
   const [priceData, setPriceData] = useState<PriceData | null>(null);
   const [ebayData, setEbayData] = useState<EbayData | null>(null);
 
@@ -151,6 +156,40 @@ const SpenndTool: React.FC = () => {
   const handleMatrixSkip = () => {
     setMatrixResult(null);
     setStep('grading');
+  };
+
+  // Step 3: Grading
+  const computeAndAdvance = () => {
+    const totalScore = Object.values(answers).reduce((sum, s) => sum + s, 0);
+    let computedGrade = scoreToGrade(totalScore);
+
+    // Conflict check for vinyl
+    if (selectedFormat === 'vinyl' && answers.visual <= 1 && answers.playback === 3) {
+      const grades: ConditionGrade[] = ['M', 'NM', 'VG+', 'VG', 'G+', 'G', 'F', 'P'];
+      const idx = grades.indexOf(computedGrade);
+      if (idx < grades.length - 1) {
+        computedGrade = grades[idx + 1];
+      }
+      setConflictNote("Your record looks better than it sounds. We adjusted the grade down — condition is based on the worst factor, not the average.");
+    }
+
+    setGrade(computedGrade);
+    setRecordsChecked(prev => prev + 1);
+
+    // Fire price fetches
+    if (selectedRelease) {
+      fetch(`/api/spennd/price?release_id=${selectedRelease.id}&condition=${computedGrade}`)
+        .then(r => r.json())
+        .then(setPriceData)
+        .catch(() => setPriceData({ available: false } as PriceData));
+
+      fetch(`/api/spennd/ebay?q=${encodeURIComponent(`${selectedRelease.artist} ${selectedRelease.title} vinyl`)}`)
+        .then(r => r.json())
+        .then(setEbayData)
+        .catch(() => setEbayData({ available: false } as EbayData));
+    }
+
+    setStep('results');
   };
 
   // Render based on step
@@ -583,10 +622,109 @@ const SpenndTool: React.FC = () => {
     );
   }
 
-  // Placeholder for grading/results
+  if (step === 'grading') {
+    // Format selector first
+    if (!selectedFormat) {
+      return (
+        <div className="max-w-xl mx-auto bg-paper rounded-2xl p-8 shadow-sm">
+          <h3 className="font-display text-[22px] text-ink mb-6 text-center">
+            Is this a vinyl record or a CD?
+          </h3>
+
+          <div className="grid grid-cols-2 gap-4 max-w-xs mx-auto">
+            <button
+              onClick={() => setSelectedFormat('vinyl')}
+              className="bg-white border-2 border-paper-dark hover:border-burnt-peach rounded-2xl p-6 text-center transition-colors"
+            >
+              <div className="text-[32px] mb-2">💿</div>
+              <div className="font-serif text-ink">Vinyl</div>
+            </button>
+            <button
+              onClick={() => setSelectedFormat('cd')}
+              className="bg-white border-2 border-paper-dark hover:border-burnt-peach rounded-2xl p-6 text-center transition-colors"
+            >
+              <div className="text-[32px] mb-2">📀</div>
+              <div className="font-serif text-ink">CD</div>
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // Checklist questions
+    const checklist = selectedFormat === 'vinyl' ? VINYL_CHECKLIST : CD_CHECKLIST;
+    const currentQ = checklist[currentQuestionIndex];
+
+    return (
+      <div className="max-w-xl mx-auto bg-paper rounded-2xl p-8 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <div className="font-mono text-[10px] text-burnt-peach uppercase tracking-wide">
+            QUESTION {currentQuestionIndex + 1} OF {checklist.length}
+          </div>
+          <div className="inline-block bg-paper-dark text-ink font-mono text-[9px] rounded-full px-2 py-0.5 uppercase">
+            {selectedFormat}
+          </div>
+        </div>
+
+        {currentQuestionIndex === 0 && (
+          <p className="font-serif text-[14px] italic text-ink/60 mb-6">
+            Condition is the other half of the value equation. A Near Mint copy can be worth 3–5× a Very Good copy of the same pressing. Answer these questions and we'll give you the standard industry grade.
+          </p>
+        )}
+
+        <h4 className="font-serif text-[16px] text-ink font-medium mb-4">
+          {currentQ.question}
+        </h4>
+
+        <div className="flex flex-col gap-1">
+          {currentQ.options.map((option) => {
+            const isSelected = answers[currentQ.id] === option.score;
+            return (
+              <button
+                key={option.score}
+                onClick={() => {
+                  setAnswers(prev => ({ ...prev, [currentQ.id]: option.score }));
+                  if (currentQuestionIndex < checklist.length - 1) {
+                    setTimeout(() => setCurrentQuestionIndex(i => i + 1), 400);
+                  } else {
+                    setTimeout(() => computeAndAdvance(), 400);
+                  }
+                }}
+                className={`w-full text-left py-3 px-3 rounded-xl cursor-pointer transition-colors ${
+                  isSelected ? 'bg-paper-dark' : 'hover:bg-paper-dark/50'
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className={`w-4 h-4 rounded-full border-[1.5px] flex-shrink-0 mt-0.5 flex items-center justify-center ${
+                    isSelected ? 'bg-burnt-peach border-burnt-peach' : 'border-paper-darker'
+                  }`}>
+                    {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                  </div>
+                  <span className="font-serif text-[14px] text-ink leading-snug flex-1">
+                    {option.label}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {currentQuestionIndex > 0 && (
+          <button
+            onClick={() => setCurrentQuestionIndex(i => i - 1)}
+            className="mt-4 text-sm text-ink/60 underline cursor-pointer"
+          >
+            ← Previous question
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  // Placeholder for results
   return (
     <div className="max-w-xl mx-auto bg-paper rounded-2xl p-8 shadow-sm">
-      <p className="text-ink font-serif">Step {step} - will be implemented in next prompts</p>
+      <p className="text-ink font-serif">Step {step} - will be implemented in next prompt</p>
     </div>
   );
 };
