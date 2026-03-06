@@ -223,6 +223,7 @@ const CollectionValueTile: React.FC<CollectionValueTileProps> = ({
           {/* CTA */}
           <button
             onClick={onStartGrading}
+            aria-label="Start grading your collection"
             className="px-4 py-2 bg-burnt-peach/10 border border-burnt-peach/30 text-burnt-peach font-mono text-[8px] tracking-widest uppercase rounded-lg hover:bg-burnt-peach/20 transition-colors focus:outline-none focus:ring-2 focus:ring-burnt-peach focus:ring-offset-2"
           >
             Start Grading →
@@ -314,6 +315,7 @@ const CollectionValueTile: React.FC<CollectionValueTileProps> = ({
           </span>
           <button
             onClick={onStartGrading}
+            aria-label="Grade remaining ungraded albums"
             className="font-mono text-[9px] text-burnt-peach tracking-wide hover:underline focus:outline-none focus:ring-2 focus:ring-burnt-peach focus:ring-offset-2 rounded"
           >
             Grade now →

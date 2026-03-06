@@ -148,7 +148,7 @@ const GradingSheet: React.FC<GradingSheetProps> = ({
                   </div>
 
                   {/* Options */}
-                  <div className="space-y-2">
+                  <div className="space-y-2" role="radiogroup" aria-label={question.question}>
                     {question.options.map((option) => {
                       const isSelected = answers[question.id] === option.score;
                       return (

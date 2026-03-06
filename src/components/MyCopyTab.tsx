@@ -62,12 +62,14 @@ const MyCopyTab: React.FC<MyCopyTabProps> = ({
           <div className="flex gap-3 justify-center">
             <button
               onClick={() => setGradingSheetOpen(true)}
+              aria-label={`Grade your copy of ${album.title} by ${album.artist}`}
               className="px-6 py-3 border-2 border-burnt-peach text-burnt-peach font-mono text-[10px] tracking-widest uppercase rounded-lg hover:bg-burnt-peach/10 transition-colors focus:outline-none focus:ring-2 focus:ring-burnt-peach focus:ring-offset-2"
             >
               Grade Your Copy →
             </button>
             <button
               onClick={() => setShowDetailsOverride(true)}
+              aria-label={`Add details for ${album.title} by ${album.artist}`}
               className="px-6 py-3 border-2 border-burnt-peach text-burnt-peach font-mono text-[10px] tracking-widest uppercase rounded-lg hover:bg-burnt-peach/10 transition-colors focus:outline-none focus:ring-2 focus:ring-burnt-peach focus:ring-offset-2"
             >
               Add Details →
@@ -152,6 +154,7 @@ const MyCopyTab: React.FC<MyCopyTabProps> = ({
               </p>
               <button
                 onClick={() => setGradingSheetOpen(true)}
+                aria-label={`Grade ${album.title} by ${album.artist}`}
                 className="px-6 py-2 bg-burnt-peach text-white font-mono text-[10px] tracking-widest uppercase rounded-lg hover:bg-burnt-peach/90 transition-colors focus:outline-none focus:ring-2 focus:ring-burnt-peach focus:ring-offset-2"
               >
                 Grade Now
