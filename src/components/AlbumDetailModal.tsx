@@ -10,6 +10,7 @@ import CoverPicker from './CoverPicker';
 import FormatBadge from './FormatBadge';
 import MyCopyTab from './MyCopyTab';
 import { useToast } from '../contexts/ToastContext';
+import { useSubscription } from '../contexts/SubscriptionContext';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { engagementService } from '../services/engagementService';
 import { getAlbumPlacementInfo, type PlacementResult } from '../helpers/shelfHelpers';
@@ -59,6 +60,7 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
   onAddToWantlist,
 }) => {
   const { showToast } = useToast();
+  const { plan } = useSubscription();
   const modalRef = useRef<HTMLDivElement>(null);
   const stableOnClose = useCallback(onClose, [onClose]);
   useFocusTrap(modalRef, stableOnClose);
@@ -391,13 +393,13 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
             <circle cx="100" cy="100" r="6" fill="#2a2016" />
           </svg>
           <div className="relative px-6 pt-14 pb-8 flex flex-col items-center text-center">
-            <span className="text-[#e8dab2]/30 font-mono text-[9px] tracking-[4px] uppercase mb-3">{album.genre || 'Vinyl'}</span>
+            <span className="text-[#e8dab2]/50 font-mono text-[9px] tracking-[4px] uppercase mb-3">{album.genre || 'Vinyl'}</span>
             <h2 className="text-2xl font-bold text-[#e8dab2] leading-tight mb-2">{album.title}</h2>
-            <h3 className="text-base text-[#e8dab2]/60 font-medium">{album.artist}</h3>
+            <h3 className="text-base text-[#e8dab2]/80 font-medium">{album.artist}</h3>
             <div className="flex items-center gap-2 mt-3">
-              {album.year && <span className="text-[#e8dab2]/30 font-mono text-[10px] tracking-wider">{album.year}</span>}
-              {album.year && album.label && <span className="text-[#e8dab2]/20">·</span>}
-              {album.label && <span className="text-[#e8dab2]/30 font-mono text-[10px] tracking-wider">{album.label}</span>}
+              {album.year && <span className="text-[#e8dab2]/50 font-mono text-[10px] tracking-wider">{album.year}</span>}
+              {album.year && album.label && <span className="text-[#e8dab2]/40">·</span>}
+              {album.label && <span className="text-[#e8dab2]/50 font-mono text-[10px] tracking-wider">{album.label}</span>}
             </div>
           </div>
         </div>
@@ -468,15 +470,15 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
               <FormatBadge format={album.format} size="sm" />
               {album.genre && (
                 <>
-                  <span className="text-th-text3/50">•</span>
+                  <span className="text-th-text3/70">•</span>
                   <span className="text-[#dd6e42] font-label text-[9px] tracking-[0.2em] font-bold uppercase">{album.genre}</span>
                 </>
               )}
-              <span className="text-th-text3/50">•</span>
+              <span className="text-th-text3/70">•</span>
               <span className="text-th-text3 font-label text-[9px] tracking-[0.2em] uppercase">{album.year}</span>
               {album.shelf_unit ? (
                 <>
-                  <span className="text-th-text3/50">•</span>
+                  <span className="text-th-text3/70">•</span>
                   <span
                     className="text-[#4f6d7a] font-label text-[9px] tracking-[0.2em] font-bold uppercase"
                     aria-label={`Shelved in section ${album.shelf_unit}`}
@@ -486,9 +488,9 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
                 </>
               ) : hasShelfConfig && shelfPlacement ? (
                 <>
-                  <span className="text-th-text3/50">•</span>
+                  <span className="text-th-text3/70">•</span>
                   <span
-                    className="text-th-text3/40 font-label text-[9px] tracking-[0.2em] uppercase"
+                    className="text-th-text3/60 font-label text-[9px] tracking-[0.2em] uppercase"
                     aria-label="Not yet assigned to a shelf section"
                   >
                     Not shelved
@@ -549,7 +551,7 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
 
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
-                  <p className="text-th-text3/50 text-[9px] uppercase tracking-widest mb-1">Low</p>
+                  <p className="text-th-text3/70 text-[9px] uppercase tracking-widest mb-1">Low</p>
                   <p className="text-xl font-bold text-th-text2">${Math.round(album.price_low || 0)}</p>
                 </div>
                 <div className="bg-[#dd6e42]/10 p-3 rounded-xl border border-[#dd6e42]/20">
@@ -557,7 +559,7 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
                   <p className="text-3xl font-black text-th-text">${Math.round(album.price_median || 0)}</p>
                 </div>
                 <div>
-                  <p className="text-th-text3/50 text-[9px] uppercase tracking-widest mb-1">High</p>
+                  <p className="text-th-text3/70 text-[9px] uppercase tracking-widest mb-1">High</p>
                   <p className="text-xl font-bold text-[#f0a882]">${Math.round(album.price_high || 0)}</p>
                 </div>
               </div>
@@ -569,7 +571,7 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
                    <div className="h-full bg-[#dd6e42] w-1/3"></div>
                    <div className="h-full bg-[#dd6e42]/40 w-1/3"></div>
                 </div>
-                <div className="flex justify-between text-[9px] text-th-text3/50 uppercase tracking-widest mt-2">
+                <div className="flex justify-between text-[9px] text-th-text3/70 uppercase tracking-widest mt-2">
                   <span>Common Sale</span>
                   <span>Market Avg</span>
                   <span>Premium Press</span>
@@ -635,22 +637,22 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
                 <h5 className="text-th-text3 text-[9px] uppercase tracking-widest border-b border-th-surface/[0.06] pb-2">Archive Analytics</h5>
                 <div className="grid grid-cols-2 gap-y-6">
                   <div>
-                    <p className="text-th-text3/50 text-[9px] uppercase mb-1">Spins</p>
+                    <p className="text-th-text3/70 text-[9px] uppercase mb-1">Spins</p>
                     <p className="text-2xl font-bold text-th-text">{album.play_count || 0}</p>
                   </div>
                   <div>
-                    <p className="text-th-text3/50 text-[9px] uppercase mb-1">Added</p>
+                    <p className="text-th-text3/70 text-[9px] uppercase mb-1">Added</p>
                     <p className="text-sm font-bold text-th-text">{formatDate(album.created_at)}</p>
                   </div>
                   {album.barcode && (
                     <div>
-                      <p className="text-th-text3/50 text-[9px] uppercase mb-1">Barcode</p>
+                      <p className="text-th-text3/70 text-[9px] uppercase mb-1">Barcode</p>
                       <p className="text-sm font-bold text-th-text font-mono">{album.barcode}</p>
                     </div>
                   )}
                   {album.matrix && (
                     <div>
-                      <p className="text-th-text3/50 text-[9px] uppercase mb-1">Deadwax</p>
+                      <p className="text-th-text3/70 text-[9px] uppercase mb-1">Deadwax</p>
                       <p className="text-sm font-bold text-th-text font-mono">{album.matrix}</p>
                     </div>
                   )}
@@ -673,12 +675,12 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
             {/* Narrative & Tracklist */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
               <section>
-                <h4 className="text-th-text3/70 text-[9px] font-label tracking-[0.3em] uppercase mb-4">The Narrative</h4>
-                <p className="text-th-text/70 leading-relaxed italic text-sm">"{album.description || 'A sonic journey waiting to be explored.'}"</p>
+                <h4 className="text-th-text3 text-[9px] font-label tracking-[0.3em] uppercase mb-4">The Narrative</h4>
+                <p className="text-th-text/85 leading-relaxed italic text-sm">"{album.description || 'A sonic journey waiting to be explored.'}"</p>
               </section>
               {album.tracklist && (
                 <section>
-                  <h4 className="text-th-text3/70 text-[9px] font-label tracking-[0.3em] uppercase mb-4">Manifest</h4>
+                  <h4 className="text-th-text3 text-[9px] font-label tracking-[0.3em] uppercase mb-4">Manifest</h4>
                   <div className="space-y-0">
                     {album.tracklist.map((t, i) => (
                       <div key={i}>
@@ -686,11 +688,11 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
                           onClick={() => handleTrackClick(i, t)}
                           className="w-full text-left flex items-center gap-2 text-[10px] py-1.5 text-th-text2 hover:text-th-text border-b border-th-surface/[0.06] transition-colors group"
                         >
-                          <svg className="w-3 h-3 flex-shrink-0 text-th-text3/50 group-hover:text-[#f0a882] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <svg className="w-3 h-3 flex-shrink-0 text-th-text3/70 group-hover:text-[#f0a882] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                           </svg>
                           <span className="truncate flex-1">{t}</span>
-                          <svg className={`w-3 h-3 flex-shrink-0 text-th-text3/50 transition-transform duration-200 ${expandedTrack === i ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <svg className={`w-3 h-3 flex-shrink-0 text-th-text3/70 transition-transform duration-200 ${expandedTrack === i ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                           </svg>
                         </button>
@@ -721,7 +723,7 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
             {/* Tags */}
             {album.tags && album.tags.length > 0 && (
               <section>
-                <h4 className="text-th-text3/70 text-[9px] font-label tracking-[0.3em] uppercase mb-4">Tags</h4>
+                <h4 className="text-th-text3 text-[9px] font-label tracking-[0.3em] uppercase mb-4">Tags</h4>
                 <div className="flex flex-wrap gap-2">
                   {album.tags.map((tag, i) => (
                     <span key={i} className="inline-flex items-center gap-1 bg-th-surface/[0.04] border border-th-surface/[0.10] rounded-full px-3 py-1 text-[10px] text-th-text2">
@@ -743,7 +745,7 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
             {/* Format */}
             {onUpdateAlbum && (
               <section>
-                <h4 className="text-th-text3/70 text-[9px] font-label tracking-[0.3em] uppercase mb-4">Format</h4>
+                <h4 className="text-th-text3 text-[9px] font-label tracking-[0.3em] uppercase mb-4">Format</h4>
                 <div className="flex gap-2">
                   {MEDIA_FORMATS.map(f => (
                     <button
@@ -773,12 +775,12 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
             {/* Personal Notes */}
             {onUpdateAlbum && (
               <section>
-                <h4 className="text-th-text3/70 text-[9px] font-label tracking-[0.3em] uppercase mb-4">Personal Notes</h4>
+                <h4 className="text-th-text3 text-[9px] font-label tracking-[0.3em] uppercase mb-4">Personal Notes</h4>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Add your notes about this record..."
-                  className="w-full bg-th-surface/[0.04] border border-th-surface/[0.10] rounded-xl px-4 py-3 text-sm text-th-text/80 placeholder:text-th-text3/50 focus:outline-none focus:ring-1 focus:ring-[#dd6e42]/50 resize-none"
+                  className="w-full bg-th-surface/[0.04] border border-th-surface/[0.10] rounded-xl px-4 py-3 text-sm text-th-text/90 placeholder:text-th-text3/60 focus:outline-none focus:ring-1 focus:ring-[#dd6e42]/50 resize-none"
                   rows={3}
                 />
                 {notes !== (album.personal_notes || '') && (
@@ -815,10 +817,10 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
                   value={matrix}
                   onChange={(e) => setMatrix(e.target.value)}
                   placeholder="e.g. BSK-3010 1A TML-M"
-                  className="w-full bg-th-surface/[0.04] border border-th-surface/[0.10] rounded-xl px-4 py-3 text-sm text-th-text/80 font-mono placeholder:text-th-text3/50 focus:outline-none focus:ring-1 focus:ring-[#dd6e42]/50"
+                  className="w-full bg-th-surface/[0.04] border border-th-surface/[0.10] rounded-xl px-4 py-3 text-sm text-th-text/90 font-mono placeholder:text-th-text3/60 focus:outline-none focus:ring-1 focus:ring-[#dd6e42]/50"
                   aria-label="Deadwax or matrix runout text"
                 />
-                <p className="mt-1 text-[9px] text-th-text3/50">The etching in the runout groove — identifies the specific pressing.</p>
+                <p className="mt-1 text-[9px] text-th-text3/70">The etching in the runout groove — identifies the specific pressing.</p>
                 <div className="flex gap-2 mt-2">
                   {matrix !== (album.matrix || '') && (
                     <button
@@ -846,7 +848,7 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
                   <p className="mt-2 text-[10px] text-red-400">{lookupError}</p>
                 )}
                 {pressingResults && pressingResults.length === 0 && (
-                  <p className="mt-2 text-[10px] text-th-text3/50">No matching pressings found.</p>
+                  <p className="mt-2 text-[10px] text-th-text3/70">No matching pressings found.</p>
                 )}
                 {pressingResults && pressingResults.length > 0 && (
                   <div className="mt-3 space-y-2">
@@ -864,10 +866,10 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
                             {[r.label, r.catno, r.year, r.country].filter(Boolean).join(' · ')}
                           </p>
                           {r.matchedText && (
-                            <p className="text-[9px] text-th-text3/50 font-mono truncate">{r.matchedText}</p>
+                            <p className="text-[9px] text-th-text3/70 font-mono truncate">{r.matchedText}</p>
                           )}
                         </div>
-                        <span className="text-[9px] text-th-text3/50 shrink-0">{Math.round(r.score * 100)}%</span>
+                        <span className="text-[9px] text-th-text3/70 shrink-0">{Math.round(r.score * 100)}%</span>
                         <div className="flex gap-1.5 shrink-0">
                           <a
                             href={r.discogsUrl}
@@ -904,8 +906,9 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
                   onUpdateAlbum(album.id, updates);
                 }
               }}
-              userPlan="collector"
+              userPlan={plan}
               discogsConnected={false}
+              onUpgradeRequired={onUpgradeRequired}
             />
           </div>
         </div>

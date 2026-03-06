@@ -76,12 +76,12 @@ const RoomOnboarding: React.FC<RoomOnboardingProps> = ({ onComplete, onGoHome })
       {/* Progress bar */}
       <div className="w-full max-w-lg mb-8">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-th-text3/50 text-xs font-label tracking-widest uppercase">
+          <span className="text-th-text3/70 text-xs font-label tracking-widest uppercase">
             Step {step + 1} of {TOTAL_STEPS}
           </span>
           <button
             onClick={onComplete}
-            className="text-th-text3/40 text-xs font-label tracking-widest uppercase hover:text-th-text3 transition-colors"
+            className="text-th-text3/60 text-xs font-label tracking-widest uppercase hover:text-th-text3 transition-colors"
           >
             Skip
           </button>
@@ -120,19 +120,19 @@ const RoomOnboarding: React.FC<RoomOnboardingProps> = ({ onComplete, onGoHome })
                 Map your listening spaces and get AI-powered gear placement recommendations. The Room Planner helps you optimize your audio setup for the best possible sound.
               </p>
               <div className="mt-6 flex flex-wrap justify-center gap-3">
-                <div className="flex items-center gap-2 text-xs text-th-text3/50">
+                <div className="flex items-center gap-2 text-xs text-th-text3/70">
                   <svg className="w-4 h-4 text-[#dd6e42]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                   Room mapping
                 </div>
-                <div className="flex items-center gap-2 text-xs text-th-text3/50">
+                <div className="flex items-center gap-2 text-xs text-th-text3/70">
                   <svg className="w-4 h-4 text-[#dd6e42]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                   AI placement
                 </div>
-                <div className="flex items-center gap-2 text-xs text-th-text3/50">
+                <div className="flex items-center gap-2 text-xs text-th-text3/70">
                   <svg className="w-4 h-4 text-[#dd6e42]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
@@ -241,7 +241,7 @@ const RoomOnboarding: React.FC<RoomOnboardingProps> = ({ onComplete, onGoHome })
                   </svg>
                   <div className="text-left">
                     <p className="text-th-text text-xs font-bold">Gear Placement</p>
-                    <p className="text-th-text3/50 text-[10px]">AI recommends position and facing for each piece</p>
+                    <p className="text-th-text3/70 text-[10px]">AI recommends position and facing for each piece</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 bg-th-surface/[0.04] border border-th-surface/[0.10] rounded-xl px-4 py-3">
@@ -251,7 +251,7 @@ const RoomOnboarding: React.FC<RoomOnboardingProps> = ({ onComplete, onGoHome })
                   </svg>
                   <div className="text-left">
                     <p className="text-th-text text-xs font-bold">Listening Position</p>
-                    <p className="text-th-text3/50 text-[10px]">Optimal sweet spot marked on the diagram</p>
+                    <p className="text-th-text3/70 text-[10px]">Optimal sweet spot marked on the diagram</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 bg-th-surface/[0.04] border border-th-surface/[0.10] rounded-xl px-4 py-3">
@@ -260,7 +260,7 @@ const RoomOnboarding: React.FC<RoomOnboardingProps> = ({ onComplete, onGoHome })
                   </svg>
                   <div className="text-left">
                     <p className="text-th-text text-xs font-bold">Stereo Triangle</p>
-                    <p className="text-th-text3/50 text-[10px]">Speaker-to-listener angle visualization</p>
+                    <p className="text-th-text3/70 text-[10px]">Speaker-to-listener angle visualization</p>
                   </div>
                 </div>
               </div>

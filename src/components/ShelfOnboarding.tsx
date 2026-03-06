@@ -51,12 +51,12 @@ const ShelfOnboarding: React.FC<ShelfOnboardingProps> = ({ onComplete }) => {
       {/* Progress bar */}
       <div className="w-full max-w-lg mb-8">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-th-text3/50 text-xs font-label tracking-widest uppercase">
+          <span className="text-th-text3/70 text-xs font-label tracking-widest uppercase">
             Step {step + 1} of {TOTAL_STEPS}
           </span>
           <button
             onClick={onComplete}
-            className="text-th-text3/40 text-xs font-label tracking-widest uppercase hover:text-th-text3 transition-colors"
+            className="text-th-text3/60 text-xs font-label tracking-widest uppercase hover:text-th-text3 transition-colors"
           >
             Skip
           </button>
@@ -95,19 +95,19 @@ const ShelfOnboarding: React.FC<ShelfOnboardingProps> = ({ onComplete }) => {
                 Map your digital vinyl collection to your physical shelves. The Shelf Organizer helps you know exactly where every record belongs — so your real shelves match your digital catalog.
               </p>
               <div className="mt-6 flex flex-wrap justify-center gap-3">
-                <div className="flex items-center gap-2 text-xs text-th-text3/50">
+                <div className="flex items-center gap-2 text-xs text-th-text3/70">
                   <svg className="w-4 h-4 text-[#dd6e42]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                   Smart sorting
                 </div>
-                <div className="flex items-center gap-2 text-xs text-th-text3/50">
+                <div className="flex items-center gap-2 text-xs text-th-text3/70">
                   <svg className="w-4 h-4 text-[#dd6e42]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                   Drag &amp; drop
                 </div>
-                <div className="flex items-center gap-2 text-xs text-th-text3/50">
+                <div className="flex items-center gap-2 text-xs text-th-text3/70">
                   <svg className="w-4 h-4 text-[#dd6e42]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
@@ -146,7 +146,7 @@ const ShelfOnboarding: React.FC<ShelfOnboardingProps> = ({ onComplete }) => {
                     </div>
                   ))}
                 </div>
-                <p className="text-[10px] text-th-text3/40 text-center">8 sections &middot; 50 per section &middot; 400 total</p>
+                <p className="text-[10px] text-th-text3/60 text-center">8 sections &middot; 50 per section &middot; 400 total</p>
               </div>
             </div>
           )}

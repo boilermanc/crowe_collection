@@ -186,7 +186,7 @@ const PLAN_CONFIG: Record<Plan, { label: string; color: string; bg: string; bord
     icon: <Crown className="w-5 h-5" />,
   },
   enthusiast: {
-    label: 'Archivist',
+    label: 'Enthusiast',
     color: 'text-[#f0a882]',
     bg: 'bg-[#dd6e42]/10',
     border: 'border-[#dd6e42]/25',
@@ -577,7 +577,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userId, albumCount, onClose }
                   onChange={e => setForm(prev => ({ ...prev, displayName: e.target.value }))}
                   maxLength={50}
                   placeholder="Your name or collector handle"
-                  className="w-full bg-th-surface/[0.04] border border-th-surface/[0.10] rounded-lg px-4 py-3 text-sm text-th-text placeholder:text-th-text3/50 focus:outline-none focus:ring-2 focus:ring-[#dd6e42]/50 transition-all"
+                  className="w-full bg-th-surface/[0.04] border border-th-surface/[0.10] rounded-lg px-4 py-3 text-sm text-th-text placeholder:text-th-text3/60 focus:outline-none focus:ring-2 focus:ring-[#dd6e42]/50 transition-all"
                 />
               </div>
             </div>
@@ -801,7 +801,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userId, albumCount, onClose }
                   value={newPassword}
                   onChange={e => setNewPassword(e.target.value)}
                   placeholder="New password"
-                  className="w-full bg-th-surface/[0.04] border border-th-surface/[0.10] rounded-lg px-4 py-3 pr-11 text-sm text-th-text placeholder:text-th-text3/50 focus:outline-none focus:ring-2 focus:ring-[#dd6e42]/50 transition-all"
+                  className="w-full bg-th-surface/[0.04] border border-th-surface/[0.10] rounded-lg px-4 py-3 pr-11 text-sm text-th-text placeholder:text-th-text3/60 focus:outline-none focus:ring-2 focus:ring-[#dd6e42]/50 transition-all"
                 />
                 <button
                   type="button"
@@ -832,7 +832,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userId, albumCount, onClose }
                   value={confirmPassword}
                   onChange={e => setConfirmPassword(e.target.value)}
                   placeholder="Confirm new password"
-                  className="w-full bg-th-surface/[0.04] border border-th-surface/[0.10] rounded-lg px-4 py-3 pr-11 text-sm text-th-text placeholder:text-th-text3/50 focus:outline-none focus:ring-2 focus:ring-[#dd6e42]/50 transition-all"
+                  className="w-full bg-th-surface/[0.04] border border-th-surface/[0.10] rounded-lg px-4 py-3 pr-11 text-sm text-th-text placeholder:text-th-text3/60 focus:outline-none focus:ring-2 focus:ring-[#dd6e42]/50 transition-all"
                 />
                 <button
                   type="button"

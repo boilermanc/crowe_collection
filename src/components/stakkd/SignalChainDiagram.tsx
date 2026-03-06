@@ -332,7 +332,7 @@ function GroupNode({ group, onClickGear, direction }: GroupNodeProps) {
           <div className="w-px bg-th-surface/[0.15]" style={{ height: `${Math.max(20, (group.items.length - 1) * 24)}px` }} />
         </div>
         <div className="rounded-xl border border-dashed border-th-surface/[0.12] bg-th-surface/[0.02] p-2">
-          <p className="text-th-text3/40 text-[8px] font-bold uppercase tracking-[0.2em] text-center mb-1.5">{label}</p>
+          <p className="text-th-text3/60 text-[8px] font-bold uppercase tracking-[0.2em] text-center mb-1.5">{label}</p>
           <div className="flex flex-col gap-2">
             {group.items.map((item) => (
               <DiagramNode key={item.id} gear={item} onClick={onClickGear} />
@@ -352,7 +352,7 @@ function GroupNode({ group, onClickGear, direction }: GroupNodeProps) {
         <div className="h-px bg-th-surface/[0.15]" style={{ width: `${Math.max(20, (group.items.length - 1) * 32)}px` }} />
       </div>
       <div className="rounded-xl border border-dashed border-th-surface/[0.12] bg-th-surface/[0.02] p-2">
-        <p className="text-th-text3/40 text-[8px] font-bold uppercase tracking-[0.2em] text-center mb-1.5">{label}</p>
+        <p className="text-th-text3/60 text-[8px] font-bold uppercase tracking-[0.2em] text-center mb-1.5">{label}</p>
         <div className="flex gap-2 justify-center">
           {group.items.map((item) => (
             <DiagramNode key={item.id} gear={item} onClick={onClickGear} />
@@ -469,7 +469,7 @@ const DiagramNode: React.FC<DiagramNodeProps> = ({ gear, onClick }) => {
         <p className="text-th-text text-[11px] font-semibold truncate" title={name}>
           {name}
         </p>
-        <p className="text-th-text3/50 text-[9px] uppercase tracking-widest mt-0.5 truncate">
+        <p className="text-th-text3/70 text-[9px] uppercase tracking-widest mt-0.5 truncate">
           {label}
         </p>
       </div>

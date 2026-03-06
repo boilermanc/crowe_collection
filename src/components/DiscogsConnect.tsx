@@ -165,7 +165,7 @@ const DiscogsConnect: React.FC<DiscogsConnectProps> = ({ onConnectionChange }) =
         <div className="space-y-1">
           <p className="text-th-text font-medium">{profile.discogs_username}</p>
           {profile.discogs_connected_at && (
-            <p className="text-th-text/50 text-sm">
+            <p className="text-th-text/70 text-sm">
               Connected {formatDate(profile.discogs_connected_at)}
             </p>
           )}
@@ -176,7 +176,7 @@ const DiscogsConnect: React.FC<DiscogsConnectProps> = ({ onConnectionChange }) =
           onClick={handleDisconnect}
           disabled={disconnecting}
           aria-label="Disconnect Discogs account"
-          className="text-sm text-th-text/60 hover:text-red-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="text-sm text-th-text/80 hover:text-red-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {disconnecting ? 'Disconnecting...' : 'Disconnect'}
         </button>
@@ -188,7 +188,7 @@ const DiscogsConnect: React.FC<DiscogsConnectProps> = ({ onConnectionChange }) =
     <div className="glass-morphism rounded-xl p-6 space-y-4">
       <div>
         <h3 className="text-th-text font-display text-lg">Discogs</h3>
-        <p className="text-th-text/60 text-sm mt-1">
+        <p className="text-th-text/80 text-sm mt-1">
           Link your Discogs account to import your collection and access marketplace data
         </p>
       </div>

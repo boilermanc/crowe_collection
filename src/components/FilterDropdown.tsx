@@ -167,7 +167,7 @@ function PriceRangeSection({
               aria-label="Minimum price"
               value={priceMin ?? ''}
               onChange={e => onChangeMin(e.target.value === '' ? null : Number(e.target.value))}
-              className="w-full bg-th-surface/[0.04] border border-th-surface/[0.10] rounded-lg pl-6 pr-2 py-1.5 text-sm text-th-text placeholder:text-th-text3/50 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
+              className="w-full bg-th-surface/[0.04] border border-th-surface/[0.10] rounded-lg pl-6 pr-2 py-1.5 text-sm text-th-text placeholder:text-th-text3/60 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
             />
           </div>
           <span className="text-th-text3 text-xs">–</span>
@@ -181,7 +181,7 @@ function PriceRangeSection({
               aria-label="Maximum price"
               value={priceMax ?? ''}
               onChange={e => onChangeMax(e.target.value === '' ? null : Number(e.target.value))}
-              className="w-full bg-th-surface/[0.04] border border-th-surface/[0.10] rounded-lg pl-6 pr-2 py-1.5 text-sm text-th-text placeholder:text-th-text3/50 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
+              className="w-full bg-th-surface/[0.04] border border-th-surface/[0.10] rounded-lg pl-6 pr-2 py-1.5 text-sm text-th-text placeholder:text-th-text3/60 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
             />
           </div>
         </div>

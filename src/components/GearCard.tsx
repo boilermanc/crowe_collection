@@ -130,7 +130,7 @@ const GearCard: React.FC<GearCardProps> = ({ gear, onClick }) => {
             {label}
           </span>
           {gear.year && (
-            <span className="text-th-text3/50 text-[10px] uppercase tracking-widest">{gear.year}</span>
+            <span className="text-th-text3/70 text-[10px] uppercase tracking-widest">{gear.year}</span>
           )}
         </div>
         <h3 className="font-bold text-th-text text-sm md:text-base truncate" title={`${gear.brand} ${gear.model}`}>

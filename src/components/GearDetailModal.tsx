@@ -82,7 +82,7 @@ function HeroPlaceholderIcon({ category }: { category: GearCategory }) {
   }
 }
 
-const INPUT_CLS = "w-full bg-th-surface/[0.04] border border-th-surface/[0.10] rounded-xl px-4 py-3 text-sm text-th-text placeholder:text-th-text3/50 focus:outline-none focus:ring-1 focus:ring-[#dd6e42]/50";
+const INPUT_CLS = "w-full bg-th-surface/[0.04] border border-th-surface/[0.10] rounded-xl px-4 py-3 text-sm text-th-text placeholder:text-th-text3/60 focus:outline-none focus:ring-1 focus:ring-[#dd6e42]/50";
 const LABEL_CLS = "block text-th-text3/70 text-[10px] uppercase tracking-widest mb-1";
 
 interface GearDetailModalProps {
@@ -465,7 +465,7 @@ const GearDetailModal: React.FC<GearDetailModalProps> = ({
                 type="button"
                 onClick={() => photoInputRef.current?.click()}
                 disabled={uploadingPhoto}
-                className="inline-flex items-center gap-1.5 text-th-text3/50 text-[10px] uppercase tracking-widest hover:text-[#dd6e42] transition-colors disabled:opacity-40"
+                className="inline-flex items-center gap-1.5 text-th-text3/70 text-[10px] uppercase tracking-widest hover:text-[#dd6e42] transition-colors disabled:opacity-40"
               >
                 {uploadingPhoto ? (
                   <>
@@ -511,10 +511,10 @@ const GearDetailModal: React.FC<GearDetailModalProps> = ({
                 ) : label}
               </span>
               {!editing && gear.year && (
-                <span className="text-th-text3/50 text-[10px] uppercase tracking-widest">{gear.year}</span>
+                <span className="text-th-text3/70 text-[10px] uppercase tracking-widest">{gear.year}</span>
               )}
               {gear.position != null && (
-                <span className="text-th-text3/40 text-[9px] uppercase tracking-widest ml-auto">
+                <span className="text-th-text3/60 text-[9px] uppercase tracking-widest ml-auto">
                   Position #{gear.position + 1}
                 </span>
               )}
@@ -561,9 +561,9 @@ const GearDetailModal: React.FC<GearDetailModalProps> = ({
                 className={`${INPUT_CLS} resize-none text-th-text/80`}
               />
             ) : gear.description ? (
-              <p className="text-th-text/70 leading-relaxed text-sm italic">"{gear.description}"</p>
+              <p className="text-th-text/85 leading-relaxed text-sm italic">"{gear.description}"</p>
             ) : (
-              <p className="text-th-text3/40 text-sm italic">No description available</p>
+              <p className="text-th-text3/60 text-sm italic">No description available</p>
             )}
           </section>
 
@@ -580,7 +580,7 @@ const GearDetailModal: React.FC<GearDetailModalProps> = ({
                 ))}
               </div>
             ) : (
-              <p className="text-th-text3/40 text-sm italic">No specs available</p>
+              <p className="text-th-text3/60 text-sm italic">No specs available</p>
             )}
           </section>
 
@@ -714,7 +714,7 @@ const GearDetailModal: React.FC<GearDetailModalProps> = ({
                     )}
                   </div>
                 ) : (
-                  <p className="text-th-text3/50 text-sm">No confident match found</p>
+                  <p className="text-th-text3/70 text-sm">No confident match found</p>
                 )}
 
                 {manualResult.alternative_urls.length > 0 && (
@@ -804,13 +804,13 @@ const GearDetailModal: React.FC<GearDetailModalProps> = ({
               <div className="glass-morphism rounded-xl border border-th-surface/[0.06] p-4 space-y-3">
                 <div className="grid grid-cols-2 gap-y-3">
                   <div>
-                    <p className="text-th-text3/50 text-[9px] uppercase mb-0.5">Purchase Price</p>
+                    <p className="text-th-text3/70 text-[9px] uppercase mb-0.5">Purchase Price</p>
                     <p className="text-th-text font-bold text-sm">
                       {gear.purchase_price != null ? `$${Number(gear.purchase_price).toFixed(2)}` : '—'}
                     </p>
                   </div>
                   <div>
-                    <p className="text-th-text3/50 text-[9px] uppercase mb-0.5">Purchase Date</p>
+                    <p className="text-th-text3/70 text-[9px] uppercase mb-0.5">Purchase Date</p>
                     <p className="text-th-text font-bold text-sm">
                       {gear.purchase_date || '—'}
                     </p>
@@ -818,8 +818,8 @@ const GearDetailModal: React.FC<GearDetailModalProps> = ({
                 </div>
                 {gear.notes && (
                   <div className="pt-2 border-t border-th-surface/[0.06]">
-                    <p className="text-th-text3/50 text-[9px] uppercase mb-1">Notes</p>
-                    <p className="text-th-text/70 text-sm leading-relaxed">{gear.notes}</p>
+                    <p className="text-th-text3/70 text-[9px] uppercase mb-1">Notes</p>
+                    <p className="text-th-text/85 text-sm leading-relaxed">{gear.notes}</p>
                   </div>
                 )}
               </div>

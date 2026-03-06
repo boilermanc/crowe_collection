@@ -228,7 +228,7 @@ const WantlistCard: React.FC<WantlistCardProps> = ({ item, onRemove, onMarkAsOwn
                   value={targetPrice}
                   onChange={(e) => setTargetPrice(e.target.value)}
                   placeholder="e.g. 15"
-                  className="w-full h-8 pl-5 pr-2 text-xs rounded-lg glass-morphism bg-th-surface/[0.06] border border-th-surface/[0.1] text-th-text placeholder:text-th-text3/40 focus:outline-none focus:border-[#dd6e42]/50"
+                  className="w-full h-8 pl-5 pr-2 text-xs rounded-lg glass-morphism bg-th-surface/[0.06] border border-th-surface/[0.1] text-th-text placeholder:text-th-text3/60 focus:outline-none focus:border-[#dd6e42]/50"
                 />
               </div>
               <select

@@ -90,7 +90,7 @@ const CoverPicker: React.FC<CoverPickerProps> = ({ artist, title, currentCoverUr
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search artist + album..."
-              className="min-w-0 flex-1 bg-th-surface/[0.04] border border-th-surface/[0.10] rounded-xl px-3 sm:px-4 py-3 text-sm text-th-text placeholder:text-th-text3/50 focus:outline-none focus:ring-1 focus:ring-[#dd6e42]/50"
+              className="min-w-0 flex-1 bg-th-surface/[0.04] border border-th-surface/[0.10] rounded-xl px-3 sm:px-4 py-3 text-sm text-th-text placeholder:text-th-text3/60 focus:outline-none focus:ring-1 focus:ring-[#dd6e42]/50"
             />
             <button
               type="submit"

@@ -253,7 +253,7 @@ const ShelfSetup: React.FC<ShelfSetupProps> = ({ userId, albums, onUpgradeRequir
 
   // ── Render ────────────────────────────────────────────────────
 
-  // Gate: Archivist-only feature
+  // Gate: Enthusiast-only feature
   if (!canUse('shelf_organizer')) {
     return (
       <main className="max-w-7xl mx-auto px-4 md:px-6 mt-8 pb-8">
@@ -272,7 +272,7 @@ const ShelfSetup: React.FC<ShelfSetupProps> = ({ userId, albums, onUpgradeRequir
             onClick={() => onUpgradeRequired?.('shelf_organizer')}
             className="rounded-xl bg-th-accent px-6 py-3 font-semibold text-white transition-all hover:brightness-110 active:scale-[0.98]"
           >
-            Upgrade to Archivist
+            Upgrade to Enthusiast
           </button>
         </div>
       </main>
@@ -359,7 +359,7 @@ const ShelfSetup: React.FC<ShelfSetupProps> = ({ userId, albums, onUpgradeRequir
                 <rect x="3" y="14" width="7" height="7" />
                 <rect x="14" y="14" width="7" height="7" />
               </svg>
-              <p className="text-th-text3/50 text-sm mb-3">No shelf configured yet.</p>
+              <p className="text-th-text3/70 text-sm mb-3">No shelf configured yet.</p>
               <button
                 onClick={() => setActiveTab('setup')}
                 className="text-[#dd6e42] text-sm font-label tracking-wide hover:underline"
@@ -426,7 +426,7 @@ const ShelfSetup: React.FC<ShelfSetupProps> = ({ userId, albums, onUpgradeRequir
         <h3 className="font-label text-xs tracking-widest uppercase font-bold text-th-text2">
           Sort Scheme
         </h3>
-        <p className="text-th-text3/50 text-xs">
+        <p className="text-th-text3/70 text-xs">
           How should records be sorted on your shelves?
         </p>
         <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Sort scheme">
@@ -467,7 +467,7 @@ const ShelfSetup: React.FC<ShelfSetupProps> = ({ userId, albums, onUpgradeRequir
               placeholder="e.g. Kallax 4x4, Living Room Shelf"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
-              className="w-full bg-th-surface/[0.04] border border-th-surface/[0.10] rounded-lg px-3 py-2.5 text-sm text-th-text placeholder:text-th-text3/40 focus:outline-none focus:ring-2 focus:ring-[#dd6e42]/50 transition-all"
+              className="w-full bg-th-surface/[0.04] border border-th-surface/[0.10] rounded-lg px-3 py-2.5 text-sm text-th-text placeholder:text-th-text3/60 focus:outline-none focus:ring-2 focus:ring-[#dd6e42]/50 transition-all"
               aria-label="Shelf name"
             />
           </div>
@@ -519,7 +519,7 @@ const ShelfSetup: React.FC<ShelfSetupProps> = ({ userId, albums, onUpgradeRequir
                 Your Shelves
               </h3>
               {totalCapacity > 0 && (
-                <span className="text-xs text-th-text3/50">
+                <span className="text-xs text-th-text3/70">
                   {totalAssigned} / {totalCapacity.toLocaleString()} total capacity
                   {unassignedCount > 0 && (
                     <span className="ml-2 text-yellow-400">{unassignedCount} unassigned</span>
@@ -623,7 +623,7 @@ const ShelfSetup: React.FC<ShelfSetupProps> = ({ userId, albums, onUpgradeRequir
                         <h4 className="text-th-text font-label text-base font-bold tracking-wide">
                           {shelf.name}
                         </h4>
-                        <p className="text-th-text3/50 text-xs mt-0.5">
+                        <p className="text-th-text3/70 text-xs mt-0.5">
                           {shelf.unit_count} section{shelf.unit_count !== 1 ? 's' : ''} &middot;{' '}
                           {shelf.capacity_per_unit} per section
                         </p>
@@ -673,7 +673,7 @@ const ShelfSetup: React.FC<ShelfSetupProps> = ({ userId, albums, onUpgradeRequir
 
                     {/* Capacity bar */}
                     <div>
-                      <div className="flex items-center justify-between text-xs text-th-text3/50 mb-1">
+                      <div className="flex items-center justify-between text-xs text-th-text3/70 mb-1">
                         <span>Assigned / Capacity</span>
                         <span className="font-label tracking-wide">
                           {getShelfAssignedCount(shelf.id)} / {(shelf.unit_count * shelf.capacity_per_unit).toLocaleString()} records
@@ -705,7 +705,7 @@ const ShelfSetup: React.FC<ShelfSetupProps> = ({ userId, albums, onUpgradeRequir
             <rect x="3" y="14" width="7" height="7" />
             <rect x="14" y="14" width="7" height="7" />
           </svg>
-          <p className="text-th-text3/40 text-sm">No shelves configured yet. Add one above to get started.</p>
+          <p className="text-th-text3/60 text-sm">No shelves configured yet. Add one above to get started.</p>
         </div>
       )}
 

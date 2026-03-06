@@ -138,7 +138,7 @@ const AddFeatureForm: React.FC<AddFeatureFormProps> = ({
   };
 
   const inputClass =
-    'w-full px-3 py-2 text-sm rounded-lg border border-th-surface/20 bg-th-bg text-th-text placeholder:text-th-text3/40 focus:outline-none focus:ring-2 focus:ring-[#dd6e42]/30 focus:border-[#dd6e42]/60 transition-colors';
+    'w-full px-3 py-2 text-sm rounded-lg border border-th-surface/20 bg-th-bg text-th-text placeholder:text-th-text3/60 focus:outline-none focus:ring-2 focus:ring-[#dd6e42]/30 focus:border-[#dd6e42]/60 transition-colors';
   const labelClass = 'block text-xs font-medium mb-1 text-th-text3';
 
   return (
@@ -470,7 +470,7 @@ const RoomFeaturesEditor: React.FC<RoomFeaturesEditorProps> = ({
   const featuresOnWall = (wall: Wall) => features.filter(f => f.wall === wall);
 
   const inputClass =
-    'w-full px-3 py-2 text-sm rounded-lg border border-th-surface/20 bg-th-bg text-th-text placeholder:text-th-text3/40 focus:outline-none focus:ring-2 focus:ring-[#dd6e42]/30 focus:border-[#dd6e42]/60 transition-colors';
+    'w-full px-3 py-2 text-sm rounded-lg border border-th-surface/20 bg-th-bg text-th-text placeholder:text-th-text3/60 focus:outline-none focus:ring-2 focus:ring-[#dd6e42]/30 focus:border-[#dd6e42]/60 transition-colors';
 
   return (
     <div
@@ -525,7 +525,7 @@ const RoomFeaturesEditor: React.FC<RoomFeaturesEditorProps> = ({
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-xs font-semibold text-th-text uppercase tracking-widest">
                       {label} Wall
-                      <span className="text-th-text3/50 ml-2 font-normal normal-case tracking-normal">
+                      <span className="text-th-text3/70 ml-2 font-normal normal-case tracking-normal">
                         {wl} ft
                       </span>
                     </h3>
@@ -559,11 +559,11 @@ const RoomFeaturesEditor: React.FC<RoomFeaturesEditorProps> = ({
                             <span className="text-xs text-th-text font-medium capitalize truncate">
                               {f.feature_type}
                             </span>
-                            <span className="text-[10px] text-th-text3/50">
+                            <span className="text-[10px] text-th-text3/70">
                               {f.position_pct}% &middot; {f.width_ft} ft
                             </span>
                             {f.notes && (
-                              <span className="text-[10px] text-th-text3/40 truncate hidden sm:inline">
+                              <span className="text-[10px] text-th-text3/60 truncate hidden sm:inline">
                                 — {f.notes}
                               </span>
                             )}
@@ -593,7 +593,7 @@ const RoomFeaturesEditor: React.FC<RoomFeaturesEditorProps> = ({
                     </div>
                   ) : (
                     !isAdding && (
-                      <p className="text-th-text3/30 text-xs mb-2">No features on this wall</p>
+                      <p className="text-th-text3/50 text-xs mb-2">No features on this wall</p>
                     )
                   )}
 

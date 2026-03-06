@@ -556,7 +556,7 @@ const GearCaptureGuide: React.FC<GearCaptureGuideProps> = ({ isOpen, onClose, on
                       Captured
                     </p>
                   ) : (
-                    <p className="text-th-text3/50 text-xs mt-0.5">Skipped</p>
+                    <p className="text-th-text3/70 text-xs mt-0.5">Skipped</p>
                   )}
                 </div>
               </div>
@@ -586,7 +586,7 @@ const GearCaptureGuide: React.FC<GearCaptureGuideProps> = ({ isOpen, onClose, on
                   </button>
                 )}
               </div>
-              <p className="text-th-text3/40 text-[10px] text-center mt-2">
+              <p className="text-th-text3/60 text-[10px] text-center mt-2">
                 AI works best when the brand name and model number are clearly visible
               </p>
             </div>

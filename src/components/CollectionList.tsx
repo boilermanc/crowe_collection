@@ -292,7 +292,7 @@ const CollectionList: React.FC<CollectionListProps> = ({ albums, onSelect, onDel
                 </div>
 
                 {/* Value (hidden on mobile) */}
-                <p className={`text-xs font-medium hidden md:block ${album.price_median ? 'text-[#f0a882]' : 'text-th-text3/50'}`} role="cell">
+                <p className={`text-xs font-medium hidden md:block ${album.price_median ? 'text-[#f0a882]' : 'text-th-text3/70'}`} role="cell">
                   {album.price_median ? `$${Math.round(album.price_median)}` : '—'}
                 </p>
 

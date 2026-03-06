@@ -76,12 +76,12 @@ const StakkdOnboarding: React.FC<StakkdOnboardingProps> = ({ onComplete, onGoHom
       {/* Progress bar */}
       <div className="w-full max-w-lg mb-8">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-th-text3/50 text-xs font-label tracking-widest uppercase">
+          <span className="text-th-text3/70 text-xs font-label tracking-widest uppercase">
             Step {step + 1} of {TOTAL_STEPS}
           </span>
           <button
             onClick={onComplete}
-            className="text-th-text3/40 text-xs font-label tracking-widest uppercase hover:text-th-text3 transition-colors"
+            className="text-th-text3/60 text-xs font-label tracking-widest uppercase hover:text-th-text3 transition-colors"
           >
             Skip
           </button>
@@ -120,19 +120,19 @@ const StakkdOnboarding: React.FC<StakkdOnboardingProps> = ({ onComplete, onGoHom
                 Your complete audio gear catalog. Document your equipment, visualize your signal chain, and get AI-powered setup guides — all in one place.
               </p>
               <div className="mt-6 flex flex-wrap justify-center gap-3">
-                <div className="flex items-center gap-2 text-xs text-th-text3/50">
+                <div className="flex items-center gap-2 text-xs text-th-text3/70">
                   <svg className="w-4 h-4 text-[#dd6e42]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                   AI identification
                 </div>
-                <div className="flex items-center gap-2 text-xs text-th-text3/50">
+                <div className="flex items-center gap-2 text-xs text-th-text3/70">
                   <svg className="w-4 h-4 text-[#dd6e42]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                   Signal chain
                 </div>
-                <div className="flex items-center gap-2 text-xs text-th-text3/50">
+                <div className="flex items-center gap-2 text-xs text-th-text3/70">
                   <svg className="w-4 h-4 text-[#dd6e42]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
@@ -166,7 +166,7 @@ const StakkdOnboarding: React.FC<StakkdOnboardingProps> = ({ onComplete, onGoHom
                   </svg>
                   <div className="text-left">
                     <p className="text-th-text text-xs font-bold">Scan</p>
-                    <p className="text-th-text3/50 text-[10px]">Snap a photo, AI identifies your gear</p>
+                    <p className="text-th-text3/70 text-[10px]">Snap a photo, AI identifies your gear</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 bg-th-surface/[0.04] border border-th-surface/[0.10] rounded-xl px-4 py-3">
@@ -175,7 +175,7 @@ const StakkdOnboarding: React.FC<StakkdOnboardingProps> = ({ onComplete, onGoHom
                   </svg>
                   <div className="text-left">
                     <p className="text-th-text text-xs font-bold">Upload</p>
-                    <p className="text-th-text3/50 text-[10px]">Pick a photo from your library</p>
+                    <p className="text-th-text3/70 text-[10px]">Pick a photo from your library</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 bg-amber-500/[0.06] border border-amber-500/20 rounded-xl px-4 py-3">
@@ -184,7 +184,7 @@ const StakkdOnboarding: React.FC<StakkdOnboardingProps> = ({ onComplete, onGoHom
                   </svg>
                   <div className="text-left">
                     <p className="text-th-text text-xs font-bold">Manual Entry <span className="text-amber-400 text-[9px] ml-1">Recommended</span></p>
-                    <p className="text-th-text3/50 text-[10px]">Type in brand, model &amp; specs by hand</p>
+                    <p className="text-th-text3/70 text-[10px]">Type in brand, model &amp; specs by hand</p>
                   </div>
                 </div>
               </div>
@@ -258,7 +258,7 @@ const StakkdOnboarding: React.FC<StakkdOnboardingProps> = ({ onComplete, onGoHom
                   </svg>
                   <div className="text-left">
                     <p className="text-th-text text-xs font-bold">Setup Guide</p>
-                    <p className="text-th-text3/50 text-[10px]">AI wiring instructions for your gear combo</p>
+                    <p className="text-th-text3/70 text-[10px]">AI wiring instructions for your gear combo</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 bg-th-surface/[0.04] border border-th-surface/[0.10] rounded-xl px-4 py-3">
@@ -267,7 +267,7 @@ const StakkdOnboarding: React.FC<StakkdOnboardingProps> = ({ onComplete, onGoHom
                   </svg>
                   <div className="text-left">
                     <p className="text-th-text text-xs font-bold">Chain Insights</p>
-                    <p className="text-th-text3/50 text-[10px]">Quality analysis &amp; compatibility warnings</p>
+                    <p className="text-th-text3/70 text-[10px]">Quality analysis &amp; compatibility warnings</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 bg-th-surface/[0.04] border border-th-surface/[0.10] rounded-xl px-4 py-3">
@@ -276,7 +276,7 @@ const StakkdOnboarding: React.FC<StakkdOnboardingProps> = ({ onComplete, onGoHom
                   </svg>
                   <div className="text-left">
                     <p className="text-th-text text-xs font-bold">Manual Finder</p>
-                    <p className="text-th-text3/50 text-[10px]">AI tracks down equipment manuals &amp; PDFs</p>
+                    <p className="text-th-text3/70 text-[10px]">AI tracks down equipment manuals &amp; PDFs</p>
                   </div>
                 </div>
               </div>

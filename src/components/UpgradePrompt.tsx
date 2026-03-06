@@ -39,12 +39,12 @@ const FEATURE_INFO: Record<string, { title: string; description: string; cta?: s
   shelf_organizer: {
     title: 'Shelf Organizer',
     description: 'Map your digital collection to your physical shelves with smart sorting, drag-and-drop, and rebalance suggestions. Know exactly where every record goes.',
-    cta: 'Upgrade to Archivist',
+    cta: 'Upgrade to Enthusiast',
   },
   room_planner: {
     title: 'Room Planner',
-    description: 'Create listening rooms with dimensions and acoustics, visualize gear placement, and get AI-powered layout recommendations. Available on the Archivist plan.',
-    cta: 'Upgrade to Archivist',
+    description: 'Create listening rooms with dimensions and acoustics, visualize gear placement, and get AI-powered layout recommendations. Available on the Enthusiast plan.',
+    cta: 'Upgrade to Enthusiast',
   },
   bulk_import: {
     title: 'Bulk CSV Import',
@@ -57,7 +57,7 @@ const FEATURE_INFO: Record<string, { title: string; description: string; cta?: s
   analytics: {
     title: 'Collection Analytics',
     description: 'See your vinyl collection like never before — genre breakdowns, decade distribution, growth timeline, and collection stats.',
-    cta: 'Upgrade to Archivist',
+    cta: 'Upgrade to Enthusiast',
   },
 };
 
@@ -67,7 +67,7 @@ const UpgradePrompt: React.FC<UpgradePromptProps> = ({ feature, onClose, onUpgra
 
   const info = FEATURE_INFO[feature] || {
     title: 'Premium Feature',
-    description: 'This feature requires a Curator or Archivist plan.',
+    description: 'This feature requires a Curator or Enthusiast plan.',
   };
 
   return (

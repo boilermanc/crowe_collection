@@ -264,7 +264,7 @@ const BulkImport: React.FC<BulkImportProps> = ({ onUpgradeRequired, albums, onIm
           onUpgradeRequired('album_limit');
           return;
         }
-        // Cap to remaining capacity (shouldn't normally happen since bulk import is Archivist-only, but safe guard)
+        // Cap to remaining capacity (shouldn't normally happen since bulk import is Enthusiast-only, but safe guard)
         selected.splice(remaining);
       }
     }
@@ -372,7 +372,7 @@ const BulkImport: React.FC<BulkImportProps> = ({ onUpgradeRequired, albums, onIm
                 <p className="text-th-text font-medium">
                   Drop your file here, or <span className="text-[#dd6e42] underline underline-offset-2">browse</span>
                 </p>
-                <p className="text-th-text3/50 text-xs mt-1">
+                <p className="text-th-text3/70 text-xs mt-1">
                   Supports CSV, TSV, and TXT files — up to 5,000 records (5 MB max)
                 </p>
               </div>
@@ -390,10 +390,10 @@ const BulkImport: React.FC<BulkImportProps> = ({ onUpgradeRequired, albums, onIm
             {importHistory.length > 0 && (
               <div className="mt-5 pt-4 border-t border-th-surface/[0.08]">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-[10px] uppercase tracking-widest text-th-text3/50 font-label">Recent Imports</p>
+                  <p className="text-[10px] uppercase tracking-widest text-th-text3/70 font-label">Recent Imports</p>
                   <button
                     onClick={() => { clearImportHistory(); setImportHistory([]); }}
-                    className="text-[10px] text-th-text3/40 hover:text-th-text3 transition-colors underline underline-offset-2"
+                    className="text-[10px] text-th-text3/60 hover:text-th-text3 transition-colors underline underline-offset-2"
                   >
                     Clear history
                   </button>
@@ -402,7 +402,7 @@ const BulkImport: React.FC<BulkImportProps> = ({ onUpgradeRequired, albums, onIm
                   {importHistory.map((entry, i) => (
                     <div key={i} className="flex items-center justify-between text-xs text-th-text3">
                       <span className="truncate mr-3">{entry.fileName}</span>
-                      <span className="shrink-0 text-th-text3/50">
+                      <span className="shrink-0 text-th-text3/70">
                         {entry.count} {entry.count === 1 ? 'record' : 'records'} &middot; {new Date(entry.date).toLocaleDateString()}
                       </span>
                     </div>
@@ -494,7 +494,7 @@ const BulkImport: React.FC<BulkImportProps> = ({ onUpgradeRequired, albums, onIm
               {/* Mapping rows */}
               <div className="space-y-2">
                 {/* Header labels (desktop) */}
-                <div className="hidden md:grid grid-cols-[1fr_auto_1fr] gap-3 px-1 pb-1 text-[10px] uppercase tracking-widest text-th-text3/50 font-label">
+                <div className="hidden md:grid grid-cols-[1fr_auto_1fr] gap-3 px-1 pb-1 text-[10px] uppercase tracking-widest text-th-text3/70 font-label">
                   <span>Your CSV Columns</span>
                   <span className="w-6" />
                   <span>Rekkrd Fields</span>
@@ -564,7 +564,7 @@ const BulkImport: React.FC<BulkImportProps> = ({ onUpgradeRequired, albums, onIm
                           return (
                             <th
                               key={rekkrdField}
-                              className="text-left text-[10px] uppercase tracking-widest text-th-text3/50 font-label px-3 py-2 whitespace-nowrap"
+                              className="text-left text-[10px] uppercase tracking-widest text-th-text3/70 font-label px-3 py-2 whitespace-nowrap"
                               role="columnheader"
                             >
                               {label}
@@ -591,7 +591,7 @@ const BulkImport: React.FC<BulkImportProps> = ({ onUpgradeRequired, albums, onIm
                   </table>
                 </div>
                 {parseResult.rows.length > 5 && (
-                  <p className="text-th-text3/40 text-xs mt-3 px-3">
+                  <p className="text-th-text3/60 text-xs mt-3 px-3">
                     Showing 5 of {parseResult.totalRows.toLocaleString()} records
                   </p>
                 )}
@@ -722,7 +722,7 @@ const BulkImport: React.FC<BulkImportProps> = ({ onUpgradeRequired, albums, onIm
                 {/* Skipped rows view */}
                 {reviewFilter === 'skipped' && (
                   skippedRows.length === 0 ? (
-                    <div className="p-8 text-center text-th-text3/50 text-sm">No skipped rows</div>
+                    <div className="p-8 text-center text-th-text3/70 text-sm">No skipped rows</div>
                   ) : (
                     skippedRows.map(row => (
                       <div key={row.rowNumber} className="flex items-center gap-3 px-4 py-3">
@@ -741,7 +741,7 @@ const BulkImport: React.FC<BulkImportProps> = ({ onUpgradeRequired, albums, onIm
                 {/* Candidate rows view (All or Duplicates filter) */}
                 {reviewFilter !== 'skipped' && (
                   filteredCandidates.length === 0 ? (
-                    <div className="p-8 text-center text-th-text3/50 text-sm">
+                    <div className="p-8 text-center text-th-text3/70 text-sm">
                       {reviewFilter === 'duplicates' ? 'No duplicates found' : 'No records to display'}
                     </div>
                   ) : (
@@ -847,7 +847,7 @@ const BulkImport: React.FC<BulkImportProps> = ({ onUpgradeRequired, albums, onIm
               />
             </div>
 
-            <p className="text-th-text3/50 text-xs">Don't close this page while the import is running</p>
+            <p className="text-th-text3/70 text-xs">Don't close this page while the import is running</p>
           </section>
         )}
 

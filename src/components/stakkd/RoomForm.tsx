@@ -168,7 +168,7 @@ const RoomForm: React.FC<RoomFormProps> = ({ mode, initialData, onSave, onCancel
   };
 
   // Shared input class matching GearCatalogEditor pattern
-  const inputClass = 'w-full px-3 py-2 text-sm rounded-lg border border-th-surface/20 bg-th-bg text-th-text placeholder:text-th-text3/40 focus:outline-none focus:ring-2 focus:ring-[#dd6e42]/30 focus:border-[#dd6e42]/60 transition-colors';
+  const inputClass = 'w-full px-3 py-2 text-sm rounded-lg border border-th-surface/20 bg-th-bg text-th-text placeholder:text-th-text3/60 focus:outline-none focus:ring-2 focus:ring-[#dd6e42]/30 focus:border-[#dd6e42]/60 transition-colors';
   const labelClass = 'block text-xs font-medium mb-1.5 text-th-text3';
   const errorBorder = 'border-red-400 focus:ring-red-400/30 focus:border-red-400';
 

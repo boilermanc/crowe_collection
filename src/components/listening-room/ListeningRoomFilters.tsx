@@ -59,7 +59,7 @@ const ListeningRoomFilters: React.FC<ListeningRoomFiltersProps> = ({
             className={`w-full rounded-xl pl-9 pr-3 py-2 text-xs font-label focus:outline-none focus:ring-1 focus:ring-[#dd6e42]/50 transition-colors duration-500 ${
               ambientMode
                 ? 'bg-[#1a1a1a] border border-[#c4b5a0]/15 text-[#c4b5a0] placeholder:text-[#c4b5a0]/30'
-                : 'bg-th-surface/[0.04] border border-th-surface/[0.10] placeholder:text-th-text3/50'
+                : 'bg-th-surface/[0.04] border border-th-surface/[0.10] placeholder:text-th-text3/60'
             }`}
           />
           <svg

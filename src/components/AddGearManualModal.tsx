@@ -20,7 +20,7 @@ const CATEGORY_LABELS: Record<GearCategory, string> = {
   cables_other: 'Cables / Other',
 };
 
-const INPUT_CLS = 'w-full bg-th-surface/[0.04] border border-th-surface/[0.10] rounded-xl px-4 py-3 text-sm text-th-text placeholder:text-th-text3/50 focus:outline-none focus:ring-1 focus:ring-[#dd6e42]/50';
+const INPUT_CLS = 'w-full bg-th-surface/[0.04] border border-th-surface/[0.10] rounded-xl px-4 py-3 text-sm text-th-text placeholder:text-th-text3/60 focus:outline-none focus:ring-1 focus:ring-[#dd6e42]/50';
 const LABEL_CLS = 'block text-th-text3/70 text-[10px] uppercase tracking-widest mb-1';
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -101,7 +101,7 @@ const CatalogResults: React.FC<{
 
   return (
     <div className="mt-3 space-y-1">
-      <p className="text-[10px] text-th-text3/50 uppercase tracking-widest px-1">
+      <p className="text-[10px] text-th-text3/70 uppercase tracking-widest px-1">
         {results.length} result{results.length !== 1 ? 's' : ''} for &lsquo;{query.trim()}&rsquo;
       </p>
       <div className="rounded-xl border border-th-surface/[0.10] bg-th-bg/95 backdrop-blur-xl overflow-hidden">
@@ -113,7 +113,7 @@ const CatalogResults: React.FC<{
               {/* Category header */}
               <div className="flex items-center gap-2 px-3 pt-2.5 pb-1">
                 <div className="w-0.5 h-3 rounded-full" style={{ backgroundColor: color }} />
-                <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-th-text3/50">
+                <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-th-text3/70">
                   {catLabel}
                 </span>
               </div>
@@ -147,12 +147,12 @@ const CatalogResults: React.FC<{
                         {result.brand} {result.model}
                       </span>
                       {subtitle && (
-                        <span className="block text-[11px] text-th-text3/50 truncate mt-0.5">
+                        <span className="block text-[11px] text-th-text3/70 truncate mt-0.5">
                           {subtitle}
                         </span>
                       )}
                       {result.year && (
-                        <span className="block text-[10px] text-th-text3/40 mt-0.5">
+                        <span className="block text-[10px] text-th-text3/60 mt-0.5">
                           {result.year}
                         </span>
                       )}
@@ -608,7 +608,7 @@ const AddGearManualModal: React.FC<AddGearManualModalProps> = ({
                       />
                     </div>
                     <div className="flex flex-col gap-2 pt-1">
-                      <span className="text-th-text3/50 text-[10px]">From Stakkd catalog</span>
+                      <span className="text-th-text3/70 text-[10px]">From Stakkd catalog</span>
                       <button
                         type="button"
                         onClick={() => {
@@ -636,7 +636,7 @@ const AddGearManualModal: React.FC<AddGearManualModalProps> = ({
                       />
                     </div>
                     <div className="flex flex-col gap-2 pt-1">
-                      <span className="text-th-text3/50 text-[10px]">Your photo</span>
+                      <span className="text-th-text3/70 text-[10px]">Your photo</span>
                       <button
                         type="button"
                         onClick={handleRemovePhoto}

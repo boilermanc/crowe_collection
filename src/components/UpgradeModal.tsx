@@ -88,6 +88,7 @@ const FEATURE_LABELS: Record<string, string> = {
   bulk_import: 'Bulk Import',
   export: 'Collection Export',
   analytics: 'Collection Analytics',
+  discogs_pricing: 'Discogs Pricing',
   plan_upgrade: 'Premium Features',
 };
 
@@ -224,7 +225,7 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, feature, d
   const enthusiastButtonLabel = alreadyHasPlan && plan === 'enthusiast'
     ? 'Subscribe Now'
     : alreadyHasPlan
-      ? 'Upgrade to Archivist'
+      ? 'Upgrade to Enthusiast'
       : 'Start Free Trial';
 
   // Track whether auto-proceed has fired for the current defaultPriceId
@@ -524,9 +525,9 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, feature, d
                 </button>
               </div>
 
-              {/* Archivist */}
+              {/* Enthusiast */}
               <div className="rounded-xl border border-th-surface/[0.15] bg-th-surface/[0.03] p-5">
-                <p className="font-label text-[10px] tracking-widest uppercase text-[#f0a882] mb-1 mt-1">Archivist</p>
+                <p className="font-label text-[10px] tracking-widest uppercase text-[#f0a882] mb-1 mt-1">Enthusiast</p>
                 <div className="flex items-baseline gap-0.5 mb-4">
                   <span className="text-th-text3 text-sm font-semibold">$</span>
                   <span className="text-3xl font-bold text-th-text">{enthusiastPrice}</span>

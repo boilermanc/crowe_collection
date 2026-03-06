@@ -145,9 +145,9 @@ const DiscogsReleaseDetail: React.FC<DiscogsReleaseDetailProps> = ({ releaseId, 
 
                   {/* Label + catno */}
                   {labelInfo && (
-                    <p className="text-xs text-th-text3/50">
+                    <p className="text-xs text-th-text3/70">
                       {labelInfo.name}
-                      {labelInfo.catno && <span className="ml-2 text-th-text3/40">({labelInfo.catno})</span>}
+                      {labelInfo.catno && <span className="ml-2 text-th-text3/60">({labelInfo.catno})</span>}
                     </p>
                   )}
 
@@ -162,10 +162,10 @@ const DiscogsReleaseDetail: React.FC<DiscogsReleaseDetailProps> = ({ releaseId, 
                       {/* Rating */}
                       <div className="flex items-center gap-1.5" aria-label={`Rating: ${release.community.rating.average.toFixed(1)} out of 5 from ${release.community.rating.count} votes`}>
                         <StarRating value={release.community.rating.average} />
-                        <span className="text-xs text-th-text3/50">({release.community.rating.count})</span>
+                        <span className="text-xs text-th-text3/70">({release.community.rating.count})</span>
                       </div>
                       {/* Have / Want */}
-                      <div className="flex items-center gap-3 text-[10px] text-th-text3/50">
+                      <div className="flex items-center gap-3 text-[10px] text-th-text3/70">
                         <span aria-label={`${release.community.have} people have this`}>
                           <span className="text-[#6a8c9a]">{release.community.have.toLocaleString()}</span> have
                         </span>
@@ -190,12 +190,12 @@ const DiscogsReleaseDetail: React.FC<DiscogsReleaseDetailProps> = ({ releaseId, 
                         key={i}
                         className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-th-surface/[0.04] transition-colors text-sm"
                       >
-                        <span className="w-8 shrink-0 text-th-text3/40 text-xs text-right font-mono">
+                        <span className="w-8 shrink-0 text-th-text3/60 text-xs text-right font-mono">
                           {track.position || String(i + 1)}
                         </span>
                         <span className="flex-1 text-th-text truncate">{track.title}</span>
                         {track.duration && (
-                          <span className="shrink-0 text-th-text3/50 text-xs font-mono">{track.duration}</span>
+                          <span className="shrink-0 text-th-text3/70 text-xs font-mono">{track.duration}</span>
                         )}
                       </li>
                     ))}

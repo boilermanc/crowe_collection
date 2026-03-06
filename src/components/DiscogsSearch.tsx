@@ -110,7 +110,7 @@ const DiscogsSearch: React.FC<DiscogsSearchProps> = ({ onSelectResult, onWantlis
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search Discogs by artist, album, barcode..."
             aria-label="Search Discogs"
-            className="flex-1 px-4 py-3 rounded-xl bg-th-surface/[0.06] border border-th-surface/[0.10] text-th-text placeholder:text-th-text3/50 text-sm focus:outline-none focus:border-[#dd6e42]/50 focus:ring-1 focus:ring-[#dd6e42]/30 transition-all"
+            className="flex-1 px-4 py-3 rounded-xl bg-th-surface/[0.06] border border-th-surface/[0.10] text-th-text placeholder:text-th-text3/60 text-sm focus:outline-none focus:border-[#dd6e42]/50 focus:ring-1 focus:ring-[#dd6e42]/30 transition-all"
           />
           <button
             type="submit"
@@ -142,7 +142,7 @@ const DiscogsSearch: React.FC<DiscogsSearchProps> = ({ onSelectResult, onWantlis
             onChange={(e) => setYear(e.target.value)}
             placeholder="Year"
             aria-label="Filter by year"
-            className="w-20 px-3 py-2 rounded-lg bg-th-surface/[0.06] border border-th-surface/[0.10] text-th-text placeholder:text-th-text3/50 text-xs focus:outline-none focus:border-[#dd6e42]/50 transition-all"
+            className="w-20 px-3 py-2 rounded-lg bg-th-surface/[0.06] border border-th-surface/[0.10] text-th-text placeholder:text-th-text3/60 text-xs focus:outline-none focus:border-[#dd6e42]/50 transition-all"
           />
           <input
             type="text"
@@ -150,7 +150,7 @@ const DiscogsSearch: React.FC<DiscogsSearchProps> = ({ onSelectResult, onWantlis
             onChange={(e) => setCountry(e.target.value)}
             placeholder="Country"
             aria-label="Filter by country"
-            className="w-24 px-3 py-2 rounded-lg bg-th-surface/[0.06] border border-th-surface/[0.10] text-th-text placeholder:text-th-text3/50 text-xs focus:outline-none focus:border-[#dd6e42]/50 transition-all"
+            className="w-24 px-3 py-2 rounded-lg bg-th-surface/[0.06] border border-th-surface/[0.10] text-th-text placeholder:text-th-text3/60 text-xs focus:outline-none focus:border-[#dd6e42]/50 transition-all"
           />
         </div>
       </form>
@@ -253,7 +253,7 @@ const ResultCard: React.FC<{
             <span className="text-th-text3/70">{result.year}</span>
           )}
           {result.country && (
-            <span className="text-th-text3/50">{result.country}</span>
+            <span className="text-th-text3/70">{result.country}</span>
           )}
         </div>
 
@@ -273,14 +273,14 @@ const ResultCard: React.FC<{
 
         {/* Label */}
         {result.label && result.label.length > 0 && (
-          <p className="text-th-text3/50 text-[10px] truncate" title={result.label.join(', ')}>
+          <p className="text-th-text3/70 text-[10px] truncate" title={result.label.join(', ')}>
             {result.label[0]}
           </p>
         )}
 
         {/* Community stats */}
         {result.community && (
-          <div className="flex items-center gap-3 text-[10px] text-th-text3/50 pt-1">
+          <div className="flex items-center gap-3 text-[10px] text-th-text3/70 pt-1">
             <span aria-label={`${result.community.have} people have this`}>
               <span className="text-[#6a8c9a]">{result.community.have}</span> have
             </span>

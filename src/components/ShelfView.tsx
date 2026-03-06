@@ -178,7 +178,7 @@ const DraggableAlbumRow: React.FC<DraggableAlbumRowProps> = ({
       {/* Info */}
       <div className="flex-1 min-w-0">
         <p className="text-sm text-th-text truncate">{album.artist}</p>
-        <p className="text-xs text-th-text3/50 truncate">{album.title}</p>
+        <p className="text-xs text-th-text3/70 truncate">{album.title}</p>
       </div>
 
       {/* Pin indicator + unpin popover */}
@@ -207,7 +207,7 @@ const DraggableAlbumRow: React.FC<DraggableAlbumRowProps> = ({
       )}
 
       {/* Year */}
-      <span className="text-xs text-th-text3/40 font-label tracking-wide flex-shrink-0">
+      <span className="text-xs text-th-text3/60 font-label tracking-wide flex-shrink-0">
         {album.year || '—'}
       </span>
     </li>
@@ -322,7 +322,7 @@ const DragOverlayCard: React.FC<{ album: Album }> = ({ album }) => (
     </div>
     <div className="flex-1 min-w-0">
       <p className="text-sm text-th-text truncate">{album.artist}</p>
-      <p className="text-xs text-th-text3/50 truncate">{album.title}</p>
+      <p className="text-xs text-th-text3/70 truncate">{album.title}</p>
     </div>
   </div>
 );
@@ -631,7 +631,7 @@ const ShelfView: React.FC<ShelfViewProps> = ({
           <circle cx="12" cy="12" r="3" />
           <line x1="12" y1="2" x2="12" y2="5" />
         </svg>
-        <p className="text-th-text3/40 text-sm">No records in your collection yet.</p>
+        <p className="text-th-text3/60 text-sm">No records in your collection yet.</p>
       </div>
     );
   }
@@ -694,7 +694,7 @@ const ShelfView: React.FC<ShelfViewProps> = ({
 
         {/* Summary bar */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="text-xs text-th-text3/50">
+          <div className="text-xs text-th-text3/70">
             <span className="font-label tracking-wide text-th-text2">{albums.length}</span> record{albums.length !== 1 ? 's' : ''} across{' '}
             <span className="font-label tracking-wide text-th-text2">{shelfConfig.unit_count}</span> section{shelfConfig.unit_count !== 1 ? 's' : ''}
             {overflow && (
@@ -819,7 +819,7 @@ const ShelfView: React.FC<ShelfViewProps> = ({
               <h4 className="font-label text-sm tracking-widest uppercase font-bold text-th-text">
                 Rebalance Preview
               </h4>
-              <p className="text-xs text-th-text3/50 mt-1">
+              <p className="text-xs text-th-text3/70 mt-1">
                 {rebalancePlan && rebalancePlan.moves.length > 0
                   ? `Move ${rebalancePlan.moves.length} album${rebalancePlan.moves.length !== 1 ? 's' : ''} to even out your shelves`
                   : 'Your shelves are already balanced!'}
@@ -830,7 +830,7 @@ const ShelfView: React.FC<ShelfViewProps> = ({
               <>
                 {/* Before / After distribution */}
                 <div className="px-4 py-3 border-b border-th-surface/[0.06]">
-                  <p className="text-[10px] font-label tracking-widest uppercase text-th-text3/40 mb-2">Distribution</p>
+                  <p className="text-[10px] font-label tracking-widest uppercase text-th-text3/60 mb-2">Distribution</p>
                   <div className="space-y-1.5">
                     {units.map(({ unitNumber, albums: unitAlbums }, idx) => {
                       const cap = shelfConfig.capacity_per_unit;
@@ -839,7 +839,7 @@ const ShelfView: React.FC<ShelfViewProps> = ({
                       const changed = before !== after;
                       return (
                         <div key={unitNumber} className="flex items-center gap-3 text-xs">
-                          <span className="w-16 text-th-text3/50 font-label tracking-wide flex-shrink-0">Sec {unitNumber}</span>
+                          <span className="w-16 text-th-text3/70 font-label tracking-wide flex-shrink-0">Sec {unitNumber}</span>
                           <div className="flex-1 flex items-center gap-2">
                             <div className="flex-1 h-2 bg-th-surface/[0.08] rounded-full overflow-hidden">
                               <div
@@ -860,7 +860,7 @@ const ShelfView: React.FC<ShelfViewProps> = ({
                                 style={{ width: `${Math.min(100, (after / cap) * 100)}%` }}
                               />
                             </div>
-                            <span className={`w-7 text-right font-label tracking-wide ${changed ? 'text-emerald-400' : 'text-th-text3/40'}`}>{after}</span>
+                            <span className={`w-7 text-right font-label tracking-wide ${changed ? 'text-emerald-400' : 'text-th-text3/60'}`}>{after}</span>
                           </div>
                         </div>
                       );
@@ -894,7 +894,7 @@ const ShelfView: React.FC<ShelfViewProps> = ({
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-xs text-th-text truncate">{move.albumArtist} — <span className="text-th-text3/60">{move.albumTitle}</span></p>
-                            <p className="text-[10px] text-th-text3/40 font-label tracking-wide">
+                            <p className="text-[10px] text-th-text3/60 font-label tracking-wide">
                               Section {move.fromUnit} → Section {move.toUnit}
                             </p>
                           </div>

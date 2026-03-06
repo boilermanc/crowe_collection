@@ -255,7 +255,7 @@ const tiers = [
     highlighted: true,
   },
   {
-    name: 'Archivist',
+    name: 'Enthusiast',
     price: '$9.99',
     period: '/mo',
     badge: '',
@@ -268,7 +268,7 @@ const tiers = [
       'PDF collection catalogs',
       'Priority support',
     ],
-    cta: 'Go Archivist',
+    cta: 'Go Enthusiast',
     tier: 'enthusiast',
     highlighted: false,
   },

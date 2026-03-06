@@ -139,7 +139,7 @@ const DiscogsCollectionBrowser: React.FC<DiscogsCollectionBrowserProps> = ({ onI
         </button>
 
         {pagination && (
-          <span className="ml-auto text-th-text3/50 text-xs font-label tracking-widest uppercase">
+          <span className="ml-auto text-th-text3/70 text-xs font-label tracking-widest uppercase">
             {pagination.items} release{pagination.items !== 1 ? 's' : ''}
           </span>
         )}
@@ -205,10 +205,10 @@ const DiscogsCollectionBrowser: React.FC<DiscogsCollectionBrowserProps> = ({ onI
               <div className="flex-1 min-w-0">
                 <p className="text-th-text text-sm leading-tight truncate">
                   <span className="font-medium">{artist}</span>
-                  <span className="text-th-text3/50"> — </span>
+                  <span className="text-th-text3/70"> — </span>
                   <span>{info.title}</span>
                   {info.year > 0 && (
-                    <span className="text-th-text3/50 ml-1">({info.year})</span>
+                    <span className="text-th-text3/70 ml-1">({info.year})</span>
                   )}
                 </p>
               </div>

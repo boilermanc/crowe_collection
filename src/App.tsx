@@ -664,7 +664,7 @@ const App: React.FC = () => {
               <h3 className="text-3xl md:text-4xl font-bold text-th-text">{stats.total}</h3>
             </div>
             <div className="glass-morphism p-4 md:p-6 rounded-3xl border border-th-surface/[0.10]">
-              <p className="text-[9px] font-label text-[#f0a882]/60 tracking-widest uppercase mb-1">Portfolio Value</p>
+              <p className="text-[9px] font-label text-[#f0a882]/80 tracking-widest uppercase mb-1">Portfolio Value</p>
               <h3 className="text-3xl md:text-4xl font-bold text-[#f0a882]">${stats.portfolioValue.toLocaleString()}</h3>
             </div>
             <div className="glass-morphism p-4 md:p-6 rounded-3xl border border-th-surface/[0.10]">
@@ -726,7 +726,7 @@ const App: React.FC = () => {
               {processingStatus}
             </p>
             {scanElapsed > 0 && (
-              <p className="text-th-text3/50 text-xs mt-2 font-mono">({scanElapsed}s)</p>
+              <p className="text-th-text3/70 text-xs mt-2 font-mono">({scanElapsed}s)</p>
             )}
           </div>
 
@@ -1055,11 +1055,11 @@ const App: React.FC = () => {
 
           {albums.length > 0 && (
             <div className="relative z-10 mt-10 flex items-center gap-4">
-              <p className="text-th-text3/50 text-xs font-label tracking-widest uppercase">{albums.length} records in your crate</p>
+              <p className="text-th-text3/70 text-xs font-label tracking-widest uppercase">{albums.length} records in your crate</p>
               {albums.some(a => a.isFavorite) && (
                 <button
                   onClick={() => { setFilter('favoritesOnly', true); setCurrentView('list'); }}
-                  className="flex items-center gap-1.5 text-[#dd6e42]/60 hover:text-[#dd6e42] transition-colors group"
+                  className="flex items-center gap-1.5 text-[#dd6e42]/80 hover:text-[#dd6e42] transition-colors group"
                   aria-label={filters.favoritesOnly ? 'Remove favorites filter' : 'Show favorites only'}
                   aria-pressed={filters.favoritesOnly}
                   title="View favorites"
@@ -1109,7 +1109,7 @@ const App: React.FC = () => {
             <section className="glass-morphism rounded-xl p-6 space-y-4">
               <div>
                 <h3 className="text-th-text font-display text-lg">Import Your Discogs Collection</h3>
-                <p className="text-th-text/60 text-sm mt-1">
+                <p className="text-th-text/80 text-sm mt-1">
                   Select records from your Discogs collection to add them to Rekkrd.
                 </p>
               </div>

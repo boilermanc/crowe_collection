@@ -509,7 +509,7 @@ const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
                 <h3>{f.title}</h3>
                 {f.tier && f.tier !== 'all' && (
                   <span className={`feature-tier-badge tier-${f.tier}`}>
-                    {f.tier === 'curator' ? 'Curator' : 'Archivist'}
+                    {f.tier === 'curator' ? 'Curator' : 'Enthusiast'}
                   </span>
                 )}
                 {f.tier === 'all' && (
@@ -1072,7 +1072,7 @@ const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
             </div>
 
             <div className="price-card">
-              <div className="tier">Archivist</div>
+              <div className="tier">Enthusiast</div>
               <h3>Pro</h3>
               <div className="price-amount">
                 <span className="currency">$</span>

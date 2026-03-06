@@ -141,7 +141,7 @@ const ChainInsightsPanel: React.FC<ChainInsightsPanelProps> = ({ analysis, onClo
         <button
           onClick={onClose}
           aria-label="Dismiss analysis results"
-          className="text-th-text3/50 hover:text-th-text3 transition-colors p-1 -mt-0.5 shrink-0"
+          className="text-th-text3/70 hover:text-th-text3 transition-colors p-1 -mt-0.5 shrink-0"
         >
           <X className="w-4 h-4" />
         </button>
@@ -164,7 +164,7 @@ const ChainInsightsPanel: React.FC<ChainInsightsPanelProps> = ({ analysis, onClo
             <h3 className="text-th-text3/70 text-[9px] font-label tracking-[0.3em] uppercase">
               Compatibility
             </h3>
-            <span className="text-[9px] font-bold text-th-text3/50 bg-th-surface/[0.1] rounded-full px-1.5 py-0.5 leading-none">
+            <span className="text-[9px] font-bold text-th-text3/70 bg-th-surface/[0.1] rounded-full px-1.5 py-0.5 leading-none">
               {sortedNotes.length}
             </span>
           </div>
@@ -206,7 +206,7 @@ const ChainInsightsPanel: React.FC<ChainInsightsPanelProps> = ({ analysis, onClo
             Missing from Your Chain
           </h3>
           {sortedGaps.length > 0 && (
-            <span className="text-[9px] font-bold text-th-text3/50 bg-th-surface/[0.1] rounded-full px-1.5 py-0.5 leading-none">
+            <span className="text-[9px] font-bold text-th-text3/70 bg-th-surface/[0.1] rounded-full px-1.5 py-0.5 leading-none">
               {sortedGaps.length}
             </span>
           )}
@@ -246,7 +246,7 @@ const ChainInsightsPanel: React.FC<ChainInsightsPanelProps> = ({ analysis, onClo
                   <div className="flex items-start gap-2.5 pr-20">
                     {/* Category icon */}
                     <div className="w-7 h-7 rounded-lg bg-th-surface/[0.08] flex items-center justify-center shrink-0 mt-0.5">
-                      <Icon className="w-4 h-4 text-th-text3/50" />
+                      <Icon className="w-4 h-4 text-th-text3/70" />
                     </div>
 
                     <div className="flex-1 min-w-0">
@@ -257,7 +257,7 @@ const ChainInsightsPanel: React.FC<ChainInsightsPanelProps> = ({ analysis, onClo
                       <p className="text-th-text3 text-xs leading-relaxed mt-0.5">{gap.reason}</p>
 
                       {/* Position hint */}
-                      <p className="text-th-text3/50 text-[10px] mt-1">
+                      <p className="text-th-text3/70 text-[10px] mt-1">
                         After {afterLabel} in the signal chain
                       </p>
 

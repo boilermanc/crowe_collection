@@ -143,7 +143,7 @@ const SetupGuideModal: React.FC<SetupGuideModalProps> = ({ guide, loading, isOpe
               placeholder="Guide name"
               autoFocus
               onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') handleCancelSave(); }}
-              className="flex-1 bg-th-surface/[0.04] border border-th-surface/[0.10] rounded-lg px-3 py-2 text-sm text-th-text placeholder:text-th-text3/50 focus:outline-none focus:ring-1 focus:ring-[#dd6e42]/50"
+              className="flex-1 bg-th-surface/[0.04] border border-th-surface/[0.10] rounded-lg px-3 py-2 text-sm text-th-text placeholder:text-th-text3/60 focus:outline-none focus:ring-1 focus:ring-[#dd6e42]/50"
             />
             <button
               onClick={handleSave}
@@ -263,7 +263,7 @@ const SetupGuideModal: React.FC<SetupGuideModalProps> = ({ guide, loading, isOpe
                           </span>
                         </div>
                         {conn.notes && (
-                          <p className="text-th-text/60 text-xs leading-relaxed mt-1">{conn.notes}</p>
+                          <p className="text-th-text/80 text-xs leading-relaxed mt-1">{conn.notes}</p>
                         )}
                       </div>
                     ))}
@@ -281,11 +281,11 @@ const SetupGuideModal: React.FC<SetupGuideModalProps> = ({ guide, loading, isOpe
                         <div className="flex items-baseline justify-between gap-4">
                           <div>
                             <span className="text-th-text font-bold text-sm">{s.gear}</span>
-                            <span className="text-th-text3/50 text-sm"> — {s.setting}</span>
+                            <span className="text-th-text3/70 text-sm"> — {s.setting}</span>
                           </div>
                           <span className="text-[#f0a882] font-bold text-sm whitespace-nowrap">{s.recommended_value}</span>
                         </div>
-                        <p className="text-th-text/50 text-xs leading-relaxed">{s.explanation}</p>
+                        <p className="text-th-text/70 text-xs leading-relaxed">{s.explanation}</p>
                       </div>
                     ))}
                   </div>

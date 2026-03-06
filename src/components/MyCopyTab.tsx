@@ -8,6 +8,7 @@ interface MyCopyTabProps {
   onUpdate: (updates: Partial<Album>) => Promise<void>;
   userPlan: 'collector' | 'curator' | 'enthusiast';
   discogsConnected: boolean;
+  onUpgradeRequired?: (feature: string) => void;
 }
 
 const MyCopyTab: React.FC<MyCopyTabProps> = ({
@@ -15,6 +16,7 @@ const MyCopyTab: React.FC<MyCopyTabProps> = ({
   onUpdate,
   userPlan,
   discogsConnected,
+  onUpgradeRequired,
 }) => {
   const [gradingSheetOpen, setGradingSheetOpen] = useState(false);
   const [editingField, setEditingField] = useState<string | null>(null);
@@ -179,10 +181,13 @@ const MyCopyTab: React.FC<MyCopyTabProps> = ({
               <div className="bg-[#2a2016] rounded-2xl p-4 md:p-[22px_24px]" style={{ boxShadow: '0 4px 20px rgba(42,32,22,0.2)' }}>
                 <h5 className="font-display text-[16px] md:text-[18px] text-[#e8dab2] mb-2">See what your collection is worth</h5>
                 <p className="font-serif text-[13px] text-white/45 italic leading-relaxed mb-4">
-                  Upgrade to Archivist to unlock live Discogs pricing.
+                  Upgrade to Enthusiast to unlock live Discogs pricing.
                 </p>
-                <button className="bg-burnt-peach text-white font-mono text-[10px] tracking-[2px] uppercase px-5 py-2.5 rounded-xl border-none cursor-pointer hover:bg-burnt-peach/90 transition-colors focus:outline-none focus:ring-2 focus:ring-burnt-peach focus:ring-offset-2">
-                  Upgrade to Archivist
+                <button
+                  onClick={() => onUpgradeRequired?.('discogs_pricing')}
+                  className="bg-burnt-peach text-white font-mono text-[10px] tracking-[2px] uppercase px-5 py-2.5 rounded-xl border-none cursor-pointer hover:bg-burnt-peach/90 transition-colors focus:outline-none focus:ring-2 focus:ring-burnt-peach focus:ring-offset-2"
+                >
+                  Upgrade to Enthusiast
                 </button>
               </div>
             ) : !discogsConnected ? (
