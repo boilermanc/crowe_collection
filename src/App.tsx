@@ -44,6 +44,9 @@ import { wantlistService } from './services/wantlistService';
 import { engagementService } from './services/engagementService';
 import { WantlistItem, PriceAlert } from './types';
 import FilterSortPanel from './components/FilterSortPanel';
+import { useCollectionFilters } from './hooks/useCollectionFilters';
+import FilterDropdown from './components/FilterDropdown';
+import ActiveFilterPills from './components/ActiveFilterPills';
 
 const PAGE_SIZE = 40;
 
@@ -67,7 +70,12 @@ const App: React.FC = () => {
   const [isStudioOpen, setIsStudioOpen] = useState(false);
   const [sessionSeedAlbum, setSessionSeedAlbum] = useState<Album | null>(null);
   const { currentView, setCurrentView, selectedAlbum, setSelectedAlbum } = useAppNavigation(user);
-  const [searchQuery, setSearchQuery] = useState('');
+  const {
+    filters, setFilter, clearFilter, clearAll: clearAllFilters,
+    activeFilterCount, applyFilters, deriveAvailableOptions,
+  } = useCollectionFilters();
+  const searchQuery = filters.search;
+  const setSearchQuery = (q: string) => setFilter('search', q);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [showStats, setShowStats] = useState(false);
   const [heroBg, setHeroBg] = useState(DEFAULT_BG);
@@ -78,14 +86,8 @@ const App: React.FC = () => {
   const [prefilledWantlistItem, setPrefilledWantlistItem] = useState<WantlistItem | null>(null);
   const [spinningAlbumId, setSpinningAlbumId] = useState<string | null>(null);
 
-  const [yearRange, setYearRange] = useState({ min: '', max: '' });
-  const [favoritesOnly, setFavoritesOnly] = useState(false);
-  const [formatFilter, setFormatFilter] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>('recent');
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
-  const [genreFilter, setGenreFilter] = useState('');
-  const [conditionFilter, setConditionFilter] = useState('');
-  const [activeTags, setActiveTags] = useState<string[]>([]);
 
   // Sellr import highlighting
   const [importedAlbumIds] = useState<Set<string>>(() => {
@@ -410,14 +412,8 @@ const App: React.FC = () => {
   }, [albums.length, isStudioOpen]);
 
   const resetView = () => {
-    setSearchQuery('');
-    setYearRange({ min: '', max: '' });
-    setFavoritesOnly(false);
-    setFormatFilter(null);
+    clearAllFilters();
     setSortBy('recent');
-    setGenreFilter('');
-    setConditionFilter('');
-    setActiveTags([]);
     setFilterPanelOpen(false);
     setShowStats(false);
     setSelectedAlbum(null);
@@ -501,57 +497,21 @@ const App: React.FC = () => {
     [albums]
   );
 
-  const availableGenres = useMemo(() =>
-    [...new Set(albums.map(a => a.genre).filter(Boolean))].sort() as string[]
-  , [albums]);
+  const availableOptions = useMemo(() => deriveAvailableOptions(albums), [albums, deriveAvailableOptions]);
 
-  const availableTags = useMemo(() =>
-    [...new Set(albums.flatMap(a => a.tags ?? []))].sort()
-  , [albums]);
-
-  const activeFilterCount = [
-    sortBy !== 'recent',
-    formatFilter !== null,
-    yearRange.min !== '' || yearRange.max !== '',
-    favoritesOnly,
-    genreFilter !== '',
-    conditionFilter !== '',
-    activeTags.length > 0,
-  ].filter(Boolean).length;
+  // activeFilterCount from hook excludes search; include sort for the panel badge
+  const totalFilterCount = activeFilterCount + (sortBy !== 'recent' ? 1 : 0);
 
   const handleResetFilters = useCallback(() => {
     setSortBy('recent');
-    setFormatFilter(null);
-    setYearRange({ min: '', max: '' });
-    setFavoritesOnly(false);
-    setGenreFilter('');
-    setConditionFilter('');
-    setActiveTags([]);
-  }, []);
+    clearAllFilters();
+  }, [clearAllFilters]);
 
   const filteredAlbums = useMemo(() => {
-    let result = albums.filter(a => {
-      // Sellr import filter — takes priority, skips other filters
-      if (showImportedOnly) return importedAlbumIds.has(a.id);
+    // Sellr import filter — takes priority, skips other filters
+    if (showImportedOnly) return albums.filter(a => importedAlbumIds.has(a.id));
 
-      const query = searchQuery.toLowerCase();
-      const matchesSearch =
-        a.title.toLowerCase().includes(query) ||
-        a.artist.toLowerCase().includes(query) ||
-        (a.genre && a.genre.toLowerCase().includes(query));
-
-      const albumYear = parseInt(a.year || '0');
-      const minYear = parseInt(yearRange.min || '0');
-      const maxYear = parseInt(yearRange.max || '9999');
-      const matchesYear = (minYear === 0 || albumYear >= minYear) && (maxYear === 9999 || albumYear <= maxYear);
-      const matchesFavoriteOnly = !favoritesOnly || a.isFavorite;
-      const matchesFormat = !formatFilter || (a.format || 'Vinyl') === formatFilter;
-      const matchesGenre = !genreFilter || a.genre === genreFilter;
-      const matchesCondition = !conditionFilter || a.condition === conditionFilter;
-      const matchesTags = activeTags.length === 0 || activeTags.every(t => a.tags?.includes(t));
-
-      return matchesSearch && matchesYear && matchesFavoriteOnly && matchesFormat && matchesGenre && matchesCondition && matchesTags;
-    });
+    const result = applyFilters(albums);
 
     result.sort((a, b) => {
       if (sortBy === 'year') return (parseInt(b.year || '0') - parseInt(a.year || '0'));
@@ -563,12 +523,12 @@ const App: React.FC = () => {
     });
 
     return result;
-  }, [albums, searchQuery, yearRange, favoritesOnly, formatFilter, sortBy, showImportedOnly, importedAlbumIds, genreFilter, conditionFilter, activeTags]);
+  }, [albums, filters, applyFilters, sortBy, showImportedOnly, importedAlbumIds]);
 
   // Reset grid page when filters change
   useEffect(() => {
     setGridPage(1);
-  }, [searchQuery, yearRange, favoritesOnly, formatFilter, sortBy, showImportedOnly, genreFilter, conditionFilter, activeTags]);
+  }, [filters, sortBy, showImportedOnly]);
 
   const gridTotalPages = Math.ceil(filteredAlbums.length / PAGE_SIZE);
   const paginatedAlbums = filteredAlbums.slice((gridPage - 1) * PAGE_SIZE, gridPage * PAGE_SIZE);
@@ -670,10 +630,28 @@ const App: React.FC = () => {
         wantlistCount={wantlistCount}
         priceAlertCount={priceAlertCount}
         albumCount={albums.length}
-        activeFilterCount={activeFilterCount}
+        activeFilterCount={totalFilterCount}
         theme={theme}
         toggleTheme={toggleTheme}
         signOut={signOut}
+        filterDropdown={
+          (currentView === 'grid' || currentView === 'list') ? (
+            <FilterDropdown
+              filters={filters}
+              setFilter={setFilter}
+              clearAll={clearAllFilters}
+              activeFilterCount={activeFilterCount}
+              available={{
+                genres: availableOptions.availableGenres,
+                formats: availableOptions.availableFormats,
+                decades: availableOptions.availableDecades,
+                conditions: availableOptions.availableConditions,
+                labels: availableOptions.availableLabels,
+                tags: availableOptions.availableTags,
+              }}
+            />
+          ) : undefined
+        }
       />
 
       <SubscriptionBanner onUpgrade={() => setUpgradeFeature('plan_upgrade')} />
@@ -722,22 +700,22 @@ const App: React.FC = () => {
         onClose={() => setFilterPanelOpen(false)}
         sortBy={sortBy}
         onSortChange={(val) => setSortBy(val as SortOption)}
-        formatFilter={formatFilter}
-        onFormatChange={setFormatFilter}
-        yearRange={yearRange}
-        onYearRangeChange={setYearRange}
-        favoritesOnly={favoritesOnly}
-        onFavoritesChange={setFavoritesOnly}
-        genreFilter={genreFilter}
-        onGenreChange={setGenreFilter}
-        availableGenres={availableGenres}
-        conditionFilter={conditionFilter}
-        onConditionChange={setConditionFilter}
-        activeTags={activeTags}
-        onTagsChange={setActiveTags}
-        availableTags={availableTags}
+        formatFilter={filters.formats[0] ?? null}
+        onFormatChange={(val) => setFilter('formats', val ? [val] : [])}
+        yearRange={{ min: '', max: '' }}
+        onYearRangeChange={() => {}}
+        favoritesOnly={filters.favoritesOnly}
+        onFavoritesChange={(val) => setFilter('favoritesOnly', val)}
+        genreFilter={filters.genres[0] ?? ''}
+        onGenreChange={(val) => setFilter('genres', val ? [val] : [])}
+        availableGenres={availableOptions.availableGenres}
+        conditionFilter={filters.conditions[0] ?? ''}
+        onConditionChange={(val) => setFilter('conditions', val ? [val] : [])}
+        activeTags={filters.tags}
+        onTagsChange={(val) => setFilter('tags', val)}
+        availableTags={availableOptions.availableTags}
         onReset={handleResetFilters}
-        activeFilterCount={activeFilterCount}
+        activeFilterCount={totalFilterCount}
       />
 
       {processingStatus && (
@@ -1080,10 +1058,10 @@ const App: React.FC = () => {
               <p className="text-th-text3/50 text-xs font-label tracking-widest uppercase">{albums.length} records in your crate</p>
               {albums.some(a => a.isFavorite) && (
                 <button
-                  onClick={() => { setFavoritesOnly(true); setCurrentView('list'); }}
+                  onClick={() => { setFilter('favoritesOnly', true); setCurrentView('list'); }}
                   className="flex items-center gap-1.5 text-[#dd6e42]/60 hover:text-[#dd6e42] transition-colors group"
-                  aria-label={favoritesOnly ? 'Remove favorites filter' : 'Show favorites only'}
-                  aria-pressed={favoritesOnly}
+                  aria-label={filters.favoritesOnly ? 'Remove favorites filter' : 'Show favorites only'}
+                  aria-pressed={filters.favoritesOnly}
                   title="View favorites"
                 >
                   <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -1105,13 +1083,13 @@ const App: React.FC = () => {
             const album = albums.find(a => a.id === albumId);
             if (album) handleAddToWantlist(album);
           }}
-          favoritesOnly={favoritesOnly}
-          onToggleFavoritesFilter={() => setFavoritesOnly(prev => !prev)}
+          favoritesOnly={filters.favoritesOnly}
+          onToggleFavoritesFilter={() => setFilter('favoritesOnly', !filters.favoritesOnly)}
           searchQuery={searchQuery}
           importedAlbumIds={showImportRings ? importedAlbumIds : undefined}
-          genreFilter={genreFilter}
-          conditionFilter={conditionFilter}
-          activeTags={activeTags}
+          genreFilter={filters.genres[0] ?? ''}
+          conditionFilter={filters.conditions[0] ?? ''}
+          activeTags={filters.tags}
         />
       ) : currentView === 'stakkd' ? (
         <StakkdPage onUpgradeRequired={(feature: string) => setUpgradeFeature(feature)} onGoHome={resetView} />
@@ -1239,6 +1217,19 @@ const App: React.FC = () => {
             </div>
           )}
 
+          {!showImportedOnly && (
+            <div className="mb-4">
+              <ActiveFilterPills
+                filters={filters}
+                setFilter={setFilter}
+                clearFilter={clearFilter}
+                clearAll={clearAllFilters}
+                resultCount={filteredAlbums.length}
+                totalCount={albums.length}
+              />
+            </div>
+          )}
+
           {albums.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-32 text-center px-6">
               <div className="w-20 h-20 mb-6 opacity-20 text-th-text">
@@ -1359,7 +1350,7 @@ const App: React.FC = () => {
           onUploadPress={() => fileInputRef.current?.click()}
           onToggleFilters={() => setFilterPanelOpen(prev => !prev)}
           isFilterPanelOpen={filterPanelOpen}
-          activeFilterCount={activeFilterCount}
+          activeFilterCount={totalFilterCount}
           wantlistCount={wantlistCount}
           priceAlertCount={priceAlertCount}
           scansRemaining={scansRemaining}
