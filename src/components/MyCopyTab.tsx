@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Album } from '../types';
 import { CONDITION_BY_VALUE, type ConditionGrade } from '../constants/conditionGrades';
+import GradingSheet from './GradingSheet';
 
 interface MyCopyTabProps {
   album: Album;
@@ -379,20 +380,16 @@ const MyCopyTab: React.FC<MyCopyTabProps> = ({
         </div>
       </div>
 
-      {/* GradingSheet placeholder - will be replaced in Task 39.2 */}
-      {gradingSheetOpen && (
-        <div className="fixed inset-0 bg-ink/40 z-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg">
-            <p className="text-ink mb-4">Grading sheet will be added in Task 39.2</p>
-            <button
-              onClick={() => setGradingSheetOpen(false)}
-              className="px-4 py-2 bg-burnt-peach text-white rounded"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
+      {/* GradingSheet */}
+      <GradingSheet
+        isOpen={gradingSheetOpen}
+        onClose={() => setGradingSheetOpen(false)}
+        onGradeSelected={async (grade) => {
+          await onUpdate({ condition: grade });
+        }}
+        format={album.format || 'Vinyl'}
+        currentGrade={album.condition as ConditionGrade | undefined}
+      />
     </div>
   );
 };
