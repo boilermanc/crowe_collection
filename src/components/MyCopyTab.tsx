@@ -18,11 +18,12 @@ const MyCopyTab: React.FC<MyCopyTabProps> = ({
 }) => {
   const [gradingSheetOpen, setGradingSheetOpen] = useState(false);
   const [editingField, setEditingField] = useState<string | null>(null);
+  const [showDetailsOverride, setShowDetailsOverride] = useState(false);
 
   const conditionInfo = album.condition ? CONDITION_BY_VALUE[album.condition as ConditionGrade] : null;
 
   // Check if this is truly empty (first-time state)
-  const isCompletelyEmpty = !album.condition && !album.purchase_price && !album.copy_notes && !album.acquired_date;
+  const isCompletelyEmpty = !album.condition && !album.purchase_price && !album.copy_notes && !album.acquired_from;
 
   const handleFieldUpdate = async (field: keyof Album, value: unknown) => {
     try {
@@ -34,15 +35,17 @@ const MyCopyTab: React.FC<MyCopyTabProps> = ({
   };
 
   // First-time empty state
-  if (isCompletelyEmpty) {
+  if (isCompletelyEmpty && !showDetailsOverride) {
     return (
       <div className="bg-paper min-h-[600px] relative flex items-center justify-center">
         <div className="max-w-md mx-auto text-center px-6">
-          {/* Icon */}
+          {/* Vinyl record icon - concentric circles */}
           <div className="inline-flex items-center justify-center w-16 h-16 mb-4">
-            <svg className="w-16 h-16 text-ink/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+            <svg className="w-16 h-16 text-ink/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={0.75}>
               <circle cx="12" cy="12" r="10" />
-              <path d="M12 16v-4m0-4h.01" strokeLinecap="round" />
+              <circle cx="12" cy="12" r="7" />
+              <circle cx="12" cy="12" r="4" />
+              <circle cx="12" cy="12" r="1.5" fill="currentColor" />
             </svg>
           </div>
 
@@ -59,13 +62,13 @@ const MyCopyTab: React.FC<MyCopyTabProps> = ({
           <div className="flex gap-3 justify-center">
             <button
               onClick={() => setGradingSheetOpen(true)}
-              className="px-6 py-3 border-2 border-burnt-peach text-burnt-peach font-mono text-[10px] tracking-widest uppercase rounded-lg hover:bg-burnt-peach/10 transition-colors"
+              className="px-6 py-3 border-2 border-burnt-peach text-burnt-peach font-mono text-[10px] tracking-widest uppercase rounded-lg hover:bg-burnt-peach/10 transition-colors focus:outline-none focus:ring-2 focus:ring-burnt-peach focus:ring-offset-2"
             >
               Grade Your Copy →
             </button>
             <button
-              onClick={() => setEditingField('purchase_price')}
-              className="px-6 py-3 border-2 border-burnt-peach text-burnt-peach font-mono text-[10px] tracking-widest uppercase rounded-lg hover:bg-burnt-peach/10 transition-colors"
+              onClick={() => setShowDetailsOverride(true)}
+              className="px-6 py-3 border-2 border-burnt-peach text-burnt-peach font-mono text-[10px] tracking-widest uppercase rounded-lg hover:bg-burnt-peach/10 transition-colors focus:outline-none focus:ring-2 focus:ring-burnt-peach focus:ring-offset-2"
             >
               Add Details →
             </button>
