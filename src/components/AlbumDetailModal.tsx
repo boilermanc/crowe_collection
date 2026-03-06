@@ -8,6 +8,7 @@ import { compressImage } from '../utils/imageCompressor';
 import SpinningRecord from './SpinningRecord';
 import CoverPicker from './CoverPicker';
 import FormatBadge from './FormatBadge';
+import MyCopyTab from './MyCopyTab';
 import { useToast } from '../contexts/ToastContext';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { engagementService } from '../services/engagementService';
@@ -864,7 +865,16 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
 
           {/* My Copy Tab Panel */}
           <div id="my-copy-panel" role="tabpanel" aria-labelledby="my-copy-tab" className={activeTab === 'my-copy' ? 'block' : 'hidden'}>
-            <p className="text-ink/60 text-sm">My Copy content will be added in Task 38.2</p>
+            <MyCopyTab
+              album={album}
+              onUpdate={async (updates) => {
+                if (onUpdateAlbum) {
+                  onUpdateAlbum(album.id, updates);
+                }
+              }}
+              userPlan="collector"
+              discogsConnected={false}
+            />
           </div>
         </div>
       </div>
