@@ -17,27 +17,8 @@ ADD COLUMN IF NOT EXISTS pressing_year INTEGER,
 ADD COLUMN IF NOT EXISTS catalog_number TEXT,
 ADD COLUMN IF NOT EXISTS is_for_sale BOOLEAN DEFAULT false;
 
--- Add Discogs price cache table with 24hr TTL
-CREATE TABLE IF NOT EXISTS discogs_price_cache (
-  release_id TEXT PRIMARY KEY,
-  price_data JSONB NOT NULL,
-  fetched_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Create index on fetched_at for TTL queries
-CREATE INDEX IF NOT EXISTS idx_discogs_price_cache_fetched_at
-ON discogs_price_cache(fetched_at);
-
--- Add check constraint for condition grade values
-ALTER TABLE albums
-DROP CONSTRAINT IF EXISTS albums_condition_check;
-
-ALTER TABLE albums
-ADD CONSTRAINT albums_condition_check
-CHECK (condition IS NULL OR condition IN ('M', 'NM', 'VG+', 'VG', 'G+', 'G', 'F', 'P'));
-
 -- Migration for existing data: convert legacy condition values to new short format
--- This handles albums that may have old condition values like 'Mint', 'Near Mint', etc.
+-- IMPORTANT: Run this BEFORE adding the check constraint
 UPDATE albums
 SET condition = CASE
   WHEN condition = 'Mint' THEN 'M'
@@ -52,3 +33,22 @@ SET condition = CASE
 END
 WHERE condition IS NOT NULL
   AND condition NOT IN ('M', 'NM', 'VG+', 'VG', 'G+', 'G', 'F', 'P');
+
+-- Add Discogs price cache table with 24hr TTL
+CREATE TABLE IF NOT EXISTS discogs_price_cache (
+  release_id TEXT PRIMARY KEY,
+  price_data JSONB NOT NULL,
+  fetched_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Create index on fetched_at for TTL queries
+CREATE INDEX IF NOT EXISTS idx_discogs_price_cache_fetched_at
+ON discogs_price_cache(fetched_at);
+
+-- Add check constraint for condition grade values (after data migration)
+ALTER TABLE albums
+DROP CONSTRAINT IF EXISTS albums_condition_check;
+
+ALTER TABLE albums
+ADD CONSTRAINT albums_condition_check
+CHECK (condition IS NULL OR condition IN ('M', 'NM', 'VG+', 'VG', 'G+', 'G', 'F', 'P'));
