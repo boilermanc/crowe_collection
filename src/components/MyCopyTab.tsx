@@ -370,7 +370,7 @@ const MyCopyTab: React.FC<MyCopyTabProps> = ({
           <div className="grid grid-cols-2 gap-2.5 mb-7">
             {/* Paid */}
             <div className="bg-[#fefcf8] border border-[#e0d4bc] rounded-xl" style={{ padding: '12px 12px', boxShadow: '0 1px 4px rgba(42,32,22,0.05)' }}>
-              <label className="font-mono text-[9px] tracking-[2.5px] uppercase text-[#9a8f80] block mb-1.5">
+              <label className="font-mono text-[9px] tracking-[2.5px] uppercase text-[#7a6f60] block mb-1.5">
                 Paid
               </label>
               {editingField === 'purchase_price' ? (
@@ -399,7 +399,7 @@ const MyCopyTab: React.FC<MyCopyTabProps> = ({
 
             {/* Acquired */}
             <div className="bg-[#fefcf8] border border-[#e0d4bc] rounded-xl" style={{ padding: '12px 12px', boxShadow: '0 1px 4px rgba(42,32,22,0.05)' }}>
-              <label className="font-mono text-[9px] tracking-[2.5px] uppercase text-[#9a8f80] block mb-1.5">
+              <label className="font-mono text-[9px] tracking-[2.5px] uppercase text-[#7a6f60] block mb-1.5">
                 Acquired
               </label>
               {editingField === 'acquired_date' ? (
@@ -429,7 +429,7 @@ const MyCopyTab: React.FC<MyCopyTabProps> = ({
 
             {/* Source */}
             <div className="bg-[#fefcf8] border border-[#e0d4bc] rounded-xl" style={{ padding: '12px 12px', boxShadow: '0 1px 4px rgba(42,32,22,0.05)' }}>
-              <label className="font-mono text-[9px] tracking-[2.5px] uppercase text-[#9a8f80] block mb-1.5">
+              <label className="font-mono text-[9px] tracking-[2.5px] uppercase text-[#7a6f60] block mb-1.5">
                 Source
               </label>
               {editingField === 'acquired_from' ? (
@@ -457,7 +457,7 @@ const MyCopyTab: React.FC<MyCopyTabProps> = ({
 
             {/* Format */}
             <div className="bg-[#fefcf8] border border-[#e0d4bc] rounded-xl" style={{ padding: '12px 12px', boxShadow: '0 1px 4px rgba(42,32,22,0.05)' }}>
-              <label className="font-mono text-[9px] tracking-[2.5px] uppercase text-[#9a8f80] block mb-1.5">
+              <label className="font-mono text-[9px] tracking-[2.5px] uppercase text-[#7a6f60] block mb-1.5">
                 Format
               </label>
               <div className={`font-serif ${album.format ? 'text-[15px] text-[#2a2016] leading-relaxed' : 'text-[14px] text-[#bbb0a0] italic'}`}>
@@ -468,7 +468,7 @@ const MyCopyTab: React.FC<MyCopyTabProps> = ({
 
           {/* Notes (full-width) */}
           <div className="bg-[#fefcf8] border border-[#e0d4bc] rounded-xl col-span-2 mb-7" style={{ padding: '12px 12px', boxShadow: '0 1px 4px rgba(42,32,22,0.05)' }}>
-            <label className="font-mono text-[9px] tracking-[2.5px] uppercase text-[#9a8f80] block mb-1.5">
+            <label className="font-mono text-[9px] tracking-[2.5px] uppercase text-[#7a6f60] block mb-1.5">
               Notes
             </label>
             {editingField === 'copy_notes' ? (
