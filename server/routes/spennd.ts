@@ -1,7 +1,26 @@
 import express, { Request, Response } from 'express';
 import { XMLParser } from 'fast-xml-parser';
+import { getSupabaseAdmin } from '../lib/supabaseAdmin.js';
 
 const router = express.Router();
+
+async function getEbayConfig(): Promise<Record<string, string>> {
+  const supabase = getSupabaseAdmin();
+  if (!supabase) throw new Error('Supabase admin not configured');
+
+  const { data, error } = await supabase
+    .from('config_settings')
+    .select('key, value')
+    .eq('category', 'ebay');
+
+  if (error) throw new Error(`Failed to load eBay config: ${error.message}`);
+
+  const cfg: Record<string, string> = {};
+  for (const row of data ?? []) {
+    cfg[row.key] = row.value;
+  }
+  return cfg;
+}
 
 // In-memory cache for Discogs pricing and eBay results
 interface CacheEntry {
@@ -465,8 +484,22 @@ router.get('/ebay', async (req: Request, res: Response) => {
     return res.json({ ...cached.data, cached: true });
   }
 
-  const EBAY_APP_ID = process.env.EBAY_APP_ID;
-  if (!EBAY_APP_ID) {
+  let appId: string | undefined;
+  try {
+    const cfg = await getEbayConfig();
+
+    if (cfg['enabled'] !== 'true') {
+      return res.json({ available: false });
+    }
+
+    const sandbox = cfg['mode'] === 'sandbox';
+    appId = sandbox ? cfg['sandbox_app_id'] : cfg['prod_app_id'];
+  } catch (err) {
+    console.error('Failed to load eBay config:', err);
+    return res.json({ available: false });
+  }
+
+  if (!appId) {
     return res.json({ available: false });
   }
 
@@ -474,7 +507,7 @@ router.get('/ebay', async (req: Request, res: Response) => {
     const params = new URLSearchParams({
       'OPERATION-NAME': 'findCompletedItems',
       'SERVICE-VERSION': '1.0.0',
-      'SECURITY-APPNAME': EBAY_APP_ID,
+      'SECURITY-APPNAME': appId,
       'RESPONSE-DATA-FORMAT': 'XML',
       'REST-PAYLOAD': 'true',
       'keywords': q,
