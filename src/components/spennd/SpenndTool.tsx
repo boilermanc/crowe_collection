@@ -199,7 +199,7 @@ const SpenndTool: React.FC = () => {
   if (step === 'search') {
     return (
       <div className="max-w-xl mx-auto bg-paper rounded-2xl p-8 shadow-sm">
-        <h3 className="font-display text-[24px] text-ink mb-2">
+        <h3 className="font-display text-2xl sm:text-3xl text-ink mb-2">
           What record do you have?
         </h3>
 
@@ -317,16 +317,16 @@ const SpenndTool: React.FC = () => {
           ← Change record
         </button>
 
-        <h3 className="font-display text-[22px] text-ink mt-4 mb-2">
+        <h3 className="font-display text-2xl sm:text-3xl text-ink mt-4 mb-2">
           Let's read your label first
         </h3>
 
-        <p className="font-serif text-[14px] italic text-ink/60 mb-4">
+        <p className="font-serif text-base text-ink mb-4 max-w-prose">
           Before we look at the matrix, the label on your record already tells us a lot. Pick up the record, look at the center paper label, and answer these questions.
         </p>
 
         <div className="bg-pearl-beige rounded-xl p-3 mb-5">
-          <p className="font-serif text-[13px] text-ink">
+          <p className="font-serif text-sm text-ink">
             📌 Make sure you're reading the label on the actual vinyl record — not the cardboard sleeve or cover.
           </p>
         </div>
@@ -334,7 +334,7 @@ const SpenndTool: React.FC = () => {
         <div className="flex flex-col gap-4">
           {/* Label Name */}
           <div>
-            <label className="block font-mono text-[10px] uppercase tracking-wide text-ink/60 mb-1">
+            <label className="block font-mono text-xs uppercase tracking-wide text-[#5a8a6e] mb-1">
               Label Name
             </label>
             <input
@@ -344,14 +344,14 @@ const SpenndTool: React.FC = () => {
               placeholder="e.g. Columbia, Parlophone, Warner Bros."
               className="w-full bg-paper-dark rounded-xl py-2 px-3 font-serif text-ink focus:outline-none focus:ring-2 focus:ring-[#5a8a6e]"
             />
-            <p className="mt-1 font-serif text-[12px] text-ink/60">
+            <p className="mt-1 font-serif text-sm text-ink-soft">
               The company name printed on the center label — usually at the top.
             </p>
           </div>
 
           {/* Catalog Number */}
           <div>
-            <label className="block font-mono text-[10px] uppercase tracking-wide text-ink/60 mb-1">
+            <label className="block font-mono text-xs uppercase tracking-wide text-[#5a8a6e] mb-1">
               Catalog Number
             </label>
             <input
@@ -361,14 +361,14 @@ const SpenndTool: React.FC = () => {
               placeholder="e.g. JC 35709 or BSK 3010"
               className="w-full bg-paper-dark rounded-xl py-2 px-3 font-serif text-ink focus:outline-none focus:ring-2 focus:ring-[#5a8a6e]"
             />
-            <p className="mt-1 font-serif text-[12px] text-ink/60">
+            <p className="mt-1 font-serif text-sm text-ink-soft">
               Usually on the left or right side of the label. Includes letters and numbers.
             </p>
           </div>
 
           {/* Year */}
           <div>
-            <label className="block font-mono text-[10px] uppercase tracking-wide text-ink/60 mb-1">
+            <label className="block font-mono text-xs uppercase tracking-wide text-[#5a8a6e] mb-1">
               Year
             </label>
             <input
@@ -386,13 +386,13 @@ const SpenndTool: React.FC = () => {
                 onChange={(e) => setLabelInputs(prev => ({ ...prev, yearUnknown: e.target.checked, year: '' }))}
                 className="rounded"
               />
-              <span className="font-serif text-[12px] text-ink">Can't find a year</span>
+              <span className="font-serif text-sm text-ink">Can't find a year</span>
             </label>
           </div>
 
           {/* Country */}
           <div>
-            <label className="block font-mono text-[10px] uppercase tracking-wide text-ink/60 mb-1">
+            <label className="block font-mono text-xs uppercase tracking-wide text-[#5a8a6e] mb-1">
               Country
             </label>
             <input
@@ -410,7 +410,7 @@ const SpenndTool: React.FC = () => {
                 onChange={(e) => setLabelInputs(prev => ({ ...prev, countryUnknown: e.target.checked, country: '' }))}
                 className="rounded"
               />
-              <span className="font-serif text-[12px] text-ink">Doesn't say</span>
+              <span className="font-serif text-sm text-ink">Doesn't say</span>
             </label>
           </div>
         </div>
@@ -418,7 +418,7 @@ const SpenndTool: React.FC = () => {
         {/* Special detection callouts */}
         {hasPromoKeyword && (
           <div className="mt-4 bg-pearl-beige rounded-xl p-3">
-            <p className="font-serif text-[13px] text-ink">
+            <p className="font-serif text-sm text-ink">
               Promo copies were pressed for radio stations before commercial release. They can be more collectible and may have different matrix strings.
             </p>
           </div>
@@ -426,7 +426,7 @@ const SpenndTool: React.FC = () => {
 
         {hasWhiteLabelKeyword && (
           <div className="mt-4 bg-pearl-beige rounded-xl p-3">
-            <p className="font-serif text-[13px] text-ink">
+            <p className="font-serif text-sm text-ink">
               White labels are usually test pressings or very early promos — sometimes rare and valuable.
             </p>
           </div>
@@ -469,7 +469,7 @@ const SpenndTool: React.FC = () => {
           )}
         </div>
 
-        <h3 className="font-display text-[22px] text-ink mb-4">
+        <h3 className="font-display text-2xl sm:text-3xl text-ink mb-4">
           Now let's look at the matrix
         </h3>
 
@@ -477,19 +477,19 @@ const SpenndTool: React.FC = () => {
         <div className="bg-paper-dark rounded-xl p-5 mb-5">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-[20px]">💿</span>
-            <h4 className="font-serif text-[15px] font-bold text-ink">What's a pressing?</h4>
+            <h4 className="font-serif text-base font-bold text-ink">What's a pressing?</h4>
           </div>
-          <p className="font-serif text-[14px] text-ink/60">
+          <p className="font-serif text-sm text-ink">
             The same album gets manufactured in batches called pressings. An original pressing can be worth many times more than a later reissue of the same album. The matrix is etched into the vinyl itself and tells us exactly which pressing you have.
           </p>
         </div>
 
         {/* Instruction panel */}
         <div className="bg-white border border-paper-dark rounded-xl p-5 mb-5">
-          <div className="font-mono text-[10px] uppercase text-ink/60 mb-3">
+          <div className="font-mono text-xs uppercase text-[#5a8a6e] mb-3">
             HOW TO FIND YOUR MATRIX
           </div>
-          <ol className="font-serif text-[14px] text-ink space-y-1 mb-4">
+          <ol className="font-serif text-sm text-ink space-y-1 mb-4">
             <li>1. Pick up your record</li>
             <li>2. Hold it at eye level, tilted toward a lamp or window</li>
             <li>3. Look at the shiny area between the last song's groove and the paper label</li>
@@ -516,10 +516,10 @@ const SpenndTool: React.FC = () => {
         {/* Known matrices panel */}
         {matrixResult && !matrixResult.no_matrix_data && matrixResult.all_known_matrices.length > 0 ? (
           <div className="bg-white border border-paper-dark rounded-xl p-4 mb-5">
-            <div className="font-mono text-[10px] uppercase text-ink/60 mb-1">
+            <div className="font-mono text-xs uppercase text-[#5a8a6e] mb-1">
               WHAT TO LOOK FOR
             </div>
-            <p className="font-serif text-[13px] text-ink/60 mb-2">
+            <p className="font-serif text-sm text-ink mb-2">
               For this pressing, collectors have documented:
             </p>
             <div className="flex flex-wrap gap-2 mb-2">
@@ -529,13 +529,13 @@ const SpenndTool: React.FC = () => {
                 </span>
               ))}
             </div>
-            <p className="font-serif text-[12px] italic text-ink/60">
+            <p className="font-serif text-sm italic text-ink-soft">
               Any of these is a match. Type exactly what you see.
             </p>
           </div>
         ) : matrixResult?.no_matrix_data ? (
           <div className="bg-pearl-beige rounded-xl p-4 mb-5">
-            <p className="font-serif text-[13px] text-ink/60">
+            <p className="font-serif text-sm text-ink">
               We don't have matrix data on file for this pressing yet. Type exactly what you see and we'll search for it.
             </p>
           </div>
@@ -543,10 +543,10 @@ const SpenndTool: React.FC = () => {
 
         {/* Limitations */}
         <div className="border-l-4 border-[#5a8a6e] bg-paper-dark rounded-xl p-4 mb-5">
-          <div className="font-mono text-[10px] uppercase text-ink/60 mb-1">
+          <div className="font-mono text-xs uppercase text-[#5a8a6e] mb-1">
             A NOTE ON MATRIX MATCHING
           </div>
-          <p className="font-serif text-[13px] text-ink/60">
+          <p className="font-serif text-sm text-ink">
             Matrix data in Discogs is community-contributed. Coverage is excellent for common and collectible pressings. If we can't match yours, we'll say so and explain what it means for the price range.
           </p>
         </div>
@@ -555,7 +555,7 @@ const SpenndTool: React.FC = () => {
         <div className="space-y-4 mb-5">
           {sides.map((side) => (
             <div key={side}>
-              <div className="font-mono text-[10px] uppercase tracking-wide text-ink/60 mb-1">
+              <div className="font-mono text-xs uppercase tracking-wide text-[#5a8a6e] mb-1">
                 SIDE {side} MATRIX
               </div>
               <div className="font-mono text-[9px] italic text-ink/60 mb-2">
@@ -580,7 +580,7 @@ const SpenndTool: React.FC = () => {
                   }}
                   className="rounded"
                 />
-                <span className="font-serif text-[12px] text-ink">I can't make this out</span>
+                <span className="font-serif text-sm text-ink">I can't make this out</span>
               </label>
             </div>
           ))}
@@ -634,7 +634,7 @@ const SpenndTool: React.FC = () => {
                     <div className="font-mono text-[10px] uppercase text-[#5a8a6e] mb-1">
                       {note.mark}
                     </div>
-                    <p className="font-serif text-[12px] text-ink/60">
+                    <p className="font-serif text-sm text-ink">
                       {note.description}
                     </p>
                   </div>
@@ -652,7 +652,7 @@ const SpenndTool: React.FC = () => {
     if (!selectedFormat) {
       return (
         <div className="max-w-xl mx-auto bg-paper rounded-2xl p-8 shadow-sm">
-          <h3 className="font-display text-[22px] text-ink mb-6 text-center">
+          <h3 className="font-display text-2xl sm:text-3xl text-ink mb-6 text-center">
             Is this a vinyl record or a CD?
           </h3>
 
@@ -692,12 +692,12 @@ const SpenndTool: React.FC = () => {
         </div>
 
         {currentQuestionIndex === 0 && (
-          <p className="font-serif text-[14px] italic text-ink/60 mb-6">
-            Condition is the other half of the value equation. A Near Mint copy can be worth 3–5× a Very Good copy of the same pressing. Answer these questions and we'll give you the standard industry grade.
+          <p className="font-serif text-base text-ink mb-6 max-w-prose">
+            Condition is the other half of the value equation. A Near Mint copy can be worth 3-5x a Very Good copy of the same pressing. Answer these questions and we'll give you the standard industry grade.
           </p>
         )}
 
-        <h4 className="font-serif text-[16px] text-ink font-medium mb-4">
+        <h4 className="font-serif text-lg text-ink font-medium mb-4">
           {currentQ.question}
         </h4>
 
@@ -725,7 +725,7 @@ const SpenndTool: React.FC = () => {
                   }`}>
                     {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                   </div>
-                  <span className="font-serif text-[14px] text-ink leading-snug flex-1">
+                  <span className="font-serif text-base text-ink leading-snug flex-1">
                     {option.label}
                   </span>
                 </div>
@@ -777,7 +777,7 @@ const SpenndTool: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-md p-6">
           <div className="font-display text-[64px] text-ink leading-none">{gradeInfo.shortLabel}</div>
           <div className="font-serif text-[20px] text-ink/60 mt-1">{gradeInfo.label}</div>
-          <div className="font-serif text-[14px] italic text-ink/60 mt-1">{gradeInfo.description}</div>
+          <div className="font-serif text-sm italic text-ink-soft mt-1">{gradeInfo.description}</div>
         </div>
 
         {/* Pricing panel */}
@@ -827,7 +827,7 @@ const SpenndTool: React.FC = () => {
         <div className="mt-8 pt-8 border-t text-center">
           <div className="font-mono text-[9px] text-ink/60 uppercase mb-2">FROM THE MAKERS OF SPENND</div>
           <h3 className="font-display text-[24px] text-ink mb-2">Do you have more than one?</h3>
-          <p className="font-serif text-[14px] text-ink/60 max-w-sm mx-auto mb-4">
+          <p className="font-serif text-sm text-ink max-w-sm mx-auto mb-4">
             Rekkrd tracks your whole collection — condition grading, live pricing, and gear catalog.
           </p>
           <a href="/signup" className="inline-block bg-[#5a8a6e] text-white rounded-full py-3 px-6 font-serif hover:bg-[#3d6b54] transition-colors">

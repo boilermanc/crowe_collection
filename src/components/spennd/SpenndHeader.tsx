@@ -32,9 +32,47 @@ const SpenndHeader: React.FC = () => {
           <div ref={dropdownRef} className="relative hidden sm:flex items-center">
             <button
               onClick={() => setSellrOpen(!sellrOpen)}
-              className="font-mono text-[12px] text-[#4f6d7a] font-medium cursor-pointer hover:opacity-80 transition-opacity"
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
             >
-              Sellr ↓
+              {/* Sellr icon — inline SVG vinyl record in blue-slate */}
+              <svg width="24" height="24" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <radialGradient id="sellrRecordGrad" cx="40%" cy="38%" r="55%">
+                    <stop offset="0%" stopColor="#6a8a96"/>
+                    <stop offset="100%" stopColor="#2e4f5a"/>
+                  </radialGradient>
+                  <radialGradient id="sellrLabelGrad" cx="40%" cy="36%" r="60%">
+                    <stop offset="0%" stopColor="#7a9daa"/>
+                    <stop offset="100%" stopColor="#4f6d7a"/>
+                  </radialGradient>
+                </defs>
+                <circle cx="50" cy="50" r="44" fill="url(#sellrRecordGrad)"/>
+                <circle cx="50" cy="50" r="42" fill="none" stroke="#1e3540" strokeWidth="0.6" opacity="0.9"/>
+                <circle cx="50" cy="50" r="38" fill="none" stroke="#1e3540" strokeWidth="0.5" opacity="0.8"/>
+                <circle cx="50" cy="50" r="33" fill="none" stroke="#1e3540" strokeWidth="0.5" opacity="0.7"/>
+                <circle cx="50" cy="50" r="28" fill="none" stroke="#1e3540" strokeWidth="0.45" opacity="0.6"/>
+                <circle cx="50" cy="50" r="23" fill="none" stroke="#1e3540" strokeWidth="0.4" opacity="0.5"/>
+                <circle cx="50" cy="50" r="16" fill="url(#sellrLabelGrad)"/>
+                <circle cx="50" cy="50" r="16" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="0.6"/>
+                <circle cx="50" cy="50" r="4" fill="#1e3540" opacity="0.6"/>
+              </svg>
+
+              {/* Sellr wordmark */}
+              <div className="flex flex-col items-start leading-tight">
+                <span className="font-mono text-sm font-semibold text-[#4f6d7a] tracking-wide">Sellr</span>
+                <span className="font-mono text-[10px] text-[#4f6d7a]/60 tracking-wide">vinyl appraisals</span>
+              </div>
+
+              {/* Chevron */}
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 12 12"
+                fill="none"
+                className={`transition-transform duration-200 ${sellrOpen ? 'rotate-180' : ''}`}
+              >
+                <path d="M2 4l4 4 4-4" stroke="#4f6d7a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             </button>
 
             {/* Dropdown panel */}

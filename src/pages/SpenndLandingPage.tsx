@@ -19,7 +19,7 @@ const SpenndLandingPage: React.FC = () => {
         {/* Hero Section */}
         <section className="min-h-[70vh] flex items-center px-6 py-16 relative overflow-hidden">
           <svg
-            className="absolute right-0 top-1/2 -translate-y-1/2 w-[600px] h-[600px] pointer-events-none select-none"
+            className="absolute left-0 top-1/2 -translate-y-1/2 w-[600px] h-[600px] pointer-events-none select-none"
             aria-hidden="true"
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 800 800"
