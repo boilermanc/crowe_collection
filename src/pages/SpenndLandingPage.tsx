@@ -142,6 +142,13 @@ const SpenndLandingPage: React.FC = () => {
             Contact
           </a>
         </div>
+        <div className="mt-4 flex items-center justify-center gap-1.5">
+          <span className="font-serif text-[12px] text-ink/60">Part of the</span>
+          <Link to="/" className="font-display text-[12px] text-ink/60 hover:text-ink transition-colors">
+            Rekkrd
+          </Link>
+          <span className="font-serif text-[12px] text-ink/60">family</span>
+        </div>
       </footer>
     </div>
   );
