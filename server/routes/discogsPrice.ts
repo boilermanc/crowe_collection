@@ -47,11 +47,42 @@ router.get(
       }
     }
 
-    // Fetch from Discogs
-    const data = await discogsRequest(
-      `/marketplace/price_suggestions/${releaseId}`,
-      {}
-    );
+    // Try price_suggestions first (condition-grade-specific pricing)
+    let data: Record<string, unknown>;
+    let source: 'suggestions' | 'stats' = 'suggestions';
+
+    try {
+      data = await discogsRequest<Record<string, unknown>>(
+        `/marketplace/price_suggestions/${releaseId}`,
+        {}
+      );
+    } catch (suggestionsErr: unknown) {
+      const sugMsg = suggestionsErr instanceof Error ? suggestionsErr.message : '';
+
+      // If price_suggestions returns 404, fall back to marketplace stats
+      if (sugMsg.includes('404')) {
+        console.log(`[discogs-price] No price suggestions for ${releaseId}, trying marketplace stats`);
+        try {
+          const stats = await discogsRequest<{
+            lowest_price?: { value: number; currency: string };
+            num_for_sale?: number;
+          }>(`/marketplace/stats/${releaseId}`, {});
+
+          // Convert stats into a price-suggestions-like shape so the frontend works
+          if (stats.lowest_price) {
+            data = { _stats: { lowest_price: stats.lowest_price.value, num_for_sale: stats.num_for_sale ?? 0 } };
+          } else {
+            data = { _stats: { lowest_price: null, num_for_sale: 0 } };
+          }
+          source = 'stats';
+        } catch {
+          res.status(404).json({ error: 'Release not found on Discogs' });
+          return;
+        }
+      } else {
+        throw suggestionsErr;
+      }
+    }
 
     // Upsert cache
     await supabase.from('discogs_price_cache').upsert({
@@ -60,16 +91,8 @@ router.get(
       fetched_at: new Date().toISOString(),
     });
 
-    res.status(200).json({ prices: data, cached: false });
+    res.status(200).json({ prices: data, source, cached: false });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown error';
-
-    // Check for 404 from Discogs
-    if (message.includes('404')) {
-      res.status(404).json({ error: 'Release not found on Discogs' });
-      return;
-    }
-
     console.error('Price fetch error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }

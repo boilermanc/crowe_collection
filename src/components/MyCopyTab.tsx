@@ -5,7 +5,7 @@ import { supabase } from '../services/supabaseService';
 import GradingSheet from './GradingSheet';
 
 interface PriceData {
-  [key: string]: { value: number };
+  [key: string]: { value: number } | { lowest_price: number | null; num_for_sale: number };
 }
 
 interface MyCopyTabProps {
@@ -28,6 +28,8 @@ const MyCopyTab: React.FC<MyCopyTabProps> = ({
   const [showDetailsOverride, setShowDetailsOverride] = useState(false);
   const [priceLoading, setPriceLoading] = useState(false);
   const [priceValue, setPriceValue] = useState<number | null>(null);
+  const [priceLabel, setPriceLabel] = useState<string>('');
+  const priceFetchedRef = React.useRef(false);
 
   const conditionInfo = album.condition ? CONDITION_BY_VALUE[album.condition as ConditionGrade] : null;
   const canFetchPrice = userPlan === 'enthusiast' && discogsConnected && !!album.condition;
@@ -40,8 +42,16 @@ const MyCopyTab: React.FC<MyCopyTabProps> = ({
     if (album.discogs_url) setResolvedUrl(album.discogs_url);
   }, [album.discogs_release_id, album.discogs_url]);
 
+  // Reset fetch flag when viewing a different album
   useEffect(() => {
-    if (!canFetchPrice) return;
+    priceFetchedRef.current = false;
+    setPriceValue(null);
+    setPriceLabel('');
+  }, [album.id]);
+
+  useEffect(() => {
+    if (!canFetchPrice || priceFetchedRef.current) return;
+    priceFetchedRef.current = true;
 
     let cancelled = false;
 
@@ -104,13 +114,26 @@ const MyCopyTab: React.FC<MyCopyTabProps> = ({
         const res = await fetch(`/api/discogs-price?releaseId=${releaseId}`, { headers });
         console.log('[MyCopyTab] Price response status:', res.status);
         if (!res.ok || cancelled) return;
-        const data = (await res.json()) as { prices: PriceData };
+        const data = (await res.json()) as { prices: PriceData; source?: string };
+        console.log('[MyCopyTab] Price data:', data);
         if (cancelled) return;
 
+        // Try condition-specific price (from price_suggestions)
         const discogsKey = conditionInfo?.discogsKey;
-        const value = discogsKey && data.prices[discogsKey]?.value;
-        console.log('[MyCopyTab] Condition:', album.condition, 'discogsKey:', discogsKey, 'value:', value);
-        setPriceValue(value || null);
+        const conditionEntry = discogsKey ? data.prices[discogsKey] : undefined;
+        if (conditionEntry && 'value' in conditionEntry) {
+          console.log('[MyCopyTab] Got condition price:', discogsKey, conditionEntry.value);
+          setPriceValue(conditionEntry.value);
+          setPriceLabel('Discogs median');
+        } else if (data.prices._stats) {
+          // Fallback: marketplace stats (lowest listing price)
+          const stats = data.prices._stats as { lowest_price: number | null; num_for_sale: number };
+          console.log('[MyCopyTab] Got stats fallback:', stats);
+          if (stats.lowest_price) {
+            setPriceValue(stats.lowest_price);
+            setPriceLabel(`From ${stats.num_for_sale} listing${stats.num_for_sale !== 1 ? 's' : ''}`);
+          }
+        }
       } catch (err) {
         console.error('[MyCopyTab] Price fetch error:', err);
       } finally {
@@ -317,7 +340,7 @@ const MyCopyTab: React.FC<MyCopyTabProps> = ({
                     </div>
                   )}
                   <div className="font-mono text-[10px] text-white/25 mt-1.5">
-                    {priceValue ? 'Discogs median' : priceLoading ? '' : resolvedReleaseId ? 'No price data' : 'No Discogs match'}
+                    {priceValue ? priceLabel : priceLoading ? '' : resolvedReleaseId ? 'No price data' : 'No Discogs match'}
                   </div>
                 </div>
                 <div className="text-right">
