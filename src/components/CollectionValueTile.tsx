@@ -126,12 +126,10 @@ const CollectionValueTile: React.FC<CollectionValueTileProps> = ({
       const currentKey = CONDITION_BY_VALUE[currentGrade]?.discogsKey;
       const nextKey = CONDITION_BY_VALUE[nextGrade]?.discogsKey;
 
-      const currentValue = currentKey && album.priceData[currentKey]
-        ? album.priceData[currentKey].value
-        : 0;
-      const nextValue = nextKey && album.priceData[nextKey]
-        ? album.priceData[nextKey].value
-        : 0;
+      const currentEntry = currentKey ? album.priceData[currentKey] : undefined;
+      const currentValue = currentEntry && 'value' in currentEntry ? currentEntry.value : 0;
+      const nextEntry = nextKey ? album.priceData[nextKey] : undefined;
+      const nextValue = nextEntry && 'value' in nextEntry ? nextEntry.value : 0;
 
       const gain = nextValue - currentValue;
 
