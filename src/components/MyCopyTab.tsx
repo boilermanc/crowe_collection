@@ -33,11 +33,21 @@ const MyCopyTab: React.FC<MyCopyTabProps> = ({
   const shouldFetchPrice = userPlan === 'enthusiast' && discogsConnected && !!album.condition && !!album.discogs_release_id;
 
   useEffect(() => {
+    console.log('[MyCopyTab] Price fetch check:', {
+      userPlan,
+      discogsConnected,
+      condition: album.condition,
+      discogs_release_id: album.discogs_release_id,
+      discogs_url: album.discogs_url,
+      shouldFetchPrice,
+    });
+
     if (!shouldFetchPrice) return;
 
     let cancelled = false;
     const fetchPrice = async () => {
       setPriceLoading(true);
+      console.log('[MyCopyTab] Fetching price for releaseId:', album.discogs_release_id);
       try {
         const headers: Record<string, string> = { 'Content-Type': 'application/json' };
         if (supabase) {
@@ -47,15 +57,18 @@ const MyCopyTab: React.FC<MyCopyTabProps> = ({
           }
         }
         const res = await fetch(`/api/discogs-price?releaseId=${album.discogs_release_id}`, { headers });
+        console.log('[MyCopyTab] Price response status:', res.status);
         if (!res.ok || cancelled) return;
         const data = (await res.json()) as { prices: PriceData };
+        console.log('[MyCopyTab] Price data:', data);
         if (cancelled) return;
 
         const discogsKey = conditionInfo?.discogsKey;
         const value = discogsKey && data.prices[discogsKey]?.value;
+        console.log('[MyCopyTab] Condition:', album.condition, 'discogsKey:', discogsKey, 'value:', value);
         setPriceValue(value || null);
-      } catch {
-        // Silently fail — card will show $— fallback
+      } catch (err) {
+        console.error('[MyCopyTab] Price fetch error:', err);
       } finally {
         if (!cancelled) setPriceLoading(false);
       }
