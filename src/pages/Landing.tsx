@@ -404,7 +404,7 @@ const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
               <a href="#value" onClick={closeMobileMenu}>Value</a>
               <a href="#pricing" onClick={closeMobileMenu}>Pricing</a>
               <a href="/blog" onClick={closeMobileMenu}>Blog</a>
-              <a href="/sellr" onClick={closeMobileMenu}>Sellr</a>
+              <a href="/sellr" onClick={closeMobileMenu}>Sel<span style={{ color: '#4f6d7a' }}>l</span>r</a>
             </nav>
             <div className="mobile-drawer-auth">
               {user ? (
@@ -898,12 +898,12 @@ const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
       <section className="section sellr-callout" id="sellr">
         <div className="container">
           <div className="sellr-callout-text">
-            <div className="section-label">Sellr</div>
+            <div className="section-label">Sel<span style={{ color: '#4f6d7a' }}>l</span>r</div>
             <h2 className="section-title">Ready to sell<br />
               <em style={{ color: '#E8A838', fontWeight: 400 }}>your collection?</em>
             </h2>
             <p className="section-sub">
-              Sellr appraises every record, pulls live Discogs market pricing,
+              Sel<span style={{ color: '#4f6d7a' }}>l</span>r appraises every record, pulls live Discogs market pricing,
               and writes your Facebook Marketplace ads — so you know exactly
               what you have before you sell.
             </p>
@@ -1187,7 +1187,7 @@ const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
             <div className="footer-col">
               <h4>Products</h4>
               <ul>
-                <li><a href="/sellr">Sellr</a></li>
+                <li><a href="/sellr">Sel<span style={{ color: '#4f6d7a' }}>l</span>r</a></li>
                 <li><a href="#features">Features</a></li>
                 <li><a href="#pricing">Pricing</a></li>
                 <li><a href="#playlist">Playlists</a></li>
@@ -1381,7 +1381,7 @@ const Landing: React.FC<LandingProps> = ({ onEnterApp, scrollToPricing }) => {
         </a>
         <a href="/sellr">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-5"/></svg>
-          <span>Sellr</span>
+          <span>Sel<span style={{ color: '#4f6d7a' }}>l</span>r</span>
         </a>
         {user ? (
           <button onClick={handleCTA}>

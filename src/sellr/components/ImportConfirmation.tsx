@@ -295,7 +295,7 @@ const DuplicateRow: React.FC<{
       {/* Side-by-side comparison */}
       <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-2 gap-1 sm:gap-4">
         <div className="truncate">
-          <span className="text-[10px] uppercase tracking-wider text-sellr-charcoal/40 font-medium">Sellr</span>
+          <span className="text-[10px] uppercase tracking-wider text-sellr-charcoal/40 font-medium">Sel<span className="text-[#4f6d7a]">l</span>r</span>
           <p className="text-sm text-sellr-charcoal truncate">
             {sellrRecord.artist} — {sellrRecord.title}
           </p>

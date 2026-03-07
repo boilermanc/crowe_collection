@@ -17,73 +17,60 @@ const SpenndLandingPage: React.FC = () => {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="min-h-[70vh] flex items-center px-6 py-16 relative overflow-hidden">
-          <svg
-            className="absolute left-0 top-1/2 -translate-y-1/2 w-[600px] h-[600px] pointer-events-none select-none"
-            aria-hidden="true"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 800 800"
-          >
-            <defs>
-              <radialGradient id="wmRecordGrad" cx="40%" cy="38%" r="55%">
-                <stop offset="0%" stopColor="#3a3028"/>
-                <stop offset="100%" stopColor="#1a1410"/>
-              </radialGradient>
-              <radialGradient id="wmLabelGrad" cx="40%" cy="36%" r="60%">
-                <stop offset="0%" stopColor="#6fa88a"/>
-                <stop offset="100%" stopColor="#3d6b54"/>
-              </radialGradient>
-            </defs>
-            <circle cx="400" cy="400" r="380" fill="url(#wmRecordGrad)" opacity="0.08"/>
-            <circle cx="400" cy="400" r="370" fill="none" stroke="#2a2016" strokeWidth="3" opacity="0.07"/>
-            <circle cx="400" cy="400" r="352" fill="none" stroke="#2a2016" strokeWidth="2.5" opacity="0.07"/>
-            <circle cx="400" cy="400" r="334" fill="none" stroke="#2a2016" strokeWidth="2.5" opacity="0.06"/>
-            <circle cx="400" cy="400" r="316" fill="none" stroke="#2a2016" strokeWidth="2.5" opacity="0.06"/>
-            <circle cx="400" cy="400" r="298" fill="none" stroke="#2a2016" strokeWidth="2" opacity="0.06"/>
-            <circle cx="400" cy="400" r="280" fill="none" stroke="#2a2016" strokeWidth="2" opacity="0.05"/>
-            <circle cx="400" cy="400" r="262" fill="none" stroke="#2a2016" strokeWidth="2" opacity="0.05"/>
-            <circle cx="400" cy="400" r="244" fill="none" stroke="#2a2016" strokeWidth="1.5" opacity="0.05"/>
-            <circle cx="400" cy="400" r="226" fill="none" stroke="#2a2016" strokeWidth="1.5" opacity="0.05"/>
-            <circle cx="400" cy="400" r="210" fill="none" stroke="#2a2016" strokeWidth="1.5" opacity="0.04"/>
-            <circle cx="400" cy="400" r="130" fill="url(#wmLabelGrad)" opacity="0.1"/>
-            <circle cx="400" cy="400" r="130" fill="none" stroke="#5a8a6e" strokeWidth="1" opacity="0.08"/>
-            <circle cx="400" cy="400" r="108" fill="none" stroke="#5a8a6e" strokeWidth="0.8" opacity="0.06"/>
-            <text x="400" y="452" textAnchor="middle" fontFamily="Playfair Display, Georgia, serif"
-              fontSize="160" fontWeight="700" fill="#5a8a6e" opacity="0.07">$</text>
-          </svg>
-          <div className="max-w-4xl mx-auto relative">
-            <div className="flex items-center justify-between mb-4">
-              <div className="font-mono text-[11px] text-ink uppercase tracking-widest">
-                SPENND
-              </div>
-              <div className="font-mono text-[9px] text-ink/60">
-                Powered by Rekkrd
+        <section aria-labelledby="spennd-hero-heading" className="pt-12 pb-20 md:pt-20 md:pb-28 px-6">
+          <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-10 md:gap-16">
+            <div className="flex-1 text-center md:text-left">
+              <h1
+                id="spennd-hero-heading"
+                className="font-display text-[clamp(1.75rem,6vw,2.25rem)] md:text-5xl lg:text-6xl leading-tight text-ink"
+              >
+                Know what your record is worth.
+              </h1>
+              <p className="mt-5 text-lg md:text-xl text-ink/60 max-w-lg mx-auto md:mx-0">
+                In about 3 minutes. For free. No account, no Discogs login, no jargon — we walk you through everything.
+              </p>
+              <div className="mt-8 flex flex-col sm:flex-row items-center gap-4 justify-center md:justify-start">
+                <button
+                  onClick={scrollToTool}
+                  className="px-7 py-3 min-h-[44px] bg-[#5a8a6e] text-white font-medium rounded hover:bg-[#3d6b54] transition-colors text-base"
+                >
+                  Check My Record
+                </button>
+                <a
+                  href="#how-it-works"
+                  onClick={(e) => { e.preventDefault(); document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' }); }}
+                  className="text-[#5a8a6e] font-medium hover:text-[#3d6b54] transition-colors text-base min-h-[44px] inline-flex items-center"
+                >
+                  See how it works
+                </a>
               </div>
             </div>
-
-            <h1 className="font-display text-[52px] md:text-[52px] text-ink leading-tight max-w-xl">
-              Know what your record is worth.
-            </h1>
-
-            <p className="font-serif italic text-[20px] text-ink/60 mt-2">
-              In about 3 minutes. For free.
-            </p>
-
-            <p className="font-serif text-[16px] text-ink/60 mt-4 max-w-lg">
-              No account. No Discogs login. No jargon. We'll walk you through everything.
-            </p>
-
-            <button
-              onClick={scrollToTool}
-              className="mt-8 bg-[#5a8a6e] text-white font-serif text-[16px] rounded-full py-4 px-8 hover:bg-[#3d6b54] transition-colors"
-            >
-              Check My Record →
-            </button>
+            <div className="flex-shrink-0">
+              <svg
+                viewBox="0 0 320 320"
+                className="w-48 h-48 sm:w-64 sm:h-64 md:w-80 md:h-80 max-w-full"
+                aria-hidden="true"
+                role="img"
+              >
+                <circle cx="160" cy="160" r="156" fill="#5a8a6e" opacity="0.08" />
+                <circle cx="160" cy="160" r="140" fill="none" stroke="#5a8a6e" strokeWidth="0.5" opacity="0.15" />
+                <circle cx="160" cy="160" r="120" fill="none" stroke="#5a8a6e" strokeWidth="0.5" opacity="0.18" />
+                <circle cx="160" cy="160" r="100" fill="none" stroke="#5a8a6e" strokeWidth="0.5" opacity="0.22" />
+                <circle cx="160" cy="160" r="80" fill="none" stroke="#5a8a6e" strokeWidth="0.5" opacity="0.25" />
+                <circle cx="160" cy="160" r="60" fill="none" stroke="#5a8a6e" strokeWidth="0.5" opacity="0.28" />
+                <circle cx="160" cy="160" r="40" fill="#5a8a6e" opacity="0.1" />
+                <text
+                  x="160" y="172" textAnchor="middle"
+                  fontFamily="Playfair Display, Georgia, serif"
+                  fontSize="48" fontWeight="700" fill="#5a8a6e" opacity="0.25"
+                >$</text>
+              </svg>
+            </div>
           </div>
         </section>
 
         {/* How It Works Section */}
-        <section className="bg-paper-dark py-16 px-6">
+        <section id="how-it-works" className="bg-paper-dark py-16 px-6">
           <div className="max-w-5xl mx-auto">
             <h2 className="font-display text-[28px] text-ink text-center mb-10">
               Three steps. Plain English.
@@ -158,29 +145,61 @@ const SpenndLandingPage: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <footer className="bg-paper-dark border-t border-paper-dark py-10 px-6 text-center">
-        <p className="font-mono text-[13px] text-ink/60 mb-3">
-          Spen<span className="text-[#5a8a6e]">n</span>d is a free tool by Rekk<span className="text-[#c45a30]">r</span>d
-        </p>
-        <div className="flex justify-center gap-3 font-mono text-[13px] text-ink/60">
-          <Link to="/" className="hover:text-ink transition-colors">
-            Rekk<span className="text-[#c45a30]">r</span>d
-          </Link>
-          <span>·</span>
-          <Link to="/sellr" className="hover:text-ink transition-colors">
-            Sel<span className="text-[#4f6d7a]">l</span>r
-          </Link>
-          <span>·</span>
-          <a href="mailto:hello@rekkrd.com" className="hover:text-ink transition-colors">
-            Contact
-          </a>
+      <footer role="contentinfo" className="border-t border-ink/10 pt-12 pb-8 mt-12 px-6 max-w-5xl mx-auto w-full">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
+          {/* Brand column */}
+          <div className="col-span-2 md:col-span-1">
+            <a href="https://rekkrd.com" className="inline-flex items-center gap-2 mb-3">
+              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="12" cy="12" r="11" fill="#3a525d"/>
+                <circle cx="12" cy="12" r="9.5" fill="none" stroke="#4f6d7a" strokeWidth="0.4" opacity="0.5"/>
+                <circle cx="12" cy="12" r="8" fill="none" stroke="#4f6d7a" strokeWidth="0.3" opacity="0.4"/>
+                <circle cx="12" cy="12" r="6.5" fill="none" stroke="#4f6d7a" strokeWidth="0.3" opacity="0.3"/>
+                <circle cx="12" cy="12" r="5.2" fill="#2a3d46"/>
+                <text x="12" y="12.5" textAnchor="middle" dominantBaseline="central" fontFamily="Georgia,serif" fontWeight="bold" fontSize="7" fill="#dd6e42">R</text>
+              </svg>
+              <span className="font-display text-lg text-ink">Rekk<span className="text-[#c45a30]">r</span>d</span>
+            </a>
+            <p className="text-sm text-ink/60 leading-relaxed">
+              The AI-powered vinyl collection manager for serious crate diggers and casual collectors alike.
+            </p>
+          </div>
+
+          {/* Products */}
+          <div>
+            <h4 className="font-medium text-sm text-ink mb-3">Products</h4>
+            <ul className="space-y-2 text-sm text-ink/60">
+              <li><Link to="/sellr" className="hover:text-[#5a8a6e] transition-colors">Sel<span className="text-[#4f6d7a]">l</span>r</Link></li>
+              <li><a href="https://rekkrd.com#features" className="hover:text-[#5a8a6e] transition-colors">Features</a></li>
+              <li><a href="https://rekkrd.com#pricing" className="hover:text-[#5a8a6e] transition-colors">Pricing</a></li>
+              <li><a href="https://rekkrd.com#playlist" className="hover:text-[#5a8a6e] transition-colors">Playlists</a></li>
+            </ul>
+          </div>
+
+          {/* Resources */}
+          <div>
+            <h4 className="font-medium text-sm text-ink mb-3">Resources</h4>
+            <ul className="space-y-2 text-sm text-ink/60">
+              <li><a href="https://rekkrd.com#faq" className="hover:text-[#5a8a6e] transition-colors">FAQ</a></li>
+              <li><a href="https://rekkrd.com/support" className="hover:text-[#5a8a6e] transition-colors">Support</a></li>
+            </ul>
+          </div>
+
+          {/* Company */}
+          <div>
+            <h4 className="font-medium text-sm text-ink mb-3">Company</h4>
+            <ul className="space-y-2 text-sm text-ink/60">
+              <li><a href="https://rekkrd.com/blog" className="hover:text-[#5a8a6e] transition-colors">Blog</a></li>
+              <li><a href="https://rekkrd.com/privacy" className="hover:text-[#5a8a6e] transition-colors">Privacy</a></li>
+              <li><a href="https://rekkrd.com/terms" className="hover:text-[#5a8a6e] transition-colors">Terms</a></li>
+            </ul>
+          </div>
         </div>
-        <div className="mt-4 flex items-center justify-center gap-1.5">
-          <span className="font-serif text-[14px] text-ink/60">Part of the</span>
-          <Link to="/" className="font-display text-[14px] text-ink/60 hover:text-ink transition-colors">
-            Rekk<span className="text-[#c45a30]">r</span>d
-          </Link>
-          <span className="font-serif text-[14px] text-ink/60">family</span>
+
+        {/* Bottom bar */}
+        <div className="border-t border-ink/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-ink/40">
+          <span>&copy; {new Date().getFullYear()} <a href="https://www.sweetwater.technology" target="_blank" rel="noopener noreferrer" className="hover:text-ink/60 transition-colors">Sweetwater Technology</a></span>
+          <span>Made with &#9829; for vinyl lovers</span>
         </div>
       </footer>
     </div>

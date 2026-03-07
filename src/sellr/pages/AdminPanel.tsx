@@ -77,7 +77,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ authToken }) => {
   return (
     <div className="p-6">
       {/* Header */}
-      <h2 className="text-xl font-semibold text-gray-900 mb-4">Sellr</h2>
+      <h2 className="text-xl font-semibold text-gray-900 mb-4">Sel<span className="text-[#4f6d7a]">l</span>r</h2>
 
       {/* Stats pills */}
       {statsError && (

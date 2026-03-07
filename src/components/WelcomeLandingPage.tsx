@@ -612,7 +612,7 @@ export default function WelcomeLandingPage() {
             <ul className="space-y-2 text-sm" style={{ color: C.bodyLight }}>
               <li><button onClick={() => scrollTo('features')} className="hover:underline" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'inherit', font: 'inherit' }}>Features</button></li>
               <li><button onClick={() => scrollTo('pricing')} className="hover:underline" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'inherit', font: 'inherit' }}>Pricing</button></li>
-              <li><a href="/sellr" style={{ color: 'inherit', textDecoration: 'none' }} className="hover:underline">Sellr</a></li>
+              <li><a href="/sellr" style={{ color: 'inherit', textDecoration: 'none' }} className="hover:underline">Sel<span style={{ color: '#4f6d7a' }}>l</span>r</a></li>
             </ul>
           </div>
 

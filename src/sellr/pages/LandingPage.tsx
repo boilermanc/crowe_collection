@@ -287,7 +287,7 @@ const LandingPage: React.FC = () => {
           <div>
             <h4 className="font-medium text-sm text-sellr-charcoal mb-3">Products</h4>
             <ul className="space-y-2 text-sm text-sellr-charcoal/60">
-              <li><Link to="/sellr" className="hover:text-sellr-blue transition-colors">Sellr</Link></li>
+              <li><Link to="/sellr" className="hover:text-sellr-blue transition-colors">Sel<span className="text-[#4f6d7a]">l</span>r</Link></li>
               <li><a href="https://rekkrd.com#features" className="hover:text-sellr-blue transition-colors">Features</a></li>
               <li><a href="https://rekkrd.com#pricing" className="hover:text-sellr-blue transition-colors">Pricing</a></li>
               <li><a href="https://rekkrd.com#playlist" className="hover:text-sellr-blue transition-colors">Playlists</a></li>
