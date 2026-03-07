@@ -59,8 +59,8 @@ const SpenndHeader: React.FC = () => {
 
               {/* Sellr wordmark */}
               <div className="flex flex-col items-start leading-tight">
-                <span className="font-mono text-sm font-semibold text-ink tracking-wide">Sel<span className="text-[#4f6d7a]">l</span>r</span>
-                <span className="font-mono text-[10px] text-[#4f6d7a]/60 tracking-wide">vinyl appraisals</span>
+                <span className="font-mono text-base font-semibold text-ink tracking-wide">Sel<span className="text-[#4f6d7a]">l</span>r</span>
+                <span className="font-mono text-[12px] text-[#4f6d7a]/60 tracking-wide">vinyl appraisals</span>
               </div>
 
               {/* Chevron */}

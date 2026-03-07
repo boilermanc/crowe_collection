@@ -10,6 +10,7 @@ import BulkCopyGenerator from '../components/BulkCopyGenerator';
 import CollectionPost from '../components/CollectionPost';
 import CopyExport from '../components/CopyExport';
 import RekkrdNudge from '../components/RekkrdNudge';
+import { useEbayPrices } from '../hooks/useEbayPrices';
 import type { SellrSession, SellrRecord, SellrOrder } from '../types';
 
 // ── Helpers ─────────────────────────────────────────────────────────
@@ -164,6 +165,9 @@ const ReportPage: React.FC = () => {
       .sort((a, b) => (b.price_median ?? 0) - (a.price_median ?? 0))
       .slice(0, 5);
   }, [records]);
+
+  // eBay price ranges keyed by "artist-title"
+  const ebayPrices = useEbayPrices(records);
 
   // Resolve the session_id for API calls (needed when accessed via token)
   const resolvedSessionId = session?.id ?? sessionId;
@@ -426,9 +430,20 @@ const ReportPage: React.FC = () => {
                               </span>
                             )}
                           </div>
-                          <span className="text-sm font-medium text-sellr-charcoal/70">
-                            {record.price_median != null ? `~${fmtPrice(record.price_median)}` : '—'}
-                          </span>
+                          <div className="text-right">
+                            <span className="text-sm font-medium text-sellr-charcoal/70">
+                              {record.price_median != null ? `~${fmtPrice(record.price_median)}` : '—'}
+                            </span>
+                            {(() => {
+                              const ebay = ebayPrices[`${record.artist}-${record.title}`];
+                              if (!ebay) return null;
+                              return (
+                                <span className="block text-xs text-sellr-charcoal/40">
+                                  eBay: {fmtPrice(ebay.min)} – {fmtPrice(ebay.max)}
+                                </span>
+                              );
+                            })()}
+                          </div>
                         </div>
                       </button>
                       {isExpanded && resolvedSessionId && (
@@ -515,8 +530,19 @@ const ReportPage: React.FC = () => {
                                 {record.condition}
                               </span>
                             </td>
-                            <td className="py-3 pr-3 text-right text-sellr-charcoal/70">
-                              {record.price_median != null ? `~${fmtPrice(record.price_median)}` : '—'}
+                            <td className="py-3 pr-3 text-right">
+                              <span className="text-sellr-charcoal/70">
+                                {record.price_median != null ? `~${fmtPrice(record.price_median)}` : '—'}
+                              </span>
+                              {(() => {
+                                const ebay = ebayPrices[`${record.artist}-${record.title}`];
+                                if (!ebay) return null;
+                                return (
+                                  <span className="block text-xs text-sellr-charcoal/40 mt-0.5">
+                                    eBay: {fmtPrice(ebay.min)} – {fmtPrice(ebay.max)}
+                                  </span>
+                                );
+                              })()}
                             </td>
                             <td className="py-3 text-center">
                               <span className="inline-flex items-center gap-1">

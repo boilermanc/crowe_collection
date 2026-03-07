@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import SellrLayout from '../components/SellrLayout';
 import { useSellrMeta } from '../hooks/useSellrMeta';
+import { useEbayPrices } from '../hooks/useEbayPrices';
 import type { SellrSession, SellrRecord } from '../types';
 
 // ── Helpers ──────────────────────────────────────────────────────────
@@ -13,6 +14,15 @@ function fmtUsd(value: number): string {
     currency: 'USD',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
+  });
+}
+
+function fmtPrice(value: number): string {
+  return value.toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   });
 }
 
@@ -68,6 +78,17 @@ const LotSharePage: React.FC = () => {
   const totalMedian = records.reduce((sum, r) => sum + (r.price_median ?? 0), 0);
   const fairPrice = Math.round(totalMedian * 0.65);
 
+  // eBay overall range
+  const ebayPrices = useEbayPrices(records);
+  const ebayOverall = (() => {
+    const ranges = Object.values(ebayPrices);
+    if (ranges.length === 0) return null;
+    return {
+      min: Math.min(...ranges.map(r => r.min)),
+      max: Math.max(...ranges.map(r => r.max)),
+    };
+  })();
+
   if (loading) {
     return (
       <SellrLayout>
@@ -117,6 +138,11 @@ const LotSharePage: React.FC = () => {
             </p>
           </div>
         </div>
+        {ebayOverall && (
+          <p className="mt-2 text-xs text-sellr-charcoal/40 text-center">
+            eBay market range: {fmtPrice(ebayOverall.min)} – {fmtPrice(ebayOverall.max)}
+          </p>
+        )}
 
         {/* Record List */}
         <section className="mt-8">

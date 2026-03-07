@@ -6,6 +6,7 @@ import {
 import SellrLayout from '../components/SellrLayout';
 import RekkrdNudge from '../components/RekkrdNudge';
 import { supabase } from '../../services/supabaseService';
+import { useEbayPrices } from '../hooks/useEbayPrices';
 import type { SellrSession, SellrRecord, SellrOrder } from '../types';
 
 // ── Helpers ─────────────────────────────────────────────────────────
@@ -137,6 +138,17 @@ const LotReportPage: React.FC = () => {
   const askingPrice = lotData?.lot_prices.fair ?? Math.round(totalMedian * 0.65);
   const reportToken = order?.report_token ?? null;
 
+  // eBay price ranges
+  const ebayPrices = useEbayPrices(records);
+  const ebayOverall = (() => {
+    const ranges = Object.values(ebayPrices);
+    if (ranges.length === 0) return null;
+    return {
+      min: Math.min(...ranges.map(r => r.min)),
+      max: Math.max(...ranges.map(r => r.max)),
+    };
+  })();
+
   // ── Copy handlers ─────────────────────────────────────────────────
   const copyToClipboard = async (text: string, onSuccess: () => void) => {
     try {
@@ -226,6 +238,11 @@ const LotReportPage: React.FC = () => {
             <p className="text-sm text-sellr-charcoal/50 mt-2">
               Based on live Discogs market data
             </p>
+            {ebayOverall && (
+              <p className="text-xs text-sellr-charcoal/40 mt-1">
+                eBay market range: {fmtPrice(ebayOverall.min)} – {fmtPrice(ebayOverall.max)}
+              </p>
+            )}
 
             {/* Price tier chips */}
             {lotData && (
@@ -334,8 +351,19 @@ const LotReportPage: React.FC = () => {
                             {record.condition}
                           </span>
                         </td>
-                        <td className="py-3 text-right text-sellr-charcoal/70">
-                          {record.price_median != null ? fmtPrice(record.price_median) : '—'}
+                        <td className="py-3 text-right">
+                          <span className="text-sellr-charcoal/70">
+                            {record.price_median != null ? fmtPrice(record.price_median) : '—'}
+                          </span>
+                          {(() => {
+                            const ebay = ebayPrices[`${record.artist}-${record.title}`];
+                            if (!ebay) return null;
+                            return (
+                              <span className="block text-xs text-sellr-charcoal/40 mt-0.5">
+                                eBay: {fmtPrice(ebay.min)} – {fmtPrice(ebay.max)}
+                              </span>
+                            );
+                          })()}
                         </td>
                       </tr>
                     ))}
@@ -361,9 +389,20 @@ const LotReportPage: React.FC = () => {
                           {record.condition}
                         </span>
                       </div>
-                      <span className="text-sm font-medium text-sellr-charcoal/70">
-                        {record.price_median != null ? fmtPrice(record.price_median) : '—'}
-                      </span>
+                      <div className="text-right">
+                        <span className="text-sm font-medium text-sellr-charcoal/70">
+                          {record.price_median != null ? fmtPrice(record.price_median) : '—'}
+                        </span>
+                        {(() => {
+                          const ebay = ebayPrices[`${record.artist}-${record.title}`];
+                          if (!ebay) return null;
+                          return (
+                            <span className="block text-xs text-sellr-charcoal/40">
+                              eBay: {fmtPrice(ebay.min)} – {fmtPrice(ebay.max)}
+                            </span>
+                          );
+                        })()}
+                      </div>
                     </div>
                   </div>
                 ))}
