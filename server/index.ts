@@ -73,6 +73,7 @@ import stakkdRoomPlacementRouter from './routes/stakkdRoomPlacement.js';
 import stakkdRoomLayoutsRouter from './routes/stakkdRoomLayouts.js';
 import analyzeChainRouter from './routes/analyzeChain.js';
 import spenndRouter from './routes/spennd.js';
+import ebayRouter from './routes/ebay.js';
 import crawlerMeta from './middleware/crawlerMeta.js';
 import { validateDiscogsConfig } from './lib/discogs.js';
 import { startSellrCron } from './sellrCron.js';
@@ -92,6 +93,7 @@ const _routerMap: Record<string, unknown> = {
   sellrAdminRouter, sellrAccountRouter, sellrDashboardRouter, sellrImportRouter, sellrLotRouter, integrationsRouter,
   adminGearCatalogRouter, adminGearIdentifyRouter, adminGearEnrichRouter,
   stakkdRoomsRouter, stakkdRoomFeaturesRouter, stakkdRoomLayoutsRouter, analyzeChainRouter,
+  ebayRouter,
 };
 for (const [name, r] of Object.entries(_routerMap)) {
   if (typeof r !== 'function') {
@@ -182,6 +184,7 @@ mountRouter('lyricsRouter', lyricsRouter);
 mountRouter('uploadCoverRouter', uploadCoverRouter);
 mountRouter('imageProxyRouter', imageProxyRouter);
 app.use('/api/spennd', spenndRouter);
+app.use('/api/ebay', ebayRouter);
 mountRouter('subscriptionRouter', subscriptionRouter);
 mountRouter('checkoutRouter', checkoutRouter);
 mountRouter('customerPortalRouter', customerPortalRouter);
