@@ -15,6 +15,7 @@ import { useFocusTrap } from '../hooks/useFocusTrap';
 import { engagementService } from '../services/engagementService';
 import { getAlbumPlacementInfo, type PlacementResult } from '../helpers/shelfHelpers';
 import { MEDIA_FORMATS, FORMAT_COLORS, type MediaFormat } from '../../constants/formatTypes';
+import EbayPricingPanel from './EbayPricingPanel';
 
 interface PressingResult {
   id: number;
@@ -580,6 +581,9 @@ const AlbumDetailModal: React.FC<AlbumDetailModalProps> = ({
                 </div>
               </div>
             </section>
+
+            {/* eBay Listings */}
+            <EbayPricingPanel query={`${album.artist} ${album.title} vinyl record`} />
 
             {/* Quick Actions */}
             <section className="flex flex-col sm:flex-row gap-4">

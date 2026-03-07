@@ -2,6 +2,7 @@ import { Router, type Request, type Response } from 'express';
 import { Resend } from 'resend';
 import { requireAdmin, type AdminAuthResult } from '../middleware/adminAuth.js';
 import { getSupabaseAdmin } from '../lib/supabaseAdmin.js';
+import { getEbayToken, clearEbayTokenCache } from '../lib/ebay-auth.js';
 
 const router = Router();
 
@@ -712,6 +713,88 @@ router.post('/api/admin/customers/:id/reactivate', requireAdmin, async (req, res
 
 router.delete('/api/admin/customers/:id', requireAdmin, async (req, res, next) => {
   try { await handleWipeUser(req, res); } catch (err) { next(err); }
+});
+
+// ── eBay Config ───────────────────────────────────────────────────
+router.get('/api/admin/ebay-config', requireAdmin, async (_req, res, next) => {
+  try {
+    const supabase = getSupabaseAdmin();
+    if (!supabase) throw new Error('Supabase admin not configured');
+
+    const { data, error } = await supabase
+      .from('config_settings')
+      .select('key, value')
+      .eq('category', 'ebay');
+
+    if (error) throw error;
+
+    const cfg: Record<string, string> = {};
+    for (const row of (data || []) as Array<{ key: string; value: string }>) {
+      cfg[row.key] = row.value;
+    }
+
+    res.json(cfg);
+  } catch (err) { next(err); }
+});
+
+router.post('/api/admin/ebay-config', requireAdmin, async (req, res, next) => {
+  try {
+    const supabase = getSupabaseAdmin();
+    if (!supabase) throw new Error('Supabase admin not configured');
+
+    const allowedKeys = ['sandbox_app_id', 'sandbox_cert_id', 'prod_app_id', 'prod_cert_id', 'mode', 'enabled'];
+    const body = req.body as Record<string, string>;
+
+    const records = allowedKeys
+      .filter(key => key in body)
+      .map(key => ({
+        category: 'ebay',
+        key,
+        value: body[key],
+        data_type: 'string',
+        updated_at: new Date().toISOString(),
+      }));
+
+    if (records.length === 0) {
+      res.status(400).json({ error: 'No valid keys provided' });
+      return;
+    }
+
+    const { error } = await supabase
+      .from('config_settings')
+      .upsert(records, { onConflict: 'category,key' });
+
+    if (error) throw error;
+
+    res.json({ success: true });
+  } catch (err) { next(err); }
+});
+
+router.post('/api/admin/ebay-test', requireAdmin, async (req, res) => {
+  try {
+    const { app_id, cert_id, sandbox } = req.body as {
+      app_id: string;
+      cert_id: string;
+      sandbox: boolean;
+    };
+
+    if (!app_id || !cert_id) {
+      res.status(400).json({ success: false, error: 'app_id and cert_id are required' });
+      return;
+    }
+
+    clearEbayTokenCache();
+    const token = await getEbayToken(app_id, cert_id, sandbox);
+
+    res.json({
+      success: true,
+      tokenPreview: token.slice(0, 20) + '...',
+    });
+  } catch (err: unknown) {
+    const message = (err as Error).message;
+    console.error('[admin] eBay test error:', message);
+    res.status(400).json({ success: false, error: message });
+  }
 });
 
 export default router;

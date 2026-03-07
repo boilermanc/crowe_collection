@@ -367,6 +367,37 @@ router.get('/api/admin/integrations/status', requireAdmin, async (_req: Request,
       },
     });
 
+    // ── eBay ──
+    const supabaseForEbay = getSupabaseAdmin();
+    if (supabaseForEbay) {
+      const { data: ebayCfg } = await supabaseForEbay
+        .from('config_settings')
+        .select('key, value')
+        .eq('category', 'ebay');
+
+      const ebayKv: Record<string, string> = {};
+      for (const row of (ebayCfg || []) as Array<{ key: string; value: string }>) {
+        ebayKv[row.key] = row.value;
+      }
+
+      const ebayEnabled = ebayKv.enabled === 'true';
+      const ebayMode = ebayKv.mode || 'sandbox';
+      const hasKeys = ebayMode === 'sandbox'
+        ? !!(ebayKv.sandbox_app_id && ebayKv.sandbox_cert_id)
+        : !!(ebayKv.prod_app_id && ebayKv.prod_cert_id);
+
+      integrations.push({
+        name: 'eBay',
+        key: 'ebay',
+        status: ebayEnabled && hasKeys ? 'connected' : 'disabled',
+        details: {
+          enabled: ebayEnabled ? 'Yes' : 'No',
+          mode: ebayMode,
+          credentials: hasKeys ? 'Set' : 'Not set',
+        },
+      });
+    }
+
     res.json(integrations);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';

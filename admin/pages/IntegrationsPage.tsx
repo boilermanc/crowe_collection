@@ -1,5 +1,19 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { adminService } from '../../src/services/adminService';
+import { supabase } from '../../src/services/supabaseService';
+
+// ── Auth helper ──────────────────────────────────────────────────────
+
+async function getAdminHeaders(): Promise<Record<string, string>> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (supabase) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      headers['Authorization'] = `Bearer ${session.access_token}`;
+    }
+  }
+  return headers;
+}
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -49,6 +63,7 @@ const INTEGRATION_ICONS: Record<string, string> = {
   gemini:  'M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm0 3.6c2.16 0 4.08.84 5.52 2.16L12 12 6.48 5.76A8.28 8.28 0 0112 3.6zm-8.4 8.4c0-2.16.84-4.08 2.16-5.52L12 12l-5.76 5.52A8.28 8.28 0 013.6 12zm8.4 8.4c-2.16 0-4.08-.84-5.52-2.16L12 12l5.52 6.24A8.28 8.28 0 0112 20.4zm8.4-8.4c0 2.16-.84 4.08-2.16 5.52L12 12l5.76-5.52A8.28 8.28 0 0120.4 12z',
   discogs: 'M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 2a10 10 0 110 20 10 10 0 010-20zm0 4a6 6 0 100 12 6 6 0 000-12zm0 2a4 4 0 110 8 4 4 0 010-8zm0 2a2 2 0 100 4 2 2 0 000-4z',
   resend:  'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
+  ebay:    'M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z',
 };
 
 // ── Component ────────────────────────────────────────────────────────
@@ -80,6 +95,19 @@ const IntegrationsPage: React.FC = () => {
   const [emailSaveMessage, setEmailSaveMessage] = useState<string | null>(null);
   const [testingResend, setTestingResend] = useState(false);
   const [resendTestResult, setResendTestResult] = useState<{ success: boolean; message: string; details?: Record<string, unknown> } | null>(null);
+
+  // eBay settings
+  const [ebayLoading, setEbayLoading] = useState(true);
+  const [ebaySandboxAppId, setEbaySandboxAppId] = useState('');
+  const [ebaySandboxCertId, setEbaySandboxCertId] = useState('');
+  const [ebayProdAppId, setEbayProdAppId] = useState('');
+  const [ebayProdCertId, setEbayProdCertId] = useState('');
+  const [ebayMode, setEbayMode] = useState<'sandbox' | 'production'>('sandbox');
+  const [ebayEnabled, setEbayEnabled] = useState(false);
+  const [ebaySaving, setEbaySaving] = useState(false);
+  const [ebaySaveMessage, setEbaySaveMessage] = useState<string | null>(null);
+  const [testingEbay, setTestingEbay] = useState(false);
+  const [ebayTestResult, setEbayTestResult] = useState<{ success: boolean; message: string } | null>(null);
 
   // ── Load Stripe settings ───────────────────────────────────────────
 
@@ -127,6 +155,29 @@ const IntegrationsPage: React.FC = () => {
         setSellrFromAddress((settings.sellr_from_address as string) || '');
       })
       .catch((err) => console.error('Failed to load email settings:', err));
+  }, []);
+
+  // ── Load eBay settings ──────────────────────────────────────────────
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const headers = await getAdminHeaders();
+        const res = await fetch('/api/admin/ebay-config', { headers });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const cfg: Record<string, string> = await res.json();
+        setEbaySandboxAppId(cfg.sandbox_app_id || '');
+        setEbaySandboxCertId(cfg.sandbox_cert_id || '');
+        setEbayProdAppId(cfg.prod_app_id || '');
+        setEbayProdCertId(cfg.prod_cert_id || '');
+        setEbayMode((cfg.mode as 'sandbox' | 'production') || 'sandbox');
+        setEbayEnabled(cfg.enabled === 'true');
+      } catch (err) {
+        console.error('Failed to load eBay settings:', err);
+      } finally {
+        setEbayLoading(false);
+      }
+    })();
   }, []);
 
   // ── Save ──────────────────────────────────────────────────────────
@@ -202,7 +253,67 @@ const IntegrationsPage: React.FC = () => {
     }
   }, []);
 
-  // ── Test ──────────────────────────────────────────────────────────
+  // ── Save eBay settings ──────────────────────────────────────────
+
+  const handleEbaySave = useCallback(async () => {
+    setEbaySaving(true);
+    setEbaySaveMessage(null);
+    try {
+      const headers = await getAdminHeaders();
+      const res = await fetch('/api/admin/ebay-config', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          sandbox_app_id: ebaySandboxAppId,
+          sandbox_cert_id: ebaySandboxCertId,
+          prod_app_id: ebayProdAppId,
+          prod_cert_id: ebayProdCertId,
+          mode: ebayMode,
+          enabled: ebayEnabled ? 'true' : 'false',
+        }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setEbaySaveMessage('eBay settings saved');
+      setTimeout(() => setEbaySaveMessage(null), 3000);
+    } catch (err) {
+      setEbaySaveMessage('Failed to save eBay settings');
+      setTimeout(() => setEbaySaveMessage(null), 5000);
+      console.error('eBay settings save error:', err);
+    } finally {
+      setEbaySaving(false);
+    }
+  }, [ebaySandboxAppId, ebaySandboxCertId, ebayProdAppId, ebayProdCertId, ebayMode, ebayEnabled]);
+
+  // ── Test eBay connection ──────────────────────────────────────────
+
+  const handleEbayTest = useCallback(async () => {
+    setTestingEbay(true);
+    setEbayTestResult(null);
+    try {
+      const sandbox = ebayMode === 'sandbox';
+      const appId = sandbox ? ebaySandboxAppId : ebayProdAppId;
+      const certId = sandbox ? ebaySandboxCertId : ebayProdCertId;
+
+      const headers = await getAdminHeaders();
+      const res = await fetch('/api/admin/ebay-test', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ app_id: appId, cert_id: certId, sandbox }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setEbayTestResult({ success: true, message: `Connected! Token: ${data.tokenPreview}` });
+      } else {
+        setEbayTestResult({ success: false, message: data.error || 'Test failed' });
+      }
+    } catch (err) {
+      setEbayTestResult({ success: false, message: err instanceof Error ? err.message : 'Test failed' });
+    } finally {
+      setTestingEbay(false);
+    }
+  }, [ebayMode, ebaySandboxAppId, ebaySandboxCertId, ebayProdAppId, ebayProdCertId]);
+
+  // ── Test Stripe ───────────────────────────────────────────────────
 
   const handleTest = useCallback(async (testMode: StripeMode) => {
     const setter = testMode === 'test' ? setTestingTest : setTestingLive;
@@ -252,7 +363,7 @@ const IntegrationsPage: React.FC = () => {
 
   // ── Loading ───────────────────────────────────────────────────────
 
-  if (stripeLoading || statusLoading) {
+  if (stripeLoading || statusLoading || ebayLoading) {
     return (
       <div className="p-8 flex items-center justify-center min-h-[400px]">
         <div className="w-6 h-6 border-2 border-[rgb(99,102,241)] border-t-transparent rounded-full animate-spin" />
@@ -271,6 +382,7 @@ const IntegrationsPage: React.FC = () => {
       case 'gemini': return `Model: ${s.details.model || 'gemini-2.5-flash'}`;
       case 'discogs': return s.details.user_agent || 'Connected';
       case 'resend': return `${s.details.from_name || 'Rekkrd'} <${s.details.from_address || 'noreply@rekkrd.com'}>`;
+      case 'ebay': return `Mode: ${s.details.mode || 'sandbox'}`;
       default: return 'Connected';
     }
   };
@@ -618,6 +730,185 @@ const IntegrationsPage: React.FC = () => {
                 </span>
               )}
             </div>
+          </div>
+        </AccordionSection>
+
+        {/* eBay */}
+        <AccordionSection
+          id="accordion-ebay"
+          title="eBay"
+          subtitle="Browse API for marketplace pricing data"
+          isExpanded={expandedSection === 'ebay'}
+          onToggle={() => toggleSection('ebay')}
+          status={getStatus('ebay')?.status}
+          iconPath={INTEGRATION_ICONS.ebay}
+          iconViewBox="0 0 24 24"
+        >
+          <div className="space-y-6">
+            {/* Enabled toggle */}
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-sm font-medium" style={{ color: 'rgb(17,24,39)' }}>Enabled</span>
+                <p className="text-xs" style={{ color: 'rgb(107,114,128)' }}>Allow eBay search requests from Spennd</p>
+              </div>
+              <button
+                onClick={() => setEbayEnabled((v) => !v)}
+                className="relative w-11 h-6 rounded-full transition-colors"
+                style={{ backgroundColor: ebayEnabled ? 'rgb(99,102,241)' : 'rgb(209,213,219)' }}
+                aria-label="Toggle eBay enabled"
+              >
+                <span
+                  className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"
+                  style={{ transform: ebayEnabled ? 'translateX(20px)' : 'translateX(0)' }}
+                />
+              </button>
+            </div>
+
+            {/* Mode toggle */}
+            <div>
+              <label className="block text-sm font-medium mb-2" style={{ color: 'rgb(55,65,81)' }}>Mode</label>
+              <div className="flex rounded-lg overflow-hidden border" style={{ borderColor: 'rgb(209,213,219)', width: 'fit-content' }}>
+                <button
+                  onClick={() => setEbayMode('sandbox')}
+                  className="px-4 py-2 text-sm font-medium transition-colors"
+                  style={{
+                    backgroundColor: ebayMode === 'sandbox' ? 'rgb(234,179,8)' : 'transparent',
+                    color: ebayMode === 'sandbox' ? 'white' : 'rgb(107,114,128)',
+                  }}
+                >
+                  Sandbox
+                </button>
+                <button
+                  onClick={() => setEbayMode('production')}
+                  className="px-4 py-2 text-sm font-medium transition-colors"
+                  style={{
+                    backgroundColor: ebayMode === 'production' ? 'rgb(34,197,94)' : 'transparent',
+                    color: ebayMode === 'production' ? 'white' : 'rgb(107,114,128)',
+                  }}
+                >
+                  Production
+                </button>
+              </div>
+            </div>
+
+            {/* Sandbox keys */}
+            <div>
+              <h4 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'rgb(107,114,128)' }}>
+                Sandbox Credentials
+              </h4>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'rgb(55,65,81)' }}>App ID (Client ID)</label>
+                  <input
+                    type="text"
+                    value={ebaySandboxAppId}
+                    onChange={(e) => setEbaySandboxAppId(e.target.value)}
+                    placeholder="Sandbox App ID"
+                    aria-label="eBay sandbox App ID"
+                    className="w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2"
+                    style={{ borderColor: 'rgb(209,213,219)', color: 'rgb(17,24,39)' }}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'rgb(55,65,81)' }}>Cert ID (Client Secret)</label>
+                  <input
+                    type="text"
+                    value={ebaySandboxCertId}
+                    onChange={(e) => setEbaySandboxCertId(e.target.value)}
+                    placeholder="Sandbox Cert ID"
+                    aria-label="eBay sandbox Cert ID"
+                    className="w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2"
+                    style={{ borderColor: 'rgb(209,213,219)', color: 'rgb(17,24,39)' }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Production keys */}
+            <div>
+              <h4 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'rgb(107,114,128)' }}>
+                Production Credentials
+              </h4>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'rgb(55,65,81)' }}>App ID (Client ID)</label>
+                  <input
+                    type="text"
+                    value={ebayProdAppId}
+                    onChange={(e) => setEbayProdAppId(e.target.value)}
+                    placeholder="Production App ID"
+                    aria-label="eBay production App ID"
+                    className="w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2"
+                    style={{ borderColor: 'rgb(209,213,219)', color: 'rgb(17,24,39)' }}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'rgb(55,65,81)' }}>Cert ID (Client Secret)</label>
+                  <input
+                    type="text"
+                    value={ebayProdCertId}
+                    onChange={(e) => setEbayProdCertId(e.target.value)}
+                    placeholder="Production Cert ID"
+                    aria-label="eBay production Cert ID"
+                    className="w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2"
+                    style={{ borderColor: 'rgb(209,213,219)', color: 'rgb(17,24,39)' }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Save + Test */}
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                onClick={handleEbaySave}
+                disabled={ebaySaving}
+                aria-label="Save eBay settings"
+                className="px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                style={{ backgroundColor: 'rgb(99,102,241)', color: 'white' }}
+              >
+                {ebaySaving ? 'Saving...' : 'Save Settings'}
+              </button>
+              <button
+                onClick={handleEbayTest}
+                disabled={testingEbay || !(ebayMode === 'sandbox' ? ebaySandboxAppId && ebaySandboxCertId : ebayProdAppId && ebayProdCertId)}
+                aria-label="Test eBay connection"
+                className="px-4 py-2 rounded-lg text-sm font-medium border transition-colors disabled:opacity-50 flex items-center gap-2"
+                style={{ borderColor: 'rgb(209,213,219)', color: 'rgb(55,65,81)' }}
+              >
+                {testingEbay ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    Testing...
+                  </>
+                ) : (
+                  'Test Connection'
+                )}
+              </button>
+              {ebaySaveMessage && (
+                <span
+                  className="text-sm font-medium"
+                  style={{ color: ebaySaveMessage.includes('Failed') ? 'rgb(239,68,68)' : 'rgb(34,197,94)' }}
+                >
+                  {ebaySaveMessage}
+                </span>
+              )}
+            </div>
+
+            {ebayTestResult && (
+              <div
+                className="rounded-lg text-sm px-4 py-3 font-medium flex items-center gap-2"
+                style={{
+                  backgroundColor: ebayTestResult.success ? 'rgb(240,253,244)' : 'rgb(254,242,242)',
+                  color: ebayTestResult.success ? 'rgb(22,101,52)' : 'rgb(153,27,27)',
+                }}
+              >
+                <div
+                  className="w-2 h-2 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: ebayTestResult.success ? 'rgb(34,197,94)' : 'rgb(239,68,68)' }}
+                />
+                {ebayTestResult.message}
+              </div>
+            )}
           </div>
         </AccordionSection>
       </div>
