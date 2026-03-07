@@ -5,8 +5,8 @@
       <stop offset="100%" stop-color="#1a1410"/>
     </radialGradient>
     <radialGradient id="labelGrad" cx="40%" cy="36%" r="60%">
-      <stop offset="0%" stop-color="#e87a4e"/>
-      <stop offset="100%" stop-color="#c05828"/>
+      <stop offset="0%" stop-color="#6fa88a"/>
+      <stop offset="100%" stop-color="#3d6b54"/>
     </radialGradient>
     <filter id="shadow" x="-15%" y="-15%" width="130%" height="130%">
       <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#2a2016" flood-opacity="0.4"/>

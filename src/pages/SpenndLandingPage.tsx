@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import SpenndHeader from '../components/spennd/SpenndHeader';
 import SpenndTool from '../components/spennd/SpenndTool';
@@ -10,6 +10,24 @@ const SpenndLandingPage: React.FC = () => {
       toolSection.scrollIntoView({ behavior: 'smooth' });
     }
   };
+
+  // Set Spennd favicon and title
+  useEffect(() => {
+    const prevTitle = document.title;
+    document.title = 'Spennd — Know what your record is worth';
+
+    const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement
+      ?? document.createElement('link');
+    const prevHref = link.href;
+    link.rel = 'icon';
+    link.href = '/spennd-favicon.svg';
+    document.head.appendChild(link);
+
+    return () => {
+      document.title = prevTitle;
+      link.href = prevHref || '/favicon.ico';
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-paper flex flex-col">

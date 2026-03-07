@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
-import { XMLParser } from 'fast-xml-parser';
 import { getSupabaseAdmin } from '../lib/supabaseAdmin.js';
+import { getEbayToken } from '../lib/ebay-auth.js';
 
 const router = express.Router();
 
@@ -484,75 +484,63 @@ router.get('/ebay', async (req: Request, res: Response) => {
     return res.json({ ...cached.data, cached: true });
   }
 
-  let appId: string | undefined;
+  let cfg: Record<string, string>;
   try {
-    const cfg = await getEbayConfig();
-
-    if (cfg['enabled'] !== 'true') {
-      return res.json({ available: false });
-    }
-
-    const sandbox = cfg['mode'] === 'sandbox';
-    appId = sandbox ? cfg['sandbox_app_id'] : cfg['prod_app_id'];
-  } catch (err) {
+    cfg = await getEbayConfig();
+  } catch (err: unknown) {
     console.error('Failed to load eBay config:', err);
     return res.json({ available: false });
   }
 
-  if (!appId) {
+  if (cfg['enabled'] !== 'true') {
+    return res.json({ available: false });
+  }
+
+  const sandbox = cfg['mode'] === 'sandbox';
+  const appId = sandbox ? cfg['sandbox_app_id'] : cfg['prod_app_id'];
+  const certId = sandbox ? cfg['sandbox_cert_id'] : cfg['prod_cert_id'];
+
+  if (!appId || !certId) {
     return res.json({ available: false });
   }
 
   try {
+    const token = await getEbayToken(appId, certId, sandbox);
+    const baseUrl = sandbox
+      ? 'https://api.sandbox.ebay.com'
+      : 'https://api.ebay.com';
+
     const params = new URLSearchParams({
-      'OPERATION-NAME': 'findCompletedItems',
-      'SERVICE-VERSION': '1.0.0',
-      'SECURITY-APPNAME': appId,
-      'RESPONSE-DATA-FORMAT': 'XML',
-      'REST-PAYLOAD': 'true',
-      'keywords': q,
-      'itemFilter(0).name': 'SoldItemsOnly',
-      'itemFilter(0).value': 'true',
-      'paginationInput.entriesPerPage': '50',
-      'sortOrder': 'EndTimeSoonest'
+      q,
+      limit: '10',
+      filter: 'buyingOptions:{FIXED_PRICE},categoryIds:{176985}'
     });
 
-    const url = `https://svcs.ebay.com/services/search/FindingService/v1?${params.toString()}`;
-    const response = await fetch(url);
+    const url = `${baseUrl}/buy/browse/v1/item_summary/search?${params.toString()}`;
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US'
+      }
+    });
 
     if (!response.ok) {
       return res.json({ available: false });
     }
 
-    const xmlText = await response.text();
-    const parser = new XMLParser({ ignoreAttributes: false });
-    const parsed = parser.parse(xmlText);
+    const data = await response.json() as {
+      itemSummaries?: Array<{ price?: { value?: string } }>;
+    };
 
-    // Navigate to items array
-    const items = parsed?.findCompletedItemsResponse?.searchResult?.item;
-    if (!items || !Array.isArray(items)) {
+    const items = data.itemSummaries;
+    if (!items || items.length === 0) {
       return res.json({ available: false });
     }
 
-    // Extract prices and filter
+    // Extract prices
     const prices: number[] = [];
-    const excludeTerms = ['cd', 'cassette', '8-track', '8track', 'dvd', 'vhs', '45 rpm', '45rpm', '"7', "7'"];
-
     for (const item of items) {
-      const title = (item.title || '').toLowerCase();
-
-      // Skip if title contains excluded terms
-      if (excludeTerms.some(term => title.includes(term))) {
-        continue;
-      }
-
-      // Extract price
-      const priceValue =
-        item.sellingStatus?.convertedCurrentPrice?.['__value__'] ||
-        item.sellingStatus?.currentPrice?.['__value__'] ||
-        '0';
-
-      const price = parseFloat(priceValue);
+      const price = parseFloat(item.price?.value || '0');
       if (price > 0) {
         prices.push(price);
       }
@@ -562,7 +550,7 @@ router.get('/ebay', async (req: Request, res: Response) => {
       return res.json({ available: false });
     }
 
-    // Sort and strip outliers
+    // Sort and strip outliers (drop top and bottom 10%)
     prices.sort((a, b) => a - b);
     const removeCount = Math.floor(prices.length * 0.10);
     const trimmed = removeCount > 0
@@ -590,8 +578,8 @@ router.get('/ebay', async (req: Request, res: Response) => {
 
     res.json(result);
 
-  } catch (error) {
-    console.error('eBay lookup error:', error);
+  } catch (err: unknown) {
+    console.error('eBay lookup error:', err);
     res.json({ available: false });
   }
 });
