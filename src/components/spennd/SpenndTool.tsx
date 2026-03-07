@@ -72,6 +72,7 @@ const SpenndTool: React.FC = () => {
   // Release notes state
   const [releaseNotes, setReleaseNotes] = useState<string | null>(null);
   const [notesExpanded, setNotesExpanded] = useState(false);
+  const [showAllVersions, setShowAllVersions] = useState(false);
 
   // Results state (placeholders for now)
   const [priceData, setPriceData] = useState<PriceData | null>(null);
@@ -91,6 +92,10 @@ const SpenndTool: React.FC = () => {
     setSearchLoading(true);
     setSearchError(null);
     setSearchResults([]);
+    setSelectedRelease(null);
+    setReleaseNotes(null);
+    setMatrixResult(null);
+    setShowAllVersions(false);
 
     try {
       const response = await fetch(`/api/spennd/search?q=${encodeURIComponent(combinedQuery)}`);
@@ -98,6 +103,11 @@ const SpenndTool: React.FC = () => {
 
       const data = await response.json();
       setSearchResults(data);
+
+      // Auto-select the top result (most relevant pressing)
+      if (data.length > 0) {
+        handleSelectRelease(data[0]);
+      }
     } catch (error) {
       setSearchError("We're having trouble reaching the database. Try again in a moment.");
     } finally {
@@ -108,6 +118,7 @@ const SpenndTool: React.FC = () => {
   const handleSelectRelease = (release: DiscogsRelease) => {
     setSelectedRelease(release);
     setReleaseNotes(null);
+    setShowAllVersions(false);
 
     // Fetch notes early via matrix endpoint
     const params = new URLSearchParams({
@@ -348,6 +359,10 @@ const SpenndTool: React.FC = () => {
 
         {selectedRelease && (
           <div className="mt-4">
+            <p className="font-serif text-sm text-ink/60 mb-3">
+              We found this pressing — does it look right?
+            </p>
+
             <div className="flex items-center gap-3 p-3 rounded-xl bg-paper-dark">
               <img
                 src={selectedRelease.thumb || '/placeholder-vinyl.png'}
@@ -390,12 +405,45 @@ const SpenndTool: React.FC = () => {
             >
               Continue →
             </button>
-            <button
-              onClick={() => { setSelectedRelease(null); setReleaseNotes(null); setMatrixResult(null); }}
-              className="mt-2 w-full text-sm text-ink/60 underline"
-            >
-              Choose a different pressing
-            </button>
+
+            {searchResults.length > 1 && (
+              <>
+                <button
+                  onClick={() => setShowAllVersions(v => !v)}
+                  className="mt-2 w-full text-sm text-ink/60 underline"
+                >
+                  {showAllVersions ? '▾' : '▸'} See other versions ({searchResults.length - 1})
+                </button>
+
+                {showAllVersions && (
+                  <div className="mt-2 flex flex-col gap-1">
+                    {searchResults
+                      .filter(r => r.id !== selectedRelease.id)
+                      .map((result) => (
+                        <button
+                          key={result.id}
+                          onClick={() => handleSelectRelease(result)}
+                          className="flex items-center gap-3 p-3 rounded-xl hover:bg-paper-dark transition-colors text-left"
+                        >
+                          <img
+                            src={result.thumb || '/placeholder-vinyl.png'}
+                            alt=""
+                            className="w-10 h-10 rounded-lg object-cover bg-paper-dark"
+                          />
+                          <div className="flex-1">
+                            <div className="font-serif text-[14px] text-ink font-medium">
+                              {result.artist} — {result.title}
+                            </div>
+                            <div className="font-mono text-[11px] text-ink/60">
+                              {result.year} · {result.label} · {result.country}
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                  </div>
+                )}
+              </>
+            )}
           </div>
         )}
 
