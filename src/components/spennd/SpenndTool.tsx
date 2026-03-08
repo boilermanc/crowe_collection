@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Zap, Search, Info } from 'lucide-react';
 import { DiscogsRelease, LabelValidation, MatrixResult, PriceData, EbayData } from '../../types/spennd';
 import { ConditionGrade, VINYL_CHECKLIST, CD_CHECKLIST, CONDITION_BY_VALUE, scoreToGrade } from '../../constants/conditionGrades';
 
-type Step = 'search' | 'label' | 'matrix' | 'grading' | 'results';
+type Step = 'search' | 'path' | 'label' | 'matrix' | 'grading' | 'results';
 
 const FieldTip = ({ children }: { children: React.ReactNode }) => {
   const [open, setOpen] = useState(false);
@@ -36,6 +36,8 @@ const SpenndTool: React.FC = () => {
   const [exampleOpen, setExampleOpen] = useState(false);
   const [recordsChecked, setRecordsChecked] = useState(0);
   const [nudgeDismissed, setNudgeDismissed] = useState(false);
+  const [mode, setMode] = useState<'quick' | 'deep' | null>(null);
+  const matrixSkipped = mode === 'quick';
 
   // Search state
   const [artistQuery, setArtistQuery] = useState('');
@@ -58,7 +60,7 @@ const SpenndTool: React.FC = () => {
 
   // Matrix state
   const [matrixInputs, setMatrixInputs] = useState<Record<string, string>>({});
-  const [matrixSkipped, setMatrixSkipped] = useState<Record<string, boolean>>({});
+  const [sideSkipped, setSideSkipped] = useState<Record<string, boolean>>({});
   const [matrixLoading, setMatrixLoading] = useState(false);
   const [matrixResult, setMatrixResult] = useState<MatrixResult | null>(null);
 
@@ -400,7 +402,7 @@ const SpenndTool: React.FC = () => {
             )}
 
             <button
-              onClick={() => setStep('label')}
+              onClick={() => setStep('path')}
               className="mt-4 w-full bg-[#5a8a6e] text-white rounded-full py-3 px-6 font-serif hover:bg-[#3d6b54] transition-colors"
             >
               Continue →
@@ -456,7 +458,84 @@ const SpenndTool: React.FC = () => {
     );
   }
 
-  if (step === 'label') {
+  if (step === 'path') {
+    return (
+      <div className="max-w-xl mx-auto bg-paper rounded-2xl p-8 shadow-sm">
+        <button
+          onClick={() => setStep('search')}
+          className="text-sm text-ink/80 underline mb-4"
+        >
+          ← Change record
+        </button>
+
+        {selectedRelease && (
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-paper-dark mb-6">
+            <img
+              src={selectedRelease.thumb || '/placeholder-vinyl.png'}
+              alt=""
+              className="w-10 h-10 rounded-lg object-cover"
+            />
+            <div className="flex-1">
+              <div className="font-serif text-base text-ink font-medium">
+                {selectedRelease.artist} — {selectedRelease.title}
+              </div>
+              <div className="font-mono text-[13px] text-ink/80">
+                {selectedRelease.year} · {selectedRelease.label} · {selectedRelease.country}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <h3 className="font-display text-2xl sm:text-3xl text-ink mb-2">
+          How thorough do you want to be?
+        </h3>
+        <p className="font-serif text-base text-ink/80 mb-6">
+          Choose your path based on how much time you have.
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Quick Check */}
+          <div className="bg-white border border-stone-200 rounded-xl p-6 flex flex-col">
+            <Zap className="text-[#5a8a6e] mb-3" size={28} />
+            <h4 className="font-display text-xl text-ink mb-2">Quick Check</h4>
+            <p className="font-serif text-sm text-ink/80 mb-4 flex-1">
+              Skip straight to grading. Get a price in under a minute.
+            </p>
+            <button
+              onClick={() => {
+                setMode('quick');
+                setMatrixResult(null);
+                setStep('grading');
+              }}
+              className="w-full bg-[#5a8a6e] text-white rounded-full py-3 px-6 font-serif hover:bg-[#3d6b54] transition-colors"
+            >
+              Get Price Fast
+            </button>
+          </div>
+
+          {/* Deep Dive */}
+          <div className="bg-white border border-stone-200 rounded-xl p-6 flex flex-col">
+            <Search className="text-[#5a8a6e] mb-3" size={28} />
+            <h4 className="font-display text-xl text-ink mb-2">Deep Dive</h4>
+            <p className="font-serif text-sm text-ink/80 mb-4 flex-1">
+              Verify your pressing with label and matrix identification for maximum confidence.
+            </p>
+            <button
+              onClick={() => {
+                setMode('deep');
+                setStep('label');
+              }}
+              className="w-full border border-[#5a8a6e] text-[#5a8a6e] rounded-full py-3 px-6 font-serif hover:bg-[#5a8a6e]/5 transition-colors"
+            >
+              Identify My Pressing
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (mode === 'deep' && step === 'label') {
     return (
       <div className="max-w-xl mx-auto bg-paper rounded-2xl p-8 shadow-sm">
         <button
@@ -684,7 +763,7 @@ const SpenndTool: React.FC = () => {
     );
   }
 
-  if (step === 'matrix') {
+  if (mode === 'deep' && step === 'matrix') {
     const sides = matrixResult?.is_double_album ? ['A', 'B', 'C', 'D'] : ['A', 'B'];
 
     return (
@@ -821,15 +900,15 @@ const SpenndTool: React.FC = () => {
                 type="text"
                 value={matrixInputs[side] || ''}
                 onChange={(e) => setMatrixInputs(prev => ({ ...prev, [side]: e.target.value }))}
-                disabled={matrixSkipped[side]}
+                disabled={sideSkipped[side]}
                 className="w-full bg-paper-dark rounded-xl font-mono py-2 px-3 text-ink focus:outline-none focus:ring-2 focus:ring-[#5a8a6e] disabled:opacity-50"
               />
               <label className="flex items-center gap-2 mt-2">
                 <input
                   type="checkbox"
-                  checked={matrixSkipped[side] || false}
+                  checked={sideSkipped[side] || false}
                   onChange={(e) => {
-                    setMatrixSkipped(prev => ({ ...prev, [side]: e.target.checked }));
+                    setSideSkipped(prev => ({ ...prev, [side]: e.target.checked }));
                     if (e.target.checked) {
                       setMatrixInputs(prev => ({ ...prev, [side]: '' }));
                     }
@@ -998,6 +1077,21 @@ const SpenndTool: React.FC = () => {
             ← Previous question
           </button>
         )}
+
+        {matrixSkipped && (
+          <button
+            onClick={() => {
+              setMode('deep');
+              setSelectedFormat(null);
+              setCurrentQuestionIndex(0);
+              setAnswers({});
+              setStep('label');
+            }}
+            className="mt-3 text-sm text-[#5a8a6e] underline underline-offset-2 cursor-pointer font-serif"
+          >
+            Want pressing verification? Switch to Deep Dive
+          </button>
+        )}
       </div>
     );
   }
@@ -1065,6 +1159,34 @@ const SpenndTool: React.FC = () => {
           </div>
         </div>
 
+        {/* Matrix skipped banner (Quick Check path) */}
+        {matrixSkipped && (
+          <div className="bg-stone-100 rounded-2xl p-4 flex items-start gap-3">
+            <Info className="text-stone-400 flex-shrink-0 mt-0.5" size={18} />
+            <div>
+              <p className="font-serif text-sm text-ink/80">
+                Matrix not checked. Run a Deep Dive for pressing verification.
+              </p>
+              <button
+                onClick={() => {
+                  setMode('deep');
+                  setGrade(null);
+                  setAnswers({});
+                  setSelectedFormat(null);
+                  setPriceData(null);
+                  setEbayData(null);
+                  setConflictNote(null);
+                  setCurrentQuestionIndex(0);
+                  setStep('label');
+                }}
+                className="font-serif text-sm text-[#5a8a6e] underline underline-offset-2 mt-1"
+              >
+                Start Deep Dive →
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Check another */}
         <button
           onClick={() => {
@@ -1075,6 +1197,7 @@ const SpenndTool: React.FC = () => {
             setGrade(null);
             setAnswers({});
             setSelectedFormat(null);
+            setMode(null);
           }}
           className="w-full bg-paper-dark text-ink rounded-full py-3 font-serif"
         >

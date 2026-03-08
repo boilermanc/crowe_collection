@@ -8,6 +8,23 @@ import SpotifyIcon from './SpotifyIcon';
 import DiscogsIcon from './DiscogsIcon';
 import FormatBadge from './FormatBadge';
 
+/** Pull a clean 4-digit year from potentially verbose AI text, e.g. "UNDATED (LIKELY LATE 1970S/EARLY 1980S ...)" → "1970s" */
+function extractYear(raw: string | undefined | null): string {
+  if (!raw) return '—';
+  // If it's already a clean 4-digit year, return it
+  const exactMatch = raw.match(/^\d{4}$/);
+  if (exactMatch) return raw;
+  // Try to pull the first 4-digit year from longer text
+  const yearMatch = raw.match(/\b(\d{4})\b/);
+  if (yearMatch) return yearMatch[1];
+  // Check for decade references like "1970s"
+  const decadeMatch = raw.match(/\b(\d{4}s)\b/i);
+  if (decadeMatch) return decadeMatch[1];
+  // If it's just "Unknown" or other junk, show dash
+  if (/unknown|undated|n\/a/i.test(raw)) return '—';
+  return raw.length > 6 ? '—' : raw;
+}
+
 interface AlbumCardProps {
   album: Album;
   onDelete: (id: string) => void;
@@ -156,9 +173,9 @@ const AlbumCard: React.FC<AlbumCardProps> = ({ album, onDelete, onSelect, onAddT
           </div>
         </div>
         <p className="text-[#dd6e42] text-sm font-medium truncate">{album.artist}</p>
-        <div className="mt-2 flex items-center justify-between text-[10px] text-th-text3 uppercase tracking-widest">
-          <span>{album.year || 'No Date'}</span>
-          <span>{album.genre || '—'}</span>
+        <div className="mt-2 flex items-center justify-between gap-2 text-[10px] text-th-text3 uppercase tracking-widest">
+          <span className="truncate shrink-0">{extractYear(album.year)}</span>
+          <span className="truncate text-right">{album.genre || '—'}</span>
         </div>
       </div>
     </div>
