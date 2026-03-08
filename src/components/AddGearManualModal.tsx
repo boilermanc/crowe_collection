@@ -17,6 +17,7 @@ const CATEGORY_LABELS: Record<GearCategory, string> = {
   headphones: 'Headphones',
   dac: 'DAC',
   subwoofer: 'Subwoofer',
+  tape_deck: 'Tape Deck',
   cables_other: 'Cables / Other',
 };
 

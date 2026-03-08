@@ -70,6 +70,7 @@ router.post(
               text: `Identify this audio equipment / hi-fi gear. Return JSON with these fields:
 
 - category: one of ${categoryList}
+  (tape_deck covers cassette decks, 8-track players, reel-to-reel machines, and any tape-based playback/recording device)
 - brand: manufacturer name (string)
 - model: model name/number (string)
 - year: release year or approximate era, e.g. "1972" or "early 1980s" (string)
@@ -80,6 +81,7 @@ router.post(
   - amplifier: power_output, type (tube/solid-state/class-D), inputs, impedance
   - headphones: type (open/closed), driver_size, impedance, sensitivity
   - cartridge: type (MM/MC), output, stylus_type, tracking_force
+  - tape_deck: format (cassette/8-track/reel-to-reel), heads, motor_type, noise_reduction
   Use your judgment for other categories. Values should be strings.
 - manual_search_query: a suggested Google search query to find the PDF manual, e.g. "Technics SL-1200MK7 owner's manual PDF" (string)
 

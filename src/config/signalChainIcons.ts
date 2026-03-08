@@ -8,6 +8,7 @@ import {
   Radio,
   Speaker,
   Headphones,
+  CassetteTape,
   Cable,
   type LucideIcon,
 } from 'lucide-react';
@@ -25,6 +26,7 @@ const SIGNAL_CHAIN_ICONS: Record<GearCategory, LucideIcon> = {
   speakers: Speaker,
   headphones: Headphones,
   subwoofer: Speaker,
+  tape_deck: CassetteTape,
   cables_other: Cable,
 };
 

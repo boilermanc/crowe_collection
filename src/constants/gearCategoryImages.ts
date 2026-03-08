@@ -10,6 +10,7 @@ export const GEAR_CATEGORY_IMAGES: Record<string, string> = {
   cables_other: 'https://cvqqiuhloefvaaacwxkg.supabase.co/storage/v1/object/public/gear-category-images/BCO.99bb7242-7cd0-42e3-8d4e-e6204c04be7a.png',
   subwoofer: 'https://cvqqiuhloefvaaacwxkg.supabase.co/storage/v1/object/public/gear-category-images/BCO.6c30e5bf-130c-4607-91ee-96910488dea9.png',
   headphones: 'https://cvqqiuhloefvaaacwxkg.supabase.co/storage/v1/object/public/gear-category-images/BCO.6b5da340-f4f4-49dc-a106-f3bce116896e.png',
+  tape_deck: 'https://cvqqiuhloefvaaacwxkg.supabase.co/storage/v1/object/public/gear-category-images/BCO.09566462-3700-483e-991a-663149e2dc9b.png',
 };
 
 export function getGearImage(imageUrl: string | null, category: string | null): string {

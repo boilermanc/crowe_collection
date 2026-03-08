@@ -85,6 +85,7 @@ export const GEAR_CATEGORIES = [
   'headphones',
   'dac',
   'subwoofer',
+  'tape_deck',
   'cables_other',
 ] as const;
 
