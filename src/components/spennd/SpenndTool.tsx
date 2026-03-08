@@ -14,7 +14,7 @@ const FieldTip = ({ children }: { children: React.ReactNode }) => {
         onClick={() => setOpen(o => !o)}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
         className="w-4 h-4 rounded-full bg-[#5a8a6e]/20 text-[#5a8a6e]
-          text-[10px] font-mono font-bold flex items-center justify-center
+          text-[12px] font-mono font-bold flex items-center justify-center
           hover:bg-[#5a8a6e]/30 transition-colors focus:outline-none
           focus:ring-1 focus:ring-[#5a8a6e]"
         aria-label="Help"
@@ -303,7 +303,7 @@ const SpenndTool: React.FC = () => {
           Search →
         </button>
 
-        <p className="font-serif text-[13px] italic text-[#5a8a6e]/70 mt-2">
+        <p className="font-serif text-sm italic text-[#5a8a6e] mt-2">
           Enter the artist name and album title separately for best results.
         </p>
 
@@ -315,10 +315,10 @@ const SpenndTool: React.FC = () => {
 
         {searchError && (
           <div className="mt-4 bg-amber-50 rounded-xl p-3 border border-amber-200">
-            <p className="text-amber-800 font-serif text-[13px]">{searchError}</p>
+            <p className="text-amber-800 font-serif text-sm">{searchError}</p>
             <button
               onClick={handleSearch}
-              className="mt-2 text-[#5a8a6e] font-serif text-[13px] underline"
+              className="mt-2 text-[#5a8a6e] font-serif text-sm underline"
             >
               Retry
             </button>
@@ -340,10 +340,10 @@ const SpenndTool: React.FC = () => {
                     className="w-10 h-10 rounded-lg object-cover bg-paper-dark"
                   />
                   <div className="flex-1">
-                    <div className="font-serif text-[14px] text-ink font-medium">
+                    <div className="font-serif text-base text-ink font-medium">
                       {result.artist} — {result.title}
                     </div>
-                    <div className="font-mono text-[11px] text-ink/60">
+                    <div className="font-mono text-[13px] text-ink/80">
                       {result.year} · {result.label} · {result.country}
                     </div>
                   </div>
@@ -351,7 +351,7 @@ const SpenndTool: React.FC = () => {
               ))}
             </div>
 
-            <p className="mt-3 font-serif text-[13px] italic text-ink/60">
+            <p className="mt-3 font-serif text-sm italic text-ink/80">
               Seeing multiple versions? That's normal. The same album was often pressed in different countries and years — each pressing has a different value. We'll help you figure out which one you have next.
             </p>
           </>
@@ -359,7 +359,7 @@ const SpenndTool: React.FC = () => {
 
         {selectedRelease && (
           <div className="mt-4">
-            <p className="font-serif text-sm text-ink/60 mb-3">
+            <p className="font-serif text-sm text-ink/80 mb-3">
               We found this pressing — does it look right?
             </p>
 
@@ -370,10 +370,10 @@ const SpenndTool: React.FC = () => {
                 className="w-10 h-10 rounded-lg object-cover"
               />
               <div className="flex-1">
-                <div className="font-serif text-[14px] text-ink font-medium">
+                <div className="font-serif text-base text-ink font-medium">
                   {selectedRelease.artist} — {selectedRelease.title}
                 </div>
-                <div className="font-mono text-[11px] text-ink/60">
+                <div className="font-mono text-[13px] text-ink/80">
                   {selectedRelease.year} · {selectedRelease.label} · {selectedRelease.country}
                 </div>
               </div>
@@ -382,7 +382,7 @@ const SpenndTool: React.FC = () => {
             {releaseNotes && (
               <div className="mt-3 bg-white border border-paper-dark rounded-xl
                 p-4 text-sm font-['Lora'] text-ink leading-relaxed">
-                <p className="font-mono text-[10px] uppercase tracking-wide
+                <p className="font-mono text-[12px] uppercase tracking-wide
                   text-[#5a8a6e] mb-1.5">Discogs Notes</p>
                 <p className={`text-ink-soft ${notesExpanded ? '' : 'line-clamp-4'}`}>
                   {releaseNotes}
@@ -410,7 +410,7 @@ const SpenndTool: React.FC = () => {
               <>
                 <button
                   onClick={() => setShowAllVersions(v => !v)}
-                  className="mt-2 w-full text-sm text-ink/60 underline"
+                  className="mt-2 w-full text-sm text-ink/80 underline"
                 >
                   {showAllVersions ? '▾' : '▸'} See other versions ({searchResults.length - 1})
                 </button>
@@ -431,10 +431,10 @@ const SpenndTool: React.FC = () => {
                             className="w-10 h-10 rounded-lg object-cover bg-paper-dark"
                           />
                           <div className="flex-1">
-                            <div className="font-serif text-[14px] text-ink font-medium">
+                            <div className="font-serif text-base text-ink font-medium">
                               {result.artist} — {result.title}
                             </div>
-                            <div className="font-mono text-[11px] text-ink/60">
+                            <div className="font-mono text-[13px] text-ink/80">
                               {result.year} · {result.label} · {result.country}
                             </div>
                           </div>
@@ -448,7 +448,7 @@ const SpenndTool: React.FC = () => {
         )}
 
         {!selectedRelease && !searchLoading && searchResults.length === 0 && combinedQuery && !searchError && (
-          <p className="mt-3 font-serif text-[13px] italic text-ink/60">
+          <p className="mt-3 font-serif text-sm italic text-ink/80">
             Nothing found for '{artistQuery}{titleQuery ? ` — ${titleQuery}` : ''}'. Try checking the spelling, or search with just the artist name.
           </p>
         )}
@@ -466,7 +466,7 @@ const SpenndTool: React.FC = () => {
             setMatrixResult(null);
             setStep('search');
           }}
-          className="text-sm text-ink/60 underline mb-4"
+          className="text-sm text-ink/80 underline mb-4"
         >
           ← Change record
         </button>
@@ -482,7 +482,7 @@ const SpenndTool: React.FC = () => {
         {releaseNotes && (
           <div className="bg-white border border-paper-dark rounded-xl
             p-4 mb-4 text-sm font-['Lora'] text-ink leading-relaxed">
-            <p className="font-mono text-[10px] uppercase tracking-wide
+            <p className="font-mono text-[12px] uppercase tracking-wide
               text-[#5a8a6e] mb-1.5">About This Pressing</p>
             <p className={`text-ink-soft ${notesExpanded ? '' : 'line-clamp-4'}`}>
               {releaseNotes}
@@ -675,7 +675,7 @@ const SpenndTool: React.FC = () => {
 
         {labelValidation && (
           <div className={`mt-4 rounded-xl p-3 ${labelValidation.confirmed ? 'bg-green-50 border border-green-200' : 'bg-paper-dark'}`}>
-            <p className={`font-serif text-[13px] ${labelValidation.confirmed ? 'text-green-800' : 'text-ink/60'}`}>
+            <p className={`font-serif text-sm ${labelValidation.confirmed ? 'text-green-800' : 'text-ink/80'}`}>
               {labelValidation.confirmed ? '✓ Label confirmed' : "We'll continue — the matrix may tell us more."}
             </p>
           </div>
@@ -692,12 +692,12 @@ const SpenndTool: React.FC = () => {
         <div className="flex items-center justify-between mb-4">
           <button
             onClick={() => setStep('label')}
-            className="text-sm text-ink/60 underline"
+            className="text-sm text-ink/80 underline"
           >
             ← Back to label
           </button>
           {selectedRelease && (
-            <div className="font-mono text-[11px] text-ink/60 text-right">
+            <div className="font-mono text-[13px] text-ink/80 text-right">
               {selectedRelease.artist} — {selectedRelease.title}
             </div>
           )}
@@ -814,7 +814,7 @@ const SpenndTool: React.FC = () => {
                   </FieldTip>
                 )}
               </div>
-              <div className="font-mono text-[9px] italic text-ink/60 mb-2">
+              <div className="font-mono text-[11px] italic text-ink/80 mb-2">
                 Look near the {side} label
               </div>
               <input
@@ -853,7 +853,7 @@ const SpenndTool: React.FC = () => {
           </button>
           <button
             onClick={handleMatrixSkip}
-            className="text-ink/60 underline font-serif text-sm"
+            className="text-ink/80 underline font-serif text-sm"
           >
             Skip this step →
           </button>
@@ -864,19 +864,19 @@ const SpenndTool: React.FC = () => {
           <div className="mt-4">
             {matrixResult.matched ? (
               <div className="bg-green-50 border border-green-200 rounded-xl p-3">
-                <p className="font-serif text-[13px] text-green-800">
+                <p className="font-serif text-sm text-green-800">
                   ✓ Matrix matched — {matrixResult.pressing_label}
                 </p>
               </div>
             ) : matrixResult.partial_match ? (
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
-                <p className="font-serif text-[13px] text-amber-800">
+                <p className="font-serif text-sm text-amber-800">
                   Partial match — one side confirmed.
                 </p>
               </div>
             ) : (
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
-                <p className="font-serif text-[13px] text-amber-800">
+                <p className="font-serif text-sm text-amber-800">
                   Matrix not matched. We'll show pricing with a note about the uncertainty.
                 </p>
               </div>
@@ -887,7 +887,7 @@ const SpenndTool: React.FC = () => {
               <div className="mt-3 space-y-2">
                 {matrixResult.engineer_notes.map((note, idx) => (
                   <div key={idx} className="bg-pearl-beige rounded-xl p-3">
-                    <div className="font-mono text-[10px] uppercase text-[#5a8a6e] mb-1">
+                    <div className="font-mono text-[12px] uppercase text-[#5a8a6e] mb-1">
                       {note.mark}
                     </div>
                     <p className="font-serif text-sm text-ink">
@@ -939,10 +939,10 @@ const SpenndTool: React.FC = () => {
     return (
       <div className="max-w-xl mx-auto bg-paper rounded-2xl p-8 shadow-sm">
         <div className="flex items-center justify-between mb-4">
-          <div className="font-mono text-[10px] text-[#5a8a6e] uppercase tracking-wide">
+          <div className="font-mono text-[12px] text-[#5a8a6e] uppercase tracking-wide">
             QUESTION {currentQuestionIndex + 1} OF {checklist.length}
           </div>
-          <div className="inline-block bg-paper-dark text-ink font-mono text-[9px] rounded-full px-2 py-0.5 uppercase">
+          <div className="inline-block bg-paper-dark text-ink font-mono text-[11px] rounded-full px-2 py-0.5 uppercase">
             {selectedFormat}
           </div>
         </div>
@@ -993,7 +993,7 @@ const SpenndTool: React.FC = () => {
         {currentQuestionIndex > 0 && (
           <button
             onClick={() => setCurrentQuestionIndex(i => i - 1)}
-            className="mt-4 text-sm text-ink/60 underline cursor-pointer"
+            className="mt-4 text-sm text-ink/80 underline cursor-pointer"
           >
             ← Previous question
           </button>
@@ -1012,17 +1012,17 @@ const SpenndTool: React.FC = () => {
         {/* Session nudge */}
         {recordsChecked >= 3 && !nudgeDismissed && (
           <div className="bg-pearl-beige border border-[#5a8a6e]/30 rounded-2xl p-5">
-            <div className="font-serif text-[15px] font-bold text-ink mb-1">
+            <div className="font-serif text-base font-bold text-ink mb-1">
               You've checked {recordsChecked} records.
             </div>
-            <p className="font-serif text-[13px] text-ink/60 mb-4">
+            <p className="font-serif text-sm text-ink/80 mb-4">
               Rekk<span className="text-[#c45a30]">r</span>d tracks your whole collection automatically.
             </p>
             <div className="flex gap-3">
-              <a href="/signup" className="bg-[#5a8a6e] text-white rounded-full py-2 px-5 font-serif text-[13px] hover:bg-[#3d6b54] transition-colors">
+              <a href="/signup" className="bg-[#5a8a6e] text-white rounded-full py-2 px-5 font-serif text-sm hover:bg-[#3d6b54] transition-colors">
                 Start free →
               </a>
-              <button onClick={() => setNudgeDismissed(true)} className="text-sm text-ink/60 underline">
+              <button onClick={() => setNudgeDismissed(true)} className="text-sm text-ink/80 underline">
                 Keep going
               </button>
             </div>
@@ -1032,7 +1032,7 @@ const SpenndTool: React.FC = () => {
         {/* Grade card */}
         <div className="bg-white rounded-2xl shadow-md p-6">
           <div className="font-display text-[64px] text-ink leading-none">{gradeInfo.shortLabel}</div>
-          <div className="font-serif text-[20px] text-ink/60 mt-1">{gradeInfo.label}</div>
+          <div className="font-serif text-[20px] text-ink/80 mt-1">{gradeInfo.label}</div>
           <div className="font-serif text-sm italic text-ink-soft mt-1">{gradeInfo.description}</div>
         </div>
 
@@ -1041,26 +1041,26 @@ const SpenndTool: React.FC = () => {
           <h3 className="font-display text-[20px] text-ink mb-4">What it's worth</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <div className="font-mono text-[9px] uppercase text-ink/60">DISCOGS</div>
+              <div className="font-mono text-[11px] uppercase text-ink/80">DISCOGS</div>
               {priceData?.available ? (
                 <div className="flex gap-4 mt-2">
                   <div>
                     <div className="font-display text-[24px] text-ink">{fmt(priceData.median)}</div>
-                    <div className="font-mono text-[9px] text-ink/60">MEDIAN</div>
+                    <div className="font-mono text-[11px] text-ink/80">MEDIAN</div>
                   </div>
                 </div>
-              ) : <p className="text-ink/60 text-sm mt-2">Loading...</p>}
+              ) : <p className="text-ink/80 text-sm mt-2">Loading...</p>}
             </div>
             <div>
-              <div className="font-mono text-[9px] uppercase text-ink/60">EBAY</div>
+              <div className="font-mono text-[11px] uppercase text-ink/80">EBAY</div>
               {ebayData?.available ? (
                 <div className="flex gap-4 mt-2">
                   <div>
                     <div className="font-display text-[24px] text-ink">{fmt(ebayData.median)}</div>
-                    <div className="font-mono text-[9px] text-ink/60">MEDIAN</div>
+                    <div className="font-mono text-[11px] text-ink/80">MEDIAN</div>
                   </div>
                 </div>
-              ) : <p className="text-ink/60 text-sm mt-2">Loading...</p>}
+              ) : <p className="text-ink/80 text-sm mt-2">Loading...</p>}
             </div>
           </div>
         </div>
@@ -1083,7 +1083,7 @@ const SpenndTool: React.FC = () => {
 
         {/* Soft sell */}
         <div className="mt-8 pt-8 border-t text-center">
-          <div className="font-mono text-[11px] text-ink/60 uppercase mb-2">FROM THE MAKERS OF SPEN<span className="text-[#5a8a6e]">N</span>D</div>
+          <div className="font-mono text-[13px] text-ink/80 uppercase mb-2">FROM THE MAKERS OF SPEN<span className="text-[#5a8a6e]">N</span>D</div>
           <h3 className="font-display text-[24px] text-ink mb-2">Do you have more than one?</h3>
           <p className="font-serif text-sm text-ink max-w-sm mx-auto mb-4">
             Rekk<span className="text-[#c45a30]">r</span>d tracks your whole collection — condition grading, live pricing, and gear catalog.
@@ -1091,7 +1091,7 @@ const SpenndTool: React.FC = () => {
           <a href="/signup" className="inline-block bg-[#5a8a6e] text-white rounded-full py-3 px-6 font-serif hover:bg-[#3d6b54] transition-colors">
             Start your collection free →
           </a>
-          <p className="font-mono text-[12px] text-ink/60 mt-2">No credit card. Free up to 100 albums.</p>
+          <p className="font-mono text-sm text-ink/80 mt-2">No credit card. Free up to 100 albums.</p>
         </div>
       </div>
     );

@@ -44,7 +44,7 @@ const SpenndLandingPage: React.FC = () => {
               >
                 Know what your record is worth.
               </h1>
-              <p className="mt-5 text-lg md:text-xl text-ink/60 max-w-lg mx-auto md:mx-0">
+              <p className="mt-5 text-lg md:text-xl text-ink/80 max-w-lg mx-auto md:mx-0">
                 In about 3 minutes. For free. No account, no Discogs login, no jargon — we walk you through everything.
               </p>
               <div className="mt-8 flex flex-col sm:flex-row items-center gap-4 justify-center md:justify-start">
@@ -101,7 +101,7 @@ const SpenndLandingPage: React.FC = () => {
                 <h3 className="font-serif text-[16px] font-bold text-ink mt-2">
                   Find your record
                 </h3>
-                <p className="font-serif text-[14px] text-ink/60 mt-2">
+                <p className="font-serif text-[15px] text-ink/80 mt-2">
                   Type the artist and title. We search Discogs' 8 million+ release database and show you matching pressings.
                 </p>
               </div>
@@ -112,7 +112,7 @@ const SpenndLandingPage: React.FC = () => {
                 <h3 className="font-serif text-[16px] font-bold text-ink mt-2">
                   Identify your pressing
                 </h3>
-                <p className="font-serif text-[14px] text-ink/60 mt-2">
+                <p className="font-serif text-[15px] text-ink/80 mt-2">
                   We show you exactly where to look on the record and what to read. The pressing determines real value more than anything else.
                 </p>
               </div>
@@ -123,7 +123,7 @@ const SpenndLandingPage: React.FC = () => {
                 <h3 className="font-serif text-[16px] font-bold text-ink mt-2">
                   Grade the condition
                 </h3>
-                <p className="font-serif text-[14px] text-ink/60 mt-2">
+                <p className="font-serif text-[15px] text-ink/80 mt-2">
                   A few quick questions with clear instructions. Hold it under a light — we guide you step by step.
                 </p>
               </div>
@@ -133,20 +133,20 @@ const SpenndLandingPage: React.FC = () => {
 
         {/* Trust Strip */}
         <section className="bg-paper py-10 text-center px-6">
-          <p className="font-serif text-[15px] text-ink mb-3">
+          <p className="font-serif text-base text-ink mb-3">
             Prices come from two independent sources:
           </p>
 
           <div className="flex justify-center flex-wrap gap-3">
-            <span className="border border-[#5a8a6e] text-[#5a8a6e] font-mono text-[11px] rounded-full px-3 py-1">
+            <span className="border border-[#5a8a6e] text-[#5a8a6e] font-mono text-[13px] rounded-full px-3 py-1">
               Discogs Marketplace
             </span>
-            <span className="border border-[#5a8a6e] text-[#5a8a6e] font-mono text-[11px] rounded-full px-3 py-1">
+            <span className="border border-[#5a8a6e] text-[#5a8a6e] font-mono text-[13px] rounded-full px-3 py-1">
               eBay Completed Sales
             </span>
           </div>
 
-          <p className="font-serif italic text-[14px] text-ink/60 mt-3">
+          <p className="font-serif italic text-[15px] text-ink/80 mt-3">
             Real transactions — not asking prices, not estimates.
           </p>
         </section>
@@ -178,7 +178,7 @@ const SpenndLandingPage: React.FC = () => {
               </svg>
               <span className="font-display text-lg text-ink">Rekk<span className="text-[#c45a30]">r</span>d</span>
             </a>
-            <p className="text-sm text-ink/60 leading-relaxed">
+            <p className="text-sm text-ink/70 leading-relaxed">
               The AI-powered vinyl collection manager for serious crate diggers and casual collectors alike.
             </p>
           </div>
@@ -186,7 +186,7 @@ const SpenndLandingPage: React.FC = () => {
           {/* Products */}
           <div>
             <h4 className="font-medium text-sm text-ink mb-3">Products</h4>
-            <ul className="space-y-2 text-sm text-ink/60">
+            <ul className="space-y-2 text-sm text-ink/70">
               <li><Link to="/sellr" className="hover:text-[#5a8a6e] transition-colors">Sel<span className="text-[#4f6d7a]">l</span>r</Link></li>
               <li><a href="https://rekkrd.com#features" className="hover:text-[#5a8a6e] transition-colors">Features</a></li>
               <li><a href="https://rekkrd.com#pricing" className="hover:text-[#5a8a6e] transition-colors">Pricing</a></li>
@@ -197,7 +197,7 @@ const SpenndLandingPage: React.FC = () => {
           {/* Resources */}
           <div>
             <h4 className="font-medium text-sm text-ink mb-3">Resources</h4>
-            <ul className="space-y-2 text-sm text-ink/60">
+            <ul className="space-y-2 text-sm text-ink/70">
               <li><a href="https://rekkrd.com#faq" className="hover:text-[#5a8a6e] transition-colors">FAQ</a></li>
               <li><a href="https://rekkrd.com/support" className="hover:text-[#5a8a6e] transition-colors">Support</a></li>
             </ul>
@@ -206,7 +206,7 @@ const SpenndLandingPage: React.FC = () => {
           {/* Company */}
           <div>
             <h4 className="font-medium text-sm text-ink mb-3">Company</h4>
-            <ul className="space-y-2 text-sm text-ink/60">
+            <ul className="space-y-2 text-sm text-ink/70">
               <li><a href="https://rekkrd.com/blog" className="hover:text-[#5a8a6e] transition-colors">Blog</a></li>
               <li><a href="https://rekkrd.com/privacy" className="hover:text-[#5a8a6e] transition-colors">Privacy</a></li>
               <li><a href="https://rekkrd.com/terms" className="hover:text-[#5a8a6e] transition-colors">Terms</a></li>
@@ -215,7 +215,7 @@ const SpenndLandingPage: React.FC = () => {
         </div>
 
         {/* Bottom bar */}
-        <div className="border-t border-ink/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-ink/40">
+        <div className="border-t border-ink/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-ink/60">
           <span>&copy; {new Date().getFullYear()} <a href="https://www.sweetwater.technology" target="_blank" rel="noopener noreferrer" className="hover:text-ink/60 transition-colors">Sweetwater Technology</a></span>
           <span>Made with &#9829; for vinyl lovers</span>
         </div>

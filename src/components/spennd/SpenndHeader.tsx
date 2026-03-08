@@ -60,7 +60,7 @@ const SpenndHeader: React.FC = () => {
               {/* Sellr wordmark */}
               <div className="flex flex-col items-start leading-tight">
                 <span className="font-mono text-base font-semibold text-ink tracking-wide">Sel<span className="text-[#4f6d7a]">l</span>r</span>
-                <span className="font-mono text-[12px] text-[#4f6d7a]/60 tracking-wide">vinyl appraisals</span>
+                <span className="font-mono text-[13px] text-[#4f6d7a]/80 tracking-wide">vinyl appraisals</span>
               </div>
 
               {/* Chevron */}
@@ -92,33 +92,33 @@ const SpenndHeader: React.FC = () => {
                 <span className="font-mono text-[15px] text-ink font-semibold">Sel<span className="text-[#4f6d7a]">l</span>r</span>
               </div>
 
-              <p className="font-serif text-[13px] text-ink/70 mb-3">
+              <p className="font-serif text-sm text-ink/80 mb-3">
                 The vinyl appraisal tool from the makers of Spen<span className="text-[#5a8a6e]">n</span>d. Know what your collection is really worth.
               </p>
 
               <ul className="space-y-1.5 mb-4">
-                <li className="flex items-start gap-2 font-serif text-[12px] text-ink/60">
+                <li className="flex items-start gap-2 font-serif text-[13px] text-ink/70">
                   <span className="text-[#4f6d7a] mt-0.5">&#10003;</span>
                   AI-powered condition grading &amp; pricing
                 </li>
-                <li className="flex items-start gap-2 font-serif text-[12px] text-ink/60">
+                <li className="flex items-start gap-2 font-serif text-[13px] text-ink/70">
                   <span className="text-[#4f6d7a] mt-0.5">&#10003;</span>
                   Live Discogs market data on every record
                 </li>
-                <li className="flex items-start gap-2 font-serif text-[12px] text-ink/60">
+                <li className="flex items-start gap-2 font-serif text-[13px] text-ink/70">
                   <span className="text-[#4f6d7a] mt-0.5">&#10003;</span>
                   Full collection or single-lot appraisals
                 </li>
               </ul>
 
               <Link to="/sellr" onClick={() => setSellrOpen(false)}>
-                <button className="w-full bg-[#4f6d7a] text-white rounded-full py-2.5 px-4 font-mono text-[12px] font-medium hover:opacity-90 transition-opacity">
+                <button className="w-full bg-[#4f6d7a] text-white rounded-full py-2.5 px-4 font-mono text-[13px] font-medium hover:opacity-90 transition-opacity">
                   Explore Sellr →
                 </button>
               </Link>
 
               <Link to="/sellr/signup" onClick={() => setSellrOpen(false)}>
-                <button className="w-full mt-2 border border-[#4f6d7a] text-[#4f6d7a] rounded-full py-2.5 px-4 font-mono text-[12px] font-medium hover:bg-[#4f6d7a]/10 transition-colors">
+                <button className="w-full mt-2 border border-[#4f6d7a] text-[#4f6d7a] rounded-full py-2.5 px-4 font-mono text-[13px] font-medium hover:bg-[#4f6d7a]/10 transition-colors">
                   Sign Up Free →
                 </button>
               </Link>
